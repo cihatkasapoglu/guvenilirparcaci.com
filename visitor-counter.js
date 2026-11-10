@@ -6,7 +6,7 @@
     el.textContent="Bugünkü ziyaret: bağlantı bekleniyor";
     return;
   }
-  var base=String(cfg.url).replace(/\\/+$/,"");
+  var base=String(cfg.url); while(base.endsWith("/")) base=base.slice(0,-1);
   fetch(base+"/rest/v1/rpc/increment_daily_visits",{
     method:"POST",
     headers:{
