@@ -1,5 +1,5 @@
 window.GP_BRANDS = [
- {id:"alfa-romeo",name:"Alfa Romeo",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Alfa%20Romeo%20logo.svg"},
+ {id:"alfa-romeo",name:"Alfa Romeo",logo:"https://w7.pngwing.com/pngs/962/507/png-transparent-alfa-romeo-giulia-car-2015-alfa-romeo-4c-fiat-s-p-a-alfa-romeo-logo-emblem-label-logo.png"},
  {id:"audi",name:"Audi",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Audi%20logo.svg"},
  {id:"bmw",name:"BMW",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/BMW%20logo.svg"},
  {id:"byd",name:"BYD",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/BYD%20Auto%202022%20logo.svg"},
