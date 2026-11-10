@@ -8,16 +8,19 @@
 <style>
 .hero{background:#101820;padding:24px 0 28px;color:white}
 .hero .container{max-width:1160px}
-.hero-slider{position:relative;overflow:hidden}
+.hero-slider{position:relative;overflow:visible}
+.slider-stage{position:relative;overflow:hidden}
+
 .hero-slide{display:none;position:relative}
 .hero-slide.is-active{display:block;animation:heroFade .35s ease}
 .hero-banner{display:block;width:100%;height:auto;object-fit:contain}
 .featured-label{position:absolute;right:18px;bottom:18px;background:#e7473f;color:#fff;font-size:13px;font-weight:850;letter-spacing:.7px;padding:12px 16px;border-radius:5px;box-shadow:0 4px 18px #0005}
 .slider-arrows{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px;pointer-events:none}
 .slider-arrows button{pointer-events:auto;border:1px solid #ffffff70;width:32px;height:32px;border-radius:50%;background:#14202b99;color:#fff;font-size:23px;line-height:1;cursor:pointer;display:grid;place-items:center;backdrop-filter:blur(4px)}
-.slider-dots{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:7px}
+.slider-dots{position:relative;left:auto;bottom:auto;transform:none;display:flex;align-items:center;justify-content:center;gap:7px;margin:10px auto 0}
 .slider-dots button{width:7px;height:7px;padding:0;border:1px solid #ffffffb5;border-radius:50%;background:#ffffff55;cursor:pointer}
-.slider-dots button[aria-current="true"]{background:#fff;transform:scale(1.2)}
+.slider-dots button[aria-current="true"]{background:#fff;border-color:#fff;opacity:1;transform:scale(1.35)}
+.slider-dots button[aria-current="false"]{opacity:.48}
 .firm-banner-link{display:block;position:relative;min-height:300px;background:linear-gradient(120deg,#111b25,#263b4d 58%,#111820);overflow:hidden}
 .firm-banner-fallback{min-height:300px;padding:45px 7%;display:none;flex-direction:column;align-items:flex-start;justify-content:center;color:white;gap:8px;background:radial-gradient(ellipse at 80% 50%,#e7473f44,transparent 45%)}
 .firm-banner-fallback span{font-size:12px;font-weight:800;letter-spacing:2px;color:#ff8a82}
@@ -32,7 +35,7 @@
 .brand-card{min-height:158px}
 .brand-card img{height:76px}
 .site-footer{margin-top:0}
-@media(max-width:600px){.hero{padding:12px 0 18px}.featured-label{right:9px;bottom:9px;font-size:9px;padding:7px 9px;letter-spacing:.4px}.slider-arrows{padding:0 6px}.slider-arrows button{width:25px;height:25px;font-size:19px}.slider-dots{bottom:10px;gap:5px}.slider-dots button{width:6px;height:6px}.firm-banner-link,.firm-banner-fallback{min-height:190px}.firm-banner-fallback{padding:25px 6%}.firm-banner-fallback span{font-size:10px}.firm-banner-fallback em{font-size:11px;padding:8px 11px}.mark-section{padding:38px 0 54px}.mark-section h2{font-size:24px}.brand-card{min-height:125px}.brand-card img{height:54px}}
+@media(max-width:600px){.hero{padding:12px 0 18px}.featured-label{right:9px;bottom:9px;font-size:9px;padding:7px 9px;letter-spacing:.4px}.slider-arrows{padding:0 6px}.slider-arrows button{width:25px;height:25px;font-size:19px}.slider-dots{margin-top:7px;gap:6px}.slider-dots button{width:6px;height:6px}.firm-banner-link,.firm-banner-fallback{min-height:190px}.firm-banner-fallback{padding:25px 6%}.firm-banner-fallback span{font-size:10px}.firm-banner-fallback em{font-size:11px;padding:8px 11px}.mark-section{padding:38px 0 54px}.mark-section h2{font-size:24px}.brand-card{min-height:125px}.brand-card img{height:54px}}
 </style>
 </head>
 <body>
@@ -40,19 +43,20 @@
 <main>
 <section class="hero"><div class="container">
 <div class="hero-slider" id="heroSlider">
-  <div class="hero-slide is-active" data-slide="0">
-    <img class="hero-banner" src="/banner.PNG?v=1" alt="Türkiye’nin Güvenilir Yedek Parçacıları">
-    <div class="featured-label">ÖNE ÇIKAN FİRMALAR</div>
+  <div class="slider-stage">
+    <div class="hero-slide is-active" data-slide="0">
+      <img class="hero-banner" src="/banner.PNG?v=1" alt="Türkiye’nin Güvenilir Yedek Parçacıları">
+      <div class="featured-label">ÖNE ÇIKAN FİRMALAR</div>
+    </div>
+    <div class="hero-slide" data-slide="1">
+      <a class="firm-banner-link" href="/firma/oto-bahtiyar" aria-label="Oto Bahtiyar firma profilini incele">
+        <img class="hero-banner firm-banner-image" src="/oto-bahtiyar-banner.PNG" alt="Oto Bahtiyar öne çıkan firma bannerı" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="firm-banner-fallback"><span>ÖNE ÇIKAN FİRMA</span><strong>OTO BAHTİYAR</strong><small>Hyundai &amp; Kia Yedek Parça</small><em>Firma profilini incele&nbsp; ›</em></div>
+      </a>
+      <div class="featured-label">ÖNE ÇIKAN FİRMALAR</div>
+    </div>
+    <div class="slider-arrows"><button type="button" class="slide-prev" aria-label="Önceki banner">‹</button><button type="button" class="slide-next" aria-label="Sonraki banner">›</button></div>
   </div>
-  <div class="hero-slide" data-slide="1">
-    <a class="firm-banner-link" href="/firma/oto-bahtiyar" aria-label="Oto Bahtiyar firma profilini incele">
-      <img class="hero-banner firm-banner-image" src="/oto-bahtiyar-banner.PNG" alt="Oto Bahtiyar öne çıkan firma bannerı" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <div class="firm-banner-fallback"><span>ÖNE ÇIKAN FİRMA</span><strong>OTO BAHTİYAR</strong><small>Hyundai &amp; Kia Yedek Parça</small><em>Firma profilini incele&nbsp; ›</em></div>
-    </a>
-    <div class="featured-label">ÖNE ÇIKAN FİRMALAR</div>
-  </div>
-</div>
-  <div class="slider-arrows"><button type="button" class="slide-prev" aria-label="Önceki banner">‹</button><button type="button" class="slide-next" aria-label="Sonraki banner">›</button></div>
   <div class="slider-dots" id="sliderDots" aria-label="Banner sayfaları"></div>
 </div>
 </div></section>
