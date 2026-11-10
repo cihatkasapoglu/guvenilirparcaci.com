@@ -3,6 +3,29 @@
   const display = document.querySelector("[data-daily-visitors]");
   if (!config || !display) return;
 
+  const STORAGE_KEY = "gp_daily_visitor_counter_v1";
+  const THREE_MINUTES = 3 * 60 * 1000;
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(new Date());
+
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+  } catch (error) {
+    console.warn("Sayaç tarayıcı kaydı okunamadı:", error);
+  }
+
+  const now = Date.now();
+  if (saved && saved.date === today && Number.isFinite(saved.count) &&
+      Number.isFinite(saved.lastCountedAt) && now - saved.lastCountedAt < THREE_MINUTES) {
+    display.textContent = new Intl.NumberFormat("tr-TR").format(saved.count);
+    return;
+  }
+
   fetch(config.url + "/rest/v1/rpc/increment_daily_page_view", {
     method: "POST",
     headers: {
@@ -17,7 +40,17 @@
       return response.json();
     })
     .then(function (count) {
-      display.textContent = new Intl.NumberFormat("tr-TR").format(Number(count));
+      const numericCount = Number(count);
+      display.textContent = new Intl.NumberFormat("tr-TR").format(numericCount);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          date: today,
+          count: numericCount,
+          lastCountedAt: Date.now()
+        }));
+      } catch (error) {
+        console.warn("Sayaç tarayıcı kaydı yapılamadı:", error);
+      }
     })
     .catch(function (error) {
       console.error("Günlük ziyaretçi sayacı çalışmadı:", error);
