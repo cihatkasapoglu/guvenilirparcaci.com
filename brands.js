@@ -4,7 +4,7 @@ window.GP_BRANDS = [
  {id:"bmw",name:"BMW",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/BMW%20logo.svg"},
  {id:"byd",name:"BYD",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/BYD%20Auto%202022%20logo.svg"},
  {id:"chery",name:"Chery",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Chery%20logo.svg"},
- {id:"chevrolet",name:"Chevrolet",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Logo%20Chevrolet.svg"},
+ {id:"chevrolet",name:"Chevrolet",logo:"https://1000logos-net.translate.goog/wp-content/uploads/2019/12/Chevrolet-logo.png?_x_tr_sl=en&_x_tr_tl=tr&_x_tr_hl=tr&_x_tr_pto=tc"},
  {id:"chrysler",name:"Chrysler",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Chrysler%20logo%20alt.svg"},
  {id:"citroen",name:"Citroën",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Citroen%202019logo.svg"},
  {id:"cupra",name:"Cupra",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Cupra.svg"},
