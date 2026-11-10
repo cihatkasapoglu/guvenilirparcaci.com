@@ -58,6 +58,13 @@
  function show(next){slides[current].classList.remove("is-active");current=(next+slides.length)%slides.length;slides[current].classList.add("is-active");}
  document.querySelectorAll("#heroSlider .slide-next").forEach(button=>button.addEventListener("click",()=>show(current+1)));
  document.querySelectorAll("#heroSlider .slide-prev").forEach(button=>button.addEventListener("click",()=>show(current-1)));
+ const slider=document.getElementById("heroSlider");
+ let touchStartX=0,touchStartY=0;
+ slider.addEventListener("touchstart",event=>{const t=event.changedTouches[0];touchStartX=t.clientX;touchStartY=t.clientY;},{passive:true});
+ slider.addEventListener("touchend",event=>{
+   const t=event.changedTouches[0],dx=t.clientX-touchStartX,dy=t.clientY-touchStartY;
+   if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.25)show(current+(dx<0?1:-1));
+ },{passive:true});
 })();
 </script>
 </main>
