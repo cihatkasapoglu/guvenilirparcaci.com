@@ -11,7 +11,6 @@
     method:"POST",
     headers:{
       "apikey":cfg.anonKey,
-      "Authorization":"Bearer "+cfg.anonKey,
       "Content-Type":"application/json"
     },
     body:"{}",
