@@ -25,7 +25,7 @@ window.GP_BRANDS = [
  {id:"peugeot",name:"Peugeot",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Peugeot%20Logo.svg"},
  {id:"renault",name:"Renault",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Renault%202021.svg"},
  {id:"seat",name:"SEAT",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/SEAT%20Logo%20from%202017.svg"},
- {id:"skoda",name:"Škoda",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Skoda%20Auto%20logo.svg"},
+ {id:"skoda",name:"Škoda",logo:"https://upload.wikimedia.org/wikipedia/commons/0/09/%C5%A0koda_nieuw.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original"},
  {id:"togg",name:"Togg",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/TOGG%20logo.svg"},
  {id:"toyota",name:"Toyota",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Toyota%20carlogo.svg"},
  {id:"volkswagen",name:"Volkswagen",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Volkswagen%20logo%202019.svg"},
