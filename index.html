@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101820">
 <title>GüvenilirParçacı | Marka Bazlı Yedek Parça Firma Rehberi</title>
 <meta name="description" content="Türkiye genelinde otomobil markalarına göre güvenilir yedek parça firmalarını keşfedin. Firma profilleri, iletişim ve işletme bilgileri.">
-<link rel="canonical" href="https://guvenilirparcaci.com/"><link rel="icon" type="image/jpeg" href="guvenilir-parcaci.jpg?v=logo2"><link rel="stylesheet" href="directory.css"><link rel="stylesheet" href="site.css?v=logo2">
+<link rel="canonical" href="https://guvenilirparcaci.com/"><link rel="icon" type="image/jpeg" href="/guvenilir-parcaci.jpg?v=logo3"><link rel="stylesheet" href="directory.css"><link rel="stylesheet" href="site.css?v=logo2">
 <style>
 .hero{background:#101820;color:white;padding:72px 0 66px}.hero .container{max-width:1160px}.eyebrow{color:#ffaaa5;font-size:11px;font-weight:850;letter-spacing:1.7px;text-transform:uppercase}.hero h1{font-size:clamp(36px,5vw,58px);line-height:1.08;letter-spacing:-2px;margin:14px 0}.hero h1 span{color:#ff6b63}.hero p{color:#c0c9cf;font-size:16px;max-width:660px;margin:0}.mark-section{padding:58px 0 78px}.mark-section h2{font-size:30px;letter-spacing:-1px;margin:0 0 8px}.mark-section .lead{color:#66727d;margin:0 0 28px;font-size:14px}.brand-grid{margin-top:0}.brand-card{min-height:158px}.brand-card img{height:76px}.site-footer{margin-top:0}
 @media(max-width:600px){.hero{padding:48px 0}.hero h1{letter-spacing:-1.2px}.hero p{font-size:14px}.mark-section{padding:38px 0 54px}.mark-section h2{font-size:24px}.brand-card{min-height:125px}.brand-card img{height:54px}}
@@ -17,7 +17,7 @@
 <section class="mark-section"><div class="container"><div class="kicker">Marka rehberi</div><h2>Otomobil markaları</h2><p class="lead">İlgilendiğiniz otomobil markasının logosuna veya adına tıklayarak firma rehberine geçin.</p><div class="brand-grid" id="homeBrands"></div></div></section>
 </main>
 <div id="siteFooter"></div>
-<script src="brands.js"></script><script src="shared.js?v=logo2"></script><script src="supabase-config.js"></script><script src="visitor-counter.js"></script>
+<script src="brands.js"></script><script src="shared.js?v=logo3"></script><script src="supabase-config.js"></script><script src="visitor-counter.js"></script>
 <script>
 const root=document.getElementById('homeBrands');
 root.innerHTML=(window.GP_BRANDS||[]).map(b=>'<a class="brand-card" href="marka.html?marka='+encodeURIComponent(b.id)+'"><img src="'+b.logo+'" alt="'+b.name+' logosu" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><span class="logo-fallback" style="display:none">'+b.name.slice(0,2).toUpperCase()+'</span><strong>'+b.name+'</strong><span class="card-arrow">›</span></a>').join('');
