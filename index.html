@@ -8,7 +8,20 @@
 <style>
 .hero{background:#101820;padding:24px 0 28px;color:white}
 .hero .container{max-width:1160px}
+.hero-slider{position:relative;overflow:hidden}
+.hero-slide{display:none;position:relative}
+.hero-slide.is-active{display:block;animation:heroFade .35s ease}
 .hero-banner{display:block;width:100%;height:auto;object-fit:contain}
+.featured-controls{position:absolute;right:18px;bottom:18px;display:flex;align-items:center;gap:10px}
+.featured-controls span{background:#e7473f;color:#fff;font-size:13px;font-weight:850;letter-spacing:.7px;padding:12px 16px;border-radius:5px;box-shadow:0 4px 18px #0005}
+.featured-controls button{border:0;width:42px;height:42px;border-radius:50%;background:#fff;color:#101820;font-size:30px;line-height:1;cursor:pointer;box-shadow:0 4px 18px #0005}
+.firm-banner-link{display:block;position:relative;min-height:300px;background:linear-gradient(120deg,#111b25,#263b4d 58%,#111820);overflow:hidden}
+.firm-banner-fallback{min-height:300px;padding:45px 7%;display:none;flex-direction:column;align-items:flex-start;justify-content:center;color:white;gap:8px;background:radial-gradient(ellipse at 80% 50%,#e7473f44,transparent 45%)}
+.firm-banner-fallback span{font-size:12px;font-weight:800;letter-spacing:2px;color:#ff8a82}
+.firm-banner-fallback strong{font-size:clamp(30px,5vw,58px);letter-spacing:1px}
+.firm-banner-fallback small{font-size:clamp(15px,2vw,21px);color:#d9e0e5}
+.firm-banner-fallback em{font-size:13px;font-style:normal;font-weight:750;margin-top:12px;background:#e7473f;padding:10px 15px;border-radius:5px}
+@keyframes heroFade{from{opacity:.55;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
 .mark-section{padding:58px 0 78px}
 .mark-section h2{font-size:30px;letter-spacing:-1px;margin:0 0 8px}
 .mark-section .lead{color:#66727d;margin:0 0 28px;font-size:14px}
@@ -16,14 +29,37 @@
 .brand-card{min-height:158px}
 .brand-card img{height:76px}
 .site-footer{margin-top:0}
-@media(max-width:600px){.hero{padding:12px 0 18px}.mark-section{padding:38px 0 54px}.mark-section h2{font-size:24px}.brand-card{min-height:125px}.brand-card img{height:54px}}
+@media(max-width:600px){.hero{padding:12px 0 18px}.featured-controls{right:9px;bottom:9px;gap:6px}.featured-controls span{font-size:10px;padding:9px 10px}.featured-controls button{width:34px;height:34px;font-size:25px}.firm-banner-link,.firm-banner-fallback{min-height:190px}.firm-banner-fallback{padding:25px 6%}.firm-banner-fallback span{font-size:10px}.firm-banner-fallback em{font-size:11px;padding:8px 11px}.mark-section{padding:38px 0 54px}.mark-section h2{font-size:24px}.brand-card{min-height:125px}.brand-card img{height:54px}}
 </style>
 </head>
 <body>
 <div id="siteHeader"></div>
 <main>
-<section class="hero"><div class="container"><img class="hero-banner" src="/banner.PNG?v=1" alt="Türkiye’nin Güvenilir Yedek Parçacıları"></div></section>
+<section class="hero"><div class="container">
+<div class="hero-slider" id="heroSlider">
+  <div class="hero-slide is-active" data-slide="0">
+    <img class="hero-banner" src="/banner.PNG?v=1" alt="Türkiye’nin Güvenilir Yedek Parçacıları">
+    <div class="featured-controls"><span>ÖNE ÇIKAN FİRMALAR</span><button type="button" class="slide-next" aria-label="Sonraki banner">›</button></div>
+  </div>
+  <div class="hero-slide" data-slide="1">
+    <a class="firm-banner-link" href="/firma/oto-bahtiyar" aria-label="Oto Bahtiyar firma profilini incele">
+      <img class="hero-banner firm-banner-image" src="/oto-bahtiyar-banner.PNG" alt="Oto Bahtiyar öne çıkan firma bannerı" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="firm-banner-fallback"><span>ÖNE ÇIKAN FİRMA</span><strong>OTO BAHTİYAR</strong><small>Hyundai &amp; Kia Yedek Parça</small><em>Firma profilini incele&nbsp; ›</em></div>
+    </a>
+    <div class="featured-controls"><button type="button" class="slide-prev" aria-label="Önceki banner">‹</button><span>ÖNE ÇIKAN FİRMALAR</span><button type="button" class="slide-next" aria-label="Sonraki banner">›</button></div>
+  </div>
+</div>
+</div></section>
 <section class="mark-section"><div class="container"><div class="kicker">Marka rehberi</div><h2>Otomobil markaları</h2><p class="lead">İlgilendiğiniz otomobil markasının logosuna veya adına tıklayarak firma rehberine geçin.</p><div class="brand-grid" id="homeBrands"></div></div></section>
+<script>
+(function(){
+ const slides=Array.from(document.querySelectorAll("#heroSlider .hero-slide"));
+ let current=0;
+ function show(next){slides[current].classList.remove("is-active");current=(next+slides.length)%slides.length;slides[current].classList.add("is-active");}
+ document.querySelectorAll("#heroSlider .slide-next").forEach(button=>button.addEventListener("click",()=>show(current+1)));
+ document.querySelectorAll("#heroSlider .slide-prev").forEach(button=>button.addEventListener("click",()=>show(current-1)));
+})();
+</script>
 </main>
 <div id="siteFooter"></div>
 <script src="brands.js"></script><script src="shared.js?v=logo3"></script><script src="supabase-config.js"></script><script src="visitor-counter.js"></script>
