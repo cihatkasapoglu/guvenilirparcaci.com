@@ -17,7 +17,7 @@
 <section class="mark-section"><div class="container"><div class="kicker">Marka rehberi</div><h2>Otomobil markaları</h2><p class="lead">İlgilendiğiniz otomobil markasının logosuna veya adına tıklayarak firma rehberine geçin.</p><div class="brand-grid" id="homeBrands"></div></div></section>
 </main>
 <div id="siteFooter"></div>
-<script src="brands.js"></script><script src="shared.js"></script>
+<script src="brands.js"></script><script src="shared.js?v=20261110b"></script>
 <script>
 const root=document.getElementById('homeBrands');
 root.innerHTML=(window.GP_BRANDS||[]).map(b=>'<a class="brand-card" href="marka.html?marka='+encodeURIComponent(b.id)+'"><img src="'+b.logo+'" alt="'+b.name+' logosu" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><span class="logo-fallback" style="display:none">'+b.name.slice(0,2).toUpperCase()+'</span><strong>'+b.name+'</strong><span class="card-arrow">›</span></a>').join('');
