@@ -31,4 +31,17 @@ window.GP_BRANDS = [
  {id:"volkswagen",name:"Volkswagen",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Volkswagen%20logo%202019.svg"},
  {id:"volvo",name:"Volvo",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Volvo%20Iron%20Mark%20-%20black.svg"},
 ];
-window.GP_FIRMS = window.GP_FIRMS || [];
+window.GP_FIRMS = [
+ {
+  id:"oto-bahtiyar",
+  name:"Oto Bahtiyar",
+  brands:["hyundai","kia"],
+  address:"Ayyıldız Sanayi Sitesi, 1141. Sokak No:25/2, Ostim, Ankara",
+  phone:"0546 939 45 65",
+  website:"https://otobahtiyar.com",
+  shortDescription:"Hyundai ve Kia yedek parça firması.",
+  description:"Oto Bahtiyar, Hyundai ve Kia markalarına yönelik yedek parça alanında faaliyet gösteren firmadır.",
+  sponsored:true,
+  approved:true
+ }
+];
