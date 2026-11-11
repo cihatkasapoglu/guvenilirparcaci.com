@@ -8,7 +8,7 @@ window.GP_BRANDS = [
  {id:"citroen",name:"Citroën",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Citroen%202019logo.svg"},
  {id:"cupra",name:"Cupra",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Cupra.svg"},
  {id:"dacia",name:"Dacia",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Dacia-Logo-2021.svg"},
- {id:"fiat",name:"Fiat",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Fiat%20Logo.svg"},
+ {id:"fiat",name:"Fiat",logo:"https://logos-world.net/wp-content/uploads/2021/03/Fiat-Logo.png"},
  {id:"ford",name:"Ford",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Ford%20logo.svg"},
  {id:"honda",name:"Honda",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Honda%20Logo.svg"},
  {id:"hyundai",name:"Hyundai",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Hyundai%20Motor%20Company%20logo.svg"},
