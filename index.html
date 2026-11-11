@@ -85,6 +85,6 @@
 <script src="brands.js"></script><script src="shared.js?v=blog1"></script><script src="supabase-config.js"></script><script src="visitor-counter.js"></script>
 <script>
 const root=document.getElementById('homeBrands');
-root.innerHTML=(window.GP_BRANDS||[]).map(b=>'<a class="brand-card" href="marka.html?marka='+encodeURIComponent(b.id)+'"><img src="'+b.logo+'" alt="'+b.name+' logosu" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><span class="logo-fallback" style="display:none">'+b.name.slice(0,2).toUpperCase()+'</span><strong>'+b.name+'</strong><span class="card-arrow">›</span></a>').join('');
+root.innerHTML=(window.GP_BRANDS||[]).map(b=>'<a class="brand-card" href="/'+encodeURIComponent(b.id)+'-yedek-parca+'"><img src="'+b.logo+'" alt="'+b.name+' logosu" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><span class="logo-fallback" style="display:none">'+b.name.slice(0,2).toUpperCase()+'</span><strong>'+b.name+'</strong><span class="card-arrow">›</span></a>').join('');
 </script>
 </body></html>
