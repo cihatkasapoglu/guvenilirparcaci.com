@@ -14,7 +14,7 @@ window.GP_BRANDS = [
  {id:"hyundai",name:"Hyundai",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Hyundai%20Motor%20Company%20logo.svg"},
  {id:"jeep",name:"Jeep",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Jeep%20wordmark.svg"},
  {id:"kia",name:"Kia",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/KIA%20logo3.svg"},
- {id:"land-rover",name:"Land Rover",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Land%20Rover%20logo.svg"},
+ {id:"land-rover",name:"Land Rover",logo:"https://images.seeklogo.com/logo-png/20/1/land-rover-logo-png_seeklogo-201638.png"},
  {id:"mazda",name:"Mazda",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Mazda%20logo.svg"},
  {id:"mercedes-benz",name:"Mercedes-Benz",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Mercedes-Benz%20Logo%202010.svg"},
  {id:"nissan",name:"Nissan",logo:"https://commons.wikimedia.org/wiki/Special:FilePath/Nissan%20Motor%20Corporation%202020%20logo.svg"},
