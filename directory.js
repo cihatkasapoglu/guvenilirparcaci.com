@@ -1,7 +1,7 @@
 (function(){
  const brands=window.GP_BRANDS||[], firms=window.GP_FIRMS||[];
  const params=new URLSearchParams(location.search);
- const routePath=decodeURIComponent(location.pathname.replace(/^\\/+|\\/+$/g,""));
+ const routePath=decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g,""));
  const routeMatch=routePath.match(/^(.+)-yedek-parca$/);
  const slug=params.get("marka")||(routeMatch?routeMatch[1]:null), brand=brands.find(x=>x.id===slug);
  const brandIntros={
