@@ -163,3 +163,20 @@
 @media(min-width:701px){
   .social-links .whatsapp-link img{width:19px;height:19px}
 }
+
+
+/* WhatsApp wordmark and brand-green phone number in top contact pill */
+.topbar-contact .whatsapp-wordmark{
+  color:#25D366;
+  font-size:13px;
+  font-weight:850;
+  letter-spacing:-.35px;
+  flex:0 0 auto;
+}
+.topbar-contact strong{color:#25D366!important}
+@media(max-width:700px){
+  .topbar-contact .whatsapp-wordmark{font-size:12px}
+}
+@media(max-width:360px){
+  .topbar-contact .whatsapp-wordmark{font-size:11px}
+}
