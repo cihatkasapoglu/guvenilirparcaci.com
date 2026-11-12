@@ -6,11 +6,19 @@
  const id=(pathMatch&&pathMatch[1])||new URLSearchParams(location.search).get("firma");
  const f=(window.GP_FIRMS||[]).find(x=>x.id===id&&x.approved);
  const e=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ const setMeta=(name,content,property=false)=>{let el=document.querySelector((property?'meta[property="':'meta[name="')+name+'"]');if(!el){el=document.createElement("meta");el.setAttribute(property?"property":"name",name);document.head.appendChild(el);}el.setAttribute("content",content);};
+ const setSchema=data=>{let el=document.getElementById("gp-firm-schema");if(!el){el=document.createElement("script");el.type="application/ld+json";el.id="gp-firm-schema";document.head.appendChild(el);}el.textContent=JSON.stringify(data);};
  if(!f){
+  setMeta("robots","noindex,follow");
   root.innerHTML='<a class="back-link" href="/markalar.html">← Marka rehberine dön</a><div class="empty-state"><strong>Firma profili bulunamadı.</strong>Bu firma henüz rehberde yayınlanmıyor.</div>';
   return;
  }
  document.title=f.name+" | GüvenilirParçacı";
+ const firmBrands=(f.brands||[]).map(id=>(window.GP_BRANDS||[]).find(b=>b.id===id)?.name||id);
+ const firmDescription=(f.shortDescription||f.description||"Otomotiv yedek parça firması.")+" Firma profili, faaliyet gösterdiği markalar ve iletişim bilgileri.";
+ setMeta("description",firmDescription);setMeta("robots","index,follow");setMeta("og:type","profile",true);setMeta("og:title",document.title,true);setMeta("og:description",firmDescription,true);setMeta("og:url","https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id),true);
+ setSchema({"@context":"https://schema.org","@type":"Organization","name":f.name,"url":"https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id),"description":firmDescription,"telephone":f.phone||undefined,"address":f.address?{"@type":"PostalAddress","streetAddress":f.address,"addressCountry":"TR"}:undefined,"knowsAbout":firmBrands});
+
  let canonical=document.querySelector('link[rel="canonical"]');
  if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical);}
  canonical.href="https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id);
