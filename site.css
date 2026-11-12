@@ -57,3 +57,49 @@
   .social-link{width:25px;height:25px}
   .social-link svg{width:14px;height:14px}
 }
+
+
+/* Refined mobile header behavior */
+#siteHeader{position:relative;top:auto;z-index:auto}
+.topbar{position:sticky;top:0;z-index:120}
+.topbar-contact{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:5px 11px;
+  border:1px solid #ffffff35;
+  border-radius:999px;
+  background:linear-gradient(135deg,#263744,#17232d);
+  box-shadow:0 2px 8px #0002;
+  color:#f2f6f8;
+  font-size:11px;
+  font-weight:750;
+  white-space:nowrap
+}
+.topbar-contact svg{
+  width:20px;
+  height:20px;
+  padding:3px;
+  border-radius:50%;
+  background:#16a34a;
+  fill:none;
+  stroke:#fff;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round
+}
+.topbar-contact:hover{color:#fff;background:linear-gradient(135deg,#304653,#1b2b37)}
+@media(max-width:700px){
+  .topbar{position:sticky;top:0}
+  .topbar .container{min-height:42px;align-items:center;flex-direction:row;justify-content:space-between;gap:8px}
+  .topbar-contact{padding:4px 9px;gap:6px;font-size:11px}
+  .topbar-contact svg{width:19px;height:19px}
+  .site-nav{position:relative;top:auto}
+  .site-nav .container{height:64px;gap:8px}
+  .site-nav nav{font-size:12px;gap:clamp(8px,2.5vw,15px);flex-wrap:nowrap;white-space:nowrap;justify-content:center}
+}
+@media(max-width:390px){
+  .site-nav nav{font-size:11px;gap:7px}
+  .site-nav .container{gap:5px}
+  .site-brand.site-logo{width:92px}
+}
