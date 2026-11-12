@@ -13,3 +13,14 @@
 .social-link:hover{background:#f5f7f8;border-color:#cbd2d8;transform:translateY(-1px)}
 @media(max-width:700px){.site-nav .container{gap:8px}.site-nav nav{gap:9px}.social-links{gap:5px}.social-link{width:30px;height:30px}.social-link svg{width:16px;height:16px}}
 @media(max-width:390px){.site-nav nav{gap:7px;font-size:10px}.social-links{gap:4px}.social-link{width:27px;height:27px}}
+
+
+/* WhatsApp header button and daily visitor pill */
+.whatsapp-link{border-color:#bce8cc;background:#eaf8ef}
+.whatsapp-link svg{width:21px;height:21px;fill:none;stroke:#16a34a;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round}
+.whatsapp-link:hover{background:#d9f4e3;border-color:#16a34a}
+.daily-visits{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid #ffffff35;border-radius:999px;background:linear-gradient(135deg,#263744,#17232d);box-shadow:0 2px 8px #0002;color:#f2f6f8;font-size:11px;letter-spacing:.1px}
+.daily-visits .visitors-icon{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#e7473f;color:#fff;font-size:14px;font-weight:900}
+.daily-visits strong{min-width:25px;color:#fff;font-size:13px;font-variant-numeric:tabular-nums}
+@media(max-width:700px){.whatsapp-link{width:30px;height:30px}.whatsapp-link svg{width:18px;height:18px}}
+@media(max-width:560px){.topbar .container{align-items:center;flex-direction:row;justify-content:space-between;gap:8px}.daily-visits{font-size:10px;padding:4px 8px}.daily-visits .visitors-icon{width:17px;height:17px;font-size:12px}.daily-visits strong{font-size:12px}}
