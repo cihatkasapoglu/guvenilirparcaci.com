@@ -146,3 +146,20 @@
   .topbar-contact,.daily-visits{gap:4px;padding-left:5px;padding-right:5px;font-size:9px}
   .topbar-contact strong,.daily-visits strong{font-size:10px}
 }
+
+
+/* Desktop social WhatsApp image sizing fix */
+.social-link img{
+  display:block;
+  width:19px;
+  height:19px;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+}
+.social-links .whatsapp-link{
+  overflow:hidden;
+}
+@media(min-width:701px){
+  .social-links .whatsapp-link img{width:19px;height:19px}
+}
