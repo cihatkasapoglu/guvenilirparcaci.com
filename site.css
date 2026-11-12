@@ -103,3 +103,46 @@
   .site-nav .container{gap:5px}
   .site-brand.site-logo{width:92px}
 }
+
+
+/* Stable responsive header: sticky black strip only */
+#siteHeader{display:contents}
+.topbar{position:sticky;top:0;z-index:1000}
+.site-nav{position:relative;top:auto;z-index:5}
+.topbar .container{display:flex;align-items:stretch;justify-content:space-between;gap:12px;padding:6px 0}
+.topbar-contact,.daily-visits{
+  flex:1 1 0;min-width:0;height:36px;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:4px 10px;border:1px solid #ffffff35;border-radius:999px;
+  background:linear-gradient(135deg,#263744,#17232d);box-shadow:0 2px 8px #0002;
+  color:#f2f6f8;font-size:11px;line-height:1;white-space:nowrap;overflow:hidden
+}
+.topbar-contact strong,.daily-visits strong{font-size:12px;color:#fff;flex:0 0 auto}
+.topbar-contact img{width:22px;height:22px;object-fit:contain;flex:0 0 auto}
+.daily-visits .visitors-icon{width:22px;height:22px;flex:0 0 22px}
+.site-nav .container{min-width:0}
+@media(max-width:700px){
+  .topbar{position:sticky;top:0;z-index:1000}
+  .topbar .container{width:calc(100% - 20px);min-height:48px;padding:6px 0;gap:8px}
+  .topbar-contact,.daily-visits{height:36px;flex:1 1 0;min-width:0;padding:4px 7px;gap:6px;font-size:10px}
+  .topbar-contact img{width:21px;height:21px}
+  .daily-visits .visitors-icon{width:21px;height:21px;flex-basis:21px}
+  .daily-visits strong,.topbar-contact strong{font-size:11px}
+  .site-nav{position:relative;top:auto}
+  .site-nav .container{width:calc(100% - 20px);height:62px;display:grid;grid-template-columns:minmax(68px,1fr) auto auto;align-items:center;justify-content:initial;gap:6px}
+  .site-brand.site-logo{width:100%;max-width:112px;height:46px;min-width:0}
+  .site-nav nav{display:flex;align-items:center;justify-content:center;gap:clamp(5px,1.8vw,10px);min-width:0;flex-wrap:nowrap;white-space:nowrap;font-size:clamp(10px,3vw,12px);line-height:1.2}
+  .site-nav nav a{display:block;white-space:nowrap}
+  .social-links{display:flex;align-items:center;gap:3px;min-width:0}
+  .social-link{width:25px;height:25px;flex:0 0 25px}
+  .social-link svg,.social-link img{width:15px;height:15px;object-fit:contain;display:block}
+  .site-cta{display:none}
+}
+@media(max-width:360px){
+  .site-nav .container{grid-template-columns:68px auto auto;gap:5px}
+  .site-nav nav{font-size:10px;gap:5px}
+  .social-links{gap:2px}
+  .social-link{width:23px;height:23px;flex-basis:23px}
+  .social-link svg,.social-link img{width:14px;height:14px}
+  .topbar-contact,.daily-visits{gap:4px;padding-left:5px;padding-right:5px;font-size:9px}
+  .topbar-contact strong,.daily-visits strong{font-size:10px}
+}
