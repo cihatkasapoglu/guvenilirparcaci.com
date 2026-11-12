@@ -180,3 +180,8 @@
 @media(max-width:360px){
   .topbar-contact .whatsapp-wordmark{font-size:11px}
 }
+
+
+/* Keep WhatsApp label green and phone number white */
+.topbar-contact .whatsapp-wordmark{color:#25D366!important}
+.topbar-contact strong{color:#fff!important}
