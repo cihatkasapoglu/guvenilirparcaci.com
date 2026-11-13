@@ -40,5 +40,19 @@ window.GP_FIRMS = [
   description:"Oto Bahtiyar, Hyundai ve Kia markalarına yönelik yedek parça alanında faaliyet gösteren firmadır.",
   sponsored:true,
   approved:true
+ },
+ {
+  id:"uzman-hyundai",
+  name:"Uzman Hyundai",
+  brands:["hyundai","kia"],
+  address:"Ostim OSB Mah. 1126. Cad. No: 7, Yenimahalle / Ankara",
+  phone:"0507 412 19 50",
+  whatsapp:"905074121950",
+  website:"https://uzmanhyundai.com/",
+  shortDescription:"Hyundai ve Kia çıkma yedek parça firması.",
+  description:"Uzman Hyundai, Ankara Ostim'de Hyundai ve Kia marka araçlara yönelik çıkma yedek parça, motor ve şanzıman alanlarında faaliyet gösterir. Parça ve uyumluluk bilgisi için firmayla telefon veya WhatsApp üzerinden doğrudan iletişime geçebilirsiniz.",
+  sponsored:false,
+  approved:true,
+  photos:[]
  }
 ];
