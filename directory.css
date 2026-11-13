@@ -25,3 +25,13 @@
 .hyundai-faq details p{margin:10px 0 2px}
 .hyundai-guide-note{padding:13px 15px;border-left:3px solid var(--red);background:var(--soft);border-radius:0 9px 9px 0}
 @media(max-width:560px){.hyundai-guide .hyundai-model-list{grid-template-columns:1fr;gap:3px}.hyundai-faq details{padding:12px}}
+
+/* Hyundai expanded guide navigation and model/category sections */
+.hyundai-guide-nav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 28px}
+.hyundai-guide-nav a{display:inline-flex;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--soft);font-size:12px;text-decoration:none!important}
+.hyundai-model-sections,.hyundai-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0 24px}
+.hyundai-model-sections>section,.hyundai-category-grid>div{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
+.hyundai-model-sections h3,.hyundai-category-grid h3{font-size:15px;line-height:1.4;margin:0 0 7px}
+.hyundai-model-sections p,.hyundai-category-grid p{margin:0;font-size:13px}
+.hyundai-guide h2[id]{scroll-margin-top:20px}
+@media(max-width:560px){.hyundai-model-sections,.hyundai-category-grid{grid-template-columns:1fr}.hyundai-model-sections>section,.hyundai-category-grid>div{padding:14px}}
