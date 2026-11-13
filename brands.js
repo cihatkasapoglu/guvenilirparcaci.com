@@ -80,6 +80,7 @@ window.GP_FIRMS = [
  {
   id:"tugul-fiat",
   name:"Tuğul Fiat",
+  logo:"/images/firms/tugul-fiat/unnamed (1).webp",
   brands:["fiat"],
   address:"Ayyıldız Sanayi Sitesi, 1126. Cadde No: 7, Ostim, Yenimahalle / Ankara",
   phone:"0536 656 23 63",
@@ -89,7 +90,9 @@ window.GP_FIRMS = [
   description:"Tuğul Fiat, Ankara Ostim'de Fiat marka araçlara yönelik çıkma motor, şanzıman ve yedek parça alanında faaliyet göstermektedir. Doblo, Egea, Fiorino, Linea, Punto ve diğer Fiat modelleri için parça, stok ve uyumluluk bilgisi almak üzere firmayla telefon veya WhatsApp üzerinden iletişime geçebilirsiniz. Türkiye geneline gönderim ve ürün garantisi koşullarını doğrudan firmadan teyit edebilirsiniz.",
   sponsored:false,
   approved:true,
-  photos:[],
-  photoSlots:true
+  photos:[
+   "/images/firms/tugul-fiat/unnamed.webp",
+   "/images/firms/tugul-fiat/unnamed (2).webp"
+  ]
  }
 ];
