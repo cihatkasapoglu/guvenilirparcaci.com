@@ -44,6 +44,7 @@ window.GP_FIRMS = [
  {
   id:"smg-otomotiv",
   name:"SMG Otomotiv",
+  logo:"/images/firms/smg-otomotiv/indir.webp",
   brands:["volkswagen","seat","audi","skoda"],
   address:"OSTİM OSB Mah. 1127/1. Sk. No: 18, 06374 Yenimahalle / Ankara, Türkiye",
   phone:"0530 832 68 28",
@@ -52,7 +53,13 @@ window.GP_FIRMS = [
   description:"SMG Otomotiv, Volkswagen, SEAT, Audi ve Škoda marka araçlar için çıkma ve sıfır yedek parça alanında faaliyet göstermektedir. Parça ararken aracınızın modelini, üretim yılını, motor kodunu ve mevcut parçanın referans numarasını paylaşarak uyumluluk teyidi alabilirsiniz. Stok, fiyat, ürün durumu, garanti ve teslimat bilgilerini doğrudan firmayla görüşebilirsiniz.",
   sponsored:true,
   approved:true,
-  photos:[]
+  photos:[
+   "/images/firms/smg-otomotiv/WhatsApp Image 2026-11-13 at 15.04.57.jpeg",
+   "/images/firms/smg-otomotiv/WhatsApp Image 2026-11-13 at 15.04.57 (1).jpeg",
+   "/images/firms/smg-otomotiv/WhatsApp Image 2026-11-13 at 20.07.49.jpeg",
+   "/images/firms/smg-otomotiv/WhatsApp Image 2026-11-13 at 20.07.50.jpeg",
+   "/images/firms/smg-otomotiv/WhatsApp Image 2026-11-13 at 20.07.50 (1).jpeg"
+  ]
  },
  {
   id:"uzman-hyundai",
