@@ -35,3 +35,8 @@
 .hyundai-model-sections p,.hyundai-category-grid p{margin:0;font-size:13px}
 .hyundai-guide h2[id]{scroll-margin-top:20px}
 @media(max-width:560px){.hyundai-model-sections,.hyundai-category-grid{grid-template-columns:1fr}.hyundai-model-sections>section,.hyundai-category-grid>div{padding:14px}}
+
+/* Brand-specific long-form guides */
+.brand-deep-guide .hyundai-model-sections>section{min-width:0}
+.brand-deep-guide .hyundai-model-sections h3{color:var(--ink)}
+.brand-deep-guide .hyundai-guide-nav a:hover{border-color:#efaaa6}
