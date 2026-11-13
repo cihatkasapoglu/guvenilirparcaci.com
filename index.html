@@ -7,7 +7,7 @@
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="website"><meta property="og:locale" content="tr_TR"><meta property="og:site_name" content="GüvenilirParçacı"><meta property="og:title" content="Yedek Parça Firma Rehberi | GüvenilirParçacı"><meta property="og:description" content="Türkiye genelinde otomobil markalarına göre yedek parça firmalarını ve iletişim bilgilerini keşfedin."><meta property="og:url" content="https://guvenilirparcaci.com/"><meta property="og:image" content="https://guvenilirparcaci.com/banner.PNG">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Yedek Parça Firma Rehberi | GüvenilirParçacı"><meta name="twitter:description" content="Türkiye genelinde otomobil markalarına göre yedek parça firmalarını keşfedin."><meta name="twitter:image" content="https://guvenilirparcaci.com/banner.PNG">
-<link rel="canonical" href="https://guvenilirparcaci.com/"><link rel="icon" type="image/jpeg" href="/guvenilir-parcaci.jpg?v=logo3"><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://guvenilirparcaci.com/#organization","name":"GüvenilirParçacı","url":"https://guvenilirparcaci.com/","logo":"https://guvenilirparcaci.com/guvenilir-parcaci.jpg","sameAs":["https://instagram.com/guvenilirparcaci","https://www.facebook.com/guvenilirparcaci"]},{"@type":"WebSite","@id":"https://guvenilirparcaci.com/#website","url":"https://guvenilirparcaci.com/","name":"GüvenilirParçacı","inLanguage":"tr-TR","publisher":{"@id":"https://guvenilirparcaci.com/#organization"}},{"@type":"WebPage","@id":"https://guvenilirparcaci.com/#webpage","url":"https://guvenilirparcaci.com/","name":"Yedek Parça Firma Rehberi | GüvenilirParçacı","description":"Türkiye genelinde otomobil markalarına göre yedek parça firmalarını ve iletişim bilgilerini keşfedin.","isPartOf":{"@id":"https://guvenilirparcaci.com/#website"},"about":{"@id":"https://guvenilirparcaci.com/#organization"},"inLanguage":"tr-TR"}]}</script>
+<link rel="preload" as="image" href="/banner.PNG?v=1" fetchpriority="high"><link rel="preconnect" href="https://upload.wikimedia.org"><link rel="preconnect" href="https://commons.wikimedia.org"><link rel="canonical" href="https://guvenilirparcaci.com/"><link rel="icon" type="image/jpeg" href="/guvenilir-parcaci.jpg?v=logo3"><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://guvenilirparcaci.com/#organization","name":"GüvenilirParçacı","url":"https://guvenilirparcaci.com/","logo":"https://guvenilirparcaci.com/guvenilir-parcaci.jpg","sameAs":["https://instagram.com/guvenilirparcaci","https://www.facebook.com/guvenilirparcaci"]},{"@type":"WebSite","@id":"https://guvenilirparcaci.com/#website","url":"https://guvenilirparcaci.com/","name":"GüvenilirParçacı","inLanguage":"tr-TR","publisher":{"@id":"https://guvenilirparcaci.com/#organization"}},{"@type":"WebPage","@id":"https://guvenilirparcaci.com/#webpage","url":"https://guvenilirparcaci.com/","name":"Yedek Parça Firma Rehberi | GüvenilirParçacı","description":"Türkiye genelinde otomobil markalarına göre yedek parça firmalarını ve iletişim bilgilerini keşfedin.","isPartOf":{"@id":"https://guvenilirparcaci.com/#website"},"about":{"@id":"https://guvenilirparcaci.com/#organization"},"inLanguage":"tr-TR"}]}</script>
 <link rel="stylesheet" href="directory.css"><link rel="stylesheet" href="site.css?v=whatsapp2">
 <style>
 .hero{background:#101820;padding:24px 0 28px;color:white}
@@ -50,12 +50,12 @@
 <div class="hero-slider" id="heroSlider">
   <div class="slider-stage">
     <div class="hero-slide is-active" data-slide="0">
-      <img class="hero-banner" src="/banner.PNG?v=1" alt="Türkiye’nin Güvenilir Yedek Parçacıları">
+      <img class="hero-banner" src="/banner.PNG?v=1" alt="Türkiye’nin Güvenilir Yedek Parçacıları" fetchpriority="high" loading="eager" decoding="async">
       <div class="featured-label">ÖNE ÇIKAN FİRMALAR</div>
     </div>
     <div class="hero-slide" data-slide="1">
       <a class="firm-banner-link" href="/firma/oto-bahtiyar" aria-label="Oto Bahtiyar firma profilini incele">
-        <img class="hero-banner firm-banner-image" src="/oto-bahtiyar-banner.PNG" alt="Oto Bahtiyar öne çıkan firma bannerı" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <img class="hero-banner firm-banner-image" data-src="/oto-bahtiyar-banner.PNG" loading="lazy" decoding="async" alt="Oto Bahtiyar öne çıkan firma bannerı" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="firm-banner-fallback"><span>ÖNE ÇIKAN FİRMA</span><strong>OTO BAHTİYAR</strong><small>Hyundai &amp; Kia Yedek Parça</small><em>Firma profilini incele&nbsp; ›</em></div>
       </a>
       <div class="featured-label">ÖNE ÇIKAN FİRMALAR</div>
@@ -72,7 +72,7 @@
  const dots=document.getElementById("sliderDots");
  let current=0;
  slides.forEach((slide,index)=>{const dot=document.createElement("button");dot.type="button";dot.setAttribute("aria-label",(index+1)+". banner");dot.addEventListener("click",()=>show(index));dots.appendChild(dot);});
- function show(next){slides[current].classList.remove("is-active");current=(next+slides.length)%slides.length;slides[current].classList.add("is-active");Array.from(dots.children).forEach((dot,index)=>dot.setAttribute("aria-current",index===current?"true":"false"));}
+ function show(next){slides[current].classList.remove("is-active");current=(next+slides.length)%slides.length;slides[current].classList.add("is-active");const deferredImage=slides[current].querySelector("img[data-src]");if(deferredImage){deferredImage.src=deferredImage.dataset.src;deferredImage.removeAttribute("data-src");}Array.from(dots.children).forEach((dot,index)=>dot.setAttribute("aria-current",index===current?"true":"false"));}
  document.querySelectorAll("#heroSlider .slide-next").forEach(button=>button.addEventListener("click",()=>show(current+1)));
  document.querySelectorAll("#heroSlider .slide-prev").forEach(button=>button.addEventListener("click",()=>show(current-1)));
  show(0);
