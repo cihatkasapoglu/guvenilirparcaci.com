@@ -7,7 +7,7 @@
  const f=(window.GP_FIRMS||[]).find(x=>x.id===id&&x.approved);
  const e=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const setMeta=(name,content,property=false)=>{let el=document.querySelector((property?'meta[property="':'meta[name="')+name+'"]');if(!el){el=document.createElement("meta");el.setAttribute(property?"property":"name",name);document.head.appendChild(el);}el.setAttribute("content",content);};
- const setSchema=data=>{let el=document.getElementById("gp-firm-schema");if(!el){el=document.createElement("script");el.type="application/ld+json";el.id="gp-firm-schema";document.head.appendChild(el);}el.textContent=JSON.stringify(data);};
+ const setSchema=(data,id="gp-firm-schema")=>{let el=document.getElementById(id);if(!el){el=document.createElement("script");el.type="application/ld+json";el.id=id;document.head.appendChild(el);}el.textContent=JSON.stringify(data);};
  if(!f){
   setMeta("robots","noindex,follow");
   root.innerHTML='<a class="back-link" href="/markalar.html">← Marka rehberine dön</a><div class="empty-state"><strong>Firma profili bulunamadı.</strong>Bu firma henüz rehberde yayınlanmıyor.</div>';
@@ -20,7 +20,7 @@
  const firmImage=f.logo||((f.photos||[])[0]||"");if(firmImage){const absoluteImage=new URL(firmImage,location.origin).href;setMeta("og:image",absoluteImage,true);setMeta("twitter:image",absoluteImage);}
  setMeta("twitter:card","summary");setMeta("twitter:title",document.title);setMeta("twitter:description",firmDescription);
  setSchema({"@context":"https://schema.org","@type":"Organization","name":f.name,"url":"https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id),"description":firmDescription,"telephone":f.phone||undefined,"email":f.email||undefined,"image":firmImage?new URL(firmImage,location.origin).href:undefined,"sameAs":f.website?[f.website]:undefined,"address":f.address?{"@type":"PostalAddress","streetAddress":f.address,"addressCountry":"TR"}:undefined,"knowsAbout":firmBrands});
- setSchema({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Ana Sayfa","item":"https://guvenilirparcaci.com/"},{"@type":"ListItem","position":2,"name":"Firma Profili","item":"https://guvenilirparcaci.com/markalar.html"},{"@type":"ListItem","position":3,"name":f.name,"item":"https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id)}]});
+ setSchema({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Ana Sayfa","item":"https://guvenilirparcaci.com/"},{"@type":"ListItem","position":2,"name":"Firma Profili","item":"https://guvenilirparcaci.com/markalar.html"},{"@type":"ListItem","position":3,"name":f.name,"item":"https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id)}]},"gp-firm-breadcrumb-schema");
 
  let canonical=document.querySelector('link[rel="canonical"]');
  if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical);}
