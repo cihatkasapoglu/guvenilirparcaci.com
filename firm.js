@@ -13,8 +13,8 @@
   root.innerHTML='<a class="back-link" href="/markalar.html">← Marka rehberine dön</a><div class="empty-state"><strong>Firma profili bulunamadı.</strong>Bu firma henüz rehberde yayınlanmıyor.</div>';
   return;
  }
- document.title=f.name+" | GüvenilirParçacı";
  const firmBrands=(f.brands||[]).map(id=>(window.GP_BRANDS||[]).find(b=>b.id===id)?.name||id);
+ document.title=f.name+" | "+firmBrands.join(" ve ")+" Yedek Parça Firması | GüvenilirParçacı";
  const firmDescription=((f.description||f.shortDescription||"Otomotiv yedek parça alanında faaliyet gösteren firma.")+" Faaliyet gösterdiği markalar: "+firmBrands.join(", ")+". Firma iletişim ve işletme bilgileri.").slice(0,300);
  setMeta("description",firmDescription);setMeta("robots","index,follow");setMeta("og:type","profile",true);setMeta("og:title",document.title,true);setMeta("og:description",firmDescription,true);setMeta("og:url","https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id),true);
  const firmImage=f.logo||((f.photos||[])[0]||"");if(firmImage){const absoluteImage=new URL(firmImage,location.origin).href;setMeta("og:image",absoluteImage,true);setMeta("twitter:image",absoluteImage);}
