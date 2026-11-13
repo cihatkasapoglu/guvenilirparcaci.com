@@ -5,3 +5,9 @@
 .blog-related-links ul{margin:12px 0;padding-left:20px}
 .blog-related-links li{margin:8px 0;font-size:14px;line-height:1.55}
 .blog-related-links a{color:var(--blog-red);font-weight:750;text-decoration:underline;text-underline-offset:3px}
+
+.blog-index-seo{margin:42px 0 0;padding:28px 0 0;border-top:1px solid var(--blog-line);max-width:900px}
+.blog-index-seo h2{font-size:22px;line-height:1.3;letter-spacing:-.45px;margin:0 0 12px}
+.blog-index-seo p{font-size:14px;line-height:1.85;color:var(--blog-muted);margin:10px 0}
+.blog-index-seo a{color:var(--blog-red);font-weight:750;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:600px){.blog-index-seo{margin-top:30px;padding-top:22px}.blog-index-seo h2{font-size:19px}.blog-index-seo p{font-size:13px}}
