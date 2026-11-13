@@ -44,6 +44,7 @@ window.GP_FIRMS = [
  {
   id:"uzman-hyundai",
   name:"Uzman Hyundai",
+  logo:"/images/firms/uzman-hyundai/uzman-hyundai.webp",
   brands:["hyundai","kia"],
   address:"Ostim OSB Mah. 1126. Cad. No: 7, Yenimahalle / Ankara",
   phone:"0507 412 19 50",
