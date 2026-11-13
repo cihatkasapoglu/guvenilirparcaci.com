@@ -1,10 +1,18 @@
-(function(){
+(async function(){
  const root=document.getElementById("firmRoot");
  if(!root)return;
  const path=decodeURIComponent(location.pathname.replace(/\/+$/,""));
  const pathMatch=path.match(/^\/firma\/([^/]+)$/);
  const id=(pathMatch&&pathMatch[1])||new URLSearchParams(location.search).get("firma");
- const f=(window.GP_FIRMS||[]).find(x=>x.id===id&&x.approved);
+ let f=(window.GP_FIRMS||[]).find(x=>x.id===id&&x.approved);
+ try{
+  const cfg=window.GP_SUPABASE_CONFIG;
+  if(f&&cfg){
+   const response=await fetch(cfg.url+"/rest/v1/rpc/gp_public_membership_status",{method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.anonKey,"Authorization":"Bearer "+cfg.anonKey},body:"{}"});
+   if(response.ok){const rows=await response.json();const state=(rows||[]).find(x=>x.firm_id===f.id);if(state&&!state.active)f=null;}
+  }
+ }catch(error){console.warn("Üyelik durumu kontrol edilemedi:",error);}
+
  const e=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const setMeta=(name,content,property=false)=>{let el=document.querySelector((property?'meta[property="':'meta[name="')+name+'"]');if(!el){el=document.createElement("meta");el.setAttribute(property?"property":"name",name);document.head.appendChild(el);}el.setAttribute("content",content);};
  const setSchema=(data,id="gp-firm-schema")=>{let el=document.getElementById(id);if(!el){el=document.createElement("script");el.type="application/ld+json";el.id=id;document.head.appendChild(el);}el.textContent=JSON.stringify(data);};
