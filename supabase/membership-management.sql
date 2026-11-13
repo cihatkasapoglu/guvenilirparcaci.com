@@ -75,6 +75,22 @@ drop policy if exists "gp admins manage billing settings" on public.gp_billing_s
 create policy "gp admins manage billing settings" on public.gp_billing_settings
 for all to authenticated using (public.gp_is_admin()) with check (public.gp_is_admin());
 
+
+-- Public profile visibility check: exposes only firm ID and active/inactive state.
+create or replace function public.gp_public_membership_status()
+returns table (firm_id text, active boolean)
+language sql
+stable
+security definer
+set search_path = public
+as $
+  select m.firm_id,
+         (m.status = 'active' and m.ends_at is not null and m.ends_at >= current_date) as active
+  from public.gp_memberships m;
+$;
+revoke all on function public.gp_public_membership_status() from public;
+grant execute on function public.gp_public_membership_status() to anon, authenticated;
+
 create or replace function public.gp_approve_membership_payment(p_payment_id uuid)
 returns date
 language plpgsql
