@@ -53,6 +53,6 @@ window.GP_FIRMS = [
   description:"Uzman Hyundai, Ankara Ostim'de Hyundai ve Kia marka araçlara yönelik çıkma yedek parça, motor ve şanzıman alanlarında faaliyet gösterir. Parça ve uyumluluk bilgisi için firmayla telefon veya WhatsApp üzerinden doğrudan iletişime geçebilirsiniz.",
   sponsored:false,
   approved:true,
-  photos:[]
+  photos:["/images/firms/uzman-hyundai/uzman-hyundai.webp","/images/firms/uzman-hyundai/uzman-hyundai-raf.webp","/images/firms/uzman-hyundai/uzman-hyundai-raf2.webp","/images/firms/uzman-hyundai/uzman-hyundai-raf3.webp"]
  }
 ];
