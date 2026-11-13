@@ -1,4 +1,4 @@
-(function(){
+(async function(){
  const brands=window.GP_BRANDS||[], firms=window.GP_FIRMS||[];
  const params=new URLSearchParams(location.search);
  const routePath=decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g,""));
@@ -53,7 +53,16 @@
  if(!brand){root.innerHTML='<div class="container page-intro"><h1>Marka bulunamadı</h1><a class="text-link" href="markalar.html">Tüm markalara dön</a></div>';return;}
  const deepGuideBrands=["renault","fiat","volkswagen","kia","bmw","mercedes-benz","audi","opel"];
  document.title=brand.id==="hyundai"?"Hyundai Yedek Parça | Çıkma ve Sıfır Parça Rehberi ve Firmaları | GüvenilirParçacı":(deepGuideBrands.includes(brand.id)?brand.name+" Yedek Parça | Çıkma ve Sıfır Parça Rehberi ve Firmaları | GüvenilirParçacı":brand.name+" Çıkma ve Sıfır Yedek Parça Firmaları | Güvenilir Parçacı");
- const list=firms.filter(f=>(f.brands||[]).includes(brand.id)&&f.approved);
+ let membershipStates=new Map();
+ try{
+  const cfg=window.GP_SUPABASE_CONFIG;
+  if(cfg){
+   const response=await fetch(cfg.url+"/rest/v1/rpc/gp_public_membership_status",{method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.anonKey,"Authorization":"Bearer "+cfg.anonKey},body:"{}"});
+   if(response.ok){const rows=await response.json();membershipStates=new Map((rows||[]).map(x=>[x.firm_id,!!x.active]));}
+  }
+ }catch(error){console.warn("Üyelik durumu kontrol edilemedi:",error);}
+ const list=firms.filter(f=>(f.brands||[]).includes(brand.id)&&f.approved&&(!membershipStates.has(f.id)||membershipStates.get(f.id)));
+
  const sponsored=list.filter(f=>f.sponsored).slice(0,3), regular=list.filter(f=>!f.sponsored);
  // Haftalık sabit tohum: puanlar hafta boyunca sabit kalır, pazartesi yenilenir.
  const now=new Date(), monday=new Date(now);
