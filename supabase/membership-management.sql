@@ -144,7 +144,7 @@ revoke all on function public.gp_approve_membership_payment(uuid) from public;
 grant execute on function public.gp_approve_membership_payment(uuid) to authenticated;
 
 -- Yönetici hesabı oluşturma:
--- 1) Yönetim ekranından kendi e-posta adresinizle Supabase Auth hesabı açın.
+-- 1) Supabase Dashboard > Authentication > Users > Add user bölümünden kendi e-posta adresinizle yönetici hesabı oluşturun.
 -- 2) Supabase > Authentication > Users bölümünden kullanıcı UUID'sini bulun.
 -- 3) Aşağıdaki satırdaki e-posta adresini kendi adresinizle değiştirip SQL Editor'de çalıştırın:
 -- insert into public.gp_admins(user_id)
