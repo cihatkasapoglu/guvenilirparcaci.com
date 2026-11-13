@@ -91,6 +91,7 @@ window.GP_FIRMS = [
   sponsored:false,
   approved:true,
   photos:[
+   "/images/firms/tugul-fiat/unnamed (1).webp",
    "/images/firms/tugul-fiat/unnamed.webp",
    "/images/firms/tugul-fiat/unnamed (2).webp"
   ]
