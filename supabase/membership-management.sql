@@ -83,11 +83,11 @@ language sql
 stable
 security definer
 set search_path = public
-as $
+as $$
   select m.firm_id,
          (m.status = 'active' and m.ends_at is not null and m.ends_at >= current_date) as active
   from public.gp_memberships m;
-$;
+$$;
 revoke all on function public.gp_public_membership_status() from public;
 grant execute on function public.gp_public_membership_status() to anon, authenticated;
 
