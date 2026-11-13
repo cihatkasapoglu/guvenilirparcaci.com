@@ -2,7 +2,14 @@
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Üyelik Yönetimi | GüvenilirParçacı</title><link rel="stylesheet" href="site.css"><style>
 .admin-wrap{max-width:1180px;margin:38px auto 80px;padding:0 18px}.admin-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}.admin-head h1{font-size:30px;margin:0}.admin-muted{color:#64717b;font-size:13px}.admin-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}.admin-stat,.admin-card{background:#fff;border:1px solid #e5e9ed;border-radius:14px;padding:18px}.admin-stat strong{display:block;font-size:25px;margin-top:7px}.admin-card{margin:16px 0}.admin-card h2{font-size:19px;margin:0 0 14px}.admin-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.admin-field label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}.admin-field input,.admin-field select,.admin-field textarea{width:100%;min-height:42px;padding:10px 12px;border:1px solid #d6dce1;border-radius:9px;background:#fff;font:inherit}.admin-btn{border:0;border-radius:9px;padding:11px 15px;background:#202a33;color:#fff;font-weight:700;cursor:pointer}.admin-btn.red{background:#d9433b}.admin-btn.light{background:#edf1f4;color:#26313a}.admin-actions{display:flex;gap:8px;flex-wrap:wrap}.admin-table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:720px}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid #edf0f2;font-size:13px}th{color:#65717a;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.pill{display:inline-block;padding:5px 9px;border-radius:30px;font-size:11px;font-weight:800;background:#edf1f4}.pill.active{background:#e4f5e9;color:#16743b}.pill.due{background:#fff2d8;color:#8a5b00}.pill.expired{background:#fde8e7;color:#a82e29}.admin-login{max-width:420px;margin:80px auto}.admin-error{color:#b42318;font-size:13px;margin-top:10px}.admin-empty{padding:18px;color:#6a747d;text-align:center}.admin-hidden{display:none!important}@media(max-width:800px){.admin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-form{grid-template-columns:1fr 1fr}}@media(max-width:520px){.admin-form{grid-template-columns:1fr}.admin-head h1{font-size:24px}}
 </style></head><body><div id="siteHeader"></div><main class="admin-wrap">
-<section id="loginView" class="admin-card admin-login"><h1>Yönetici Girişi</h1><p class="admin-muted">Bu alan yalnızca yetkili yönetici hesabına açıktır.</p><form id="loginForm" class="admin-form" style="grid-template-columns:1fr"><div class="admin-field"><label>E-posta</label><input id="email" type="email" required autocomplete="username"></div><div class="admin-field"><label>Şifre</label><input id="password" type="password" required autocomplete="current-password"></div><button class="admin-btn red" type="submit">Giriş yap</button></form><p id="loginError" class="admin-error"></p></section>
+<section id="loginView" class="admin-card admin-login"><h1>Yönetici Girişi</h1><p class="admin-muted">Bu alan yalnızca yetkili yönetici hesabına açıktır.</p><form id="loginForm" class="admin-form" style="grid-template-columns:1fr"><div class="admin-field"><label>E-posta</label><input id="email" type="email" required autocomplete="username"></div><div class="admin-field"><label>Şifre</label><input id="password" type="password" required autocomplete="current-password"></div><button class="admin-btn red" type="submit">Giriş yap</button></form><p id="loginError" class="admin-error"></p>
+<button id="forgotPasswordBtn" class="admin-btn light" type="button" style="width:100%;margin-top:10px">Şifremi unuttum</button>
+<form id="recoveryForm" class="admin-form admin-hidden" style="grid-template-columns:1fr;margin-top:16px">
+<div class="admin-field"><label>Yeni şifre</label><input id="newPassword" type="password" minlength="8" autocomplete="new-password" placeholder="En az 8 karakter" required></div>
+<button class="admin-btn red" type="submit">Yeni şifreyi kaydet</button>
+<p id="recoveryMessage" class="admin-muted"></p>
+</form>
+</section>
 <section id="dashboard" class="admin-hidden">
 <div class="admin-head"><div><h1>Üyelik Yönetimi</h1><p class="admin-muted">Aylık üyelik, havale/EFT ve ödeme onay takibi</p></div><button id="logoutBtn" class="admin-btn light">Güvenli çıkış</button></div>
 <div class="admin-grid"><div class="admin-stat"><span class="admin-muted">Toplam üye</span><strong id="statTotal">0</strong></div><div class="admin-stat"><span class="admin-muted">Aktif üyelik</span><strong id="statActive">0</strong></div><div class="admin-stat"><span class="admin-muted">Ödeme bekleyen</span><strong id="statPending">0</strong></div><div class="admin-stat"><span class="admin-muted">Süresi dolan</span><strong id="statExpired">0</strong></div></div>
@@ -39,6 +46,37 @@ $("loginView").classList.toggle("admin-hidden",!!session);$("dashboard").classLi
 if(session){const {data:ok,error}=await db.rpc("gp_is_admin");if(error||!ok){await db.auth.signOut();$("loginView").classList.remove("admin-hidden");$("dashboard").classList.add("admin-hidden");showError("loginError","Bu hesap yönetici olarak yetkilendirilmemiş. SQL kurulumundaki yönetici ekleme adımını tamamla.");return;}await load();}
 }
 $("loginForm").addEventListener("submit",async e=>{e.preventDefault();showError("loginError","");const {error}=await db.auth.signInWithPassword({email:$("email").value,password:$("password").value});if(error){showError("loginError","Giriş başarısız: "+error.message);return;}try{await authView();}catch(err){showError("loginError",err.message);}});
+$("forgotPasswordBtn").addEventListener("click",async()=>{
+const email=$("email").value.trim();
+showError("loginError","");
+if(!email){showError("loginError","Önce e-posta adresini yaz.");$("email").focus();return;}
+$("forgotPasswordBtn").disabled=true;
+const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
+$("forgotPasswordBtn").disabled=false;
+if(error){showError("loginError","Şifre yenileme bağlantısı gönderilemedi: "+error.message);return;}
+showError("loginError","Şifre yenileme bağlantısı e-posta adresine gönderildi. Gelen kutusu ve spam klasörünü kontrol et.");
+});
+$("recoveryForm").addEventListener("submit",async e=>{
+e.preventDefault();
+const password=$("newPassword").value;
+if(password.length<8){$("recoveryMessage").textContent="Şifre en az 8 karakter olmalı.";return;}
+const {error}=await db.auth.updateUser({password});
+if(error){$("recoveryMessage").textContent="Şifre güncellenemedi: "+error.message;return;}
+await db.auth.signOut();
+$("recoveryForm").classList.add("admin-hidden");
+$("newPassword").value="";
+showError("loginError","Şifren güncellendi. Yeni şifrenle giriş yapabilirsin.");
+});
+db.auth.onAuthStateChange((event)=>{
+if(event==="PASSWORD_RECOVERY"){
+$("loginView").classList.remove("admin-hidden");
+$("dashboard").classList.add("admin-hidden");
+$("recoveryForm").classList.remove("admin-hidden");
+$("recoveryMessage").textContent="Yeni şifreni belirle.";
+$("forgotPasswordBtn").classList.add("admin-hidden");
+$("loginForm").classList.add("admin-hidden");
+}
+});
 $("logoutBtn").addEventListener("click",()=>db.auth.signOut().then(authView));
 $("memberForm").addEventListener("submit",async e=>{e.preventDefault();const f=firms.find(x=>x.id===$("firmSelect").value);if(!f)return;const row={firm_id:f.id,firm_name:f.name,phone:$("phone").value.trim(),monthly_fee:Number($("fee").value),starts_at:$("startDate").value||null,ends_at:$("endDate").value||null,status:"awaiting_payment"};const {error}=await db.from("gp_memberships").upsert(row,{onConflict:"firm_id"});if(error){alert(error.message);return;}e.target.reset();await load();});
 $("billingForm").addEventListener("submit",async e=>{e.preventDefault();const {error}=await db.from("gp_billing_settings").upsert({id:true,iban:$("iban").value.trim(),account_holder:$("accountHolder").value.trim(),updated_at:new Date().toISOString()});if(error)alert(error.message);else alert("Banka bilgileri kaydedildi.");});
