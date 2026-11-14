@@ -100,7 +100,7 @@ window.GP_FIRMS = [
  {
   id:"cihat-hyundai",
   name:"Cihat Hyundai",
-  logo:"/images/firms/cihat-hyundai/cihat-hyundai-logo.webp",
+  logo:"/images/firms/cihat-hyundai/galeri/IMG_6534.PNG",
   brands:["hyundai","kia"],
   address:"OSTİM OSB Mah. Ayyıldız Sanayi Sitesi, 1126. Cad. No: 14, Yenimahalle / Ankara",
   phone:"0553 738 38 06",
@@ -111,8 +111,18 @@ window.GP_FIRMS = [
   hours:"08:00–18:00",
   shortDescription:"Hyundai ve Kia sıfır ve çıkma yedek parça, sandık motor ve revizyonlu motor.",
   description:"Cihat Hyundai, Ankara OSTİM'de Hyundai ve Kia marka araçlara yönelik sıfır ve çıkma yedek parça, sıfır sandık motor ve revizyonlu motor seçenekleri sunar. Accent, Getz, i10, i20, i30, Elantra, Tucson ve diğer Hyundai modelleri ile Kia modelleri için parça ve motor tedariki sağlar. Anahtar teslim motor montajı ve Türkiye geneline kargo seçenekleri hakkında doğrudan firmayla iletişime geçebilirsiniz. Ürün uyumluluğunu kontrol etmek için aracın modelini, üretim yılını ve motor kodunu paylaşmanız önerilir.",
-  sponsored:false,
-  approved:true
+  rating:4.9,
+  sponsored:true,
+  approved:true,
+  photos:[
+   "/images/firms/cihat-hyundai/galeri/accent-admire-dizel-yarim-blok.JPEG",
+   "/images/firms/cihat-hyundai/galeri/accent-blue-cikma-parca.JPEG",
+   "/images/firms/cihat-hyundai/galeri/accent-yumurta-kasa-cikma-kaput.JPEG",
+   "/images/firms/cihat-hyundai/galeri/hyundai-accent-admire-cikma-yedek-parca-cihat-hyundai-yedek-parca-hyundai-accent-admire-parca-admire-cikma-parca.jpeg",
+   "/images/firms/cihat-hyundai/galeri/hyundai-accent-admire-yesil-cikma-yedek-parca-kaporta-bagaj-kapagi-komple-arka-camurluklar.jpeg",
+   "/images/firms/cihat-hyundai/galeri/hyundai-accent-milenyum-bagaj-kapagi-hatasiz-cihat-hyundai-yedek-parca.jpeg",
+   "/images/firms/cihat-hyundai/galeri/hyundai-getz-sag-arka-camurluk-mavi.jpeg"
+  ]
  }
 
 ];

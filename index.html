@@ -26,6 +26,7 @@
 .slider-dots button[aria-current="true"]{background:#fff;border-color:#fff;opacity:1;transform:scale(1.35)}
 .slider-dots button[aria-current="false"]{opacity:.48}
 .firm-banner-link{display:block;position:relative;min-height:300px;background:linear-gradient(120deg,#111b25,#263b4d 58%,#111820);overflow:hidden}
+.cihat-banner-link{display:block;position:relative;min-height:300px;overflow:hidden;background:#101820}.cihat-banner-image{width:100%;height:300px;object-fit:cover;filter:brightness(.52)}.cihat-banner-copy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:35px 7%;gap:9px;color:#fff;background:linear-gradient(90deg,#101820d9 0%,#10182080 48%,transparent 100%)}.cihat-banner-copy span{font-size:12px;font-weight:850;letter-spacing:2px;color:#ff9a92}.cihat-banner-copy strong{font-size:clamp(30px,5vw,58px);letter-spacing:1px}.cihat-banner-copy small{font-size:clamp(14px,2vw,20px);color:#e5e9ed}.cihat-banner-copy em{font-size:13px;font-style:normal;font-weight:750;margin-top:9px;background:#e7473f;padding:10px 15px;border-radius:5px}
 .firm-banner-fallback{min-height:300px;padding:45px 7%;display:none;flex-direction:column;align-items:flex-start;justify-content:center;color:white;gap:8px;background:radial-gradient(ellipse at 80% 50%,#e7473f44,transparent 45%)}
 .firm-banner-fallback span{font-size:12px;font-weight:800;letter-spacing:2px;color:#ff8a82}
 .firm-banner-fallback strong{font-size:clamp(30px,5vw,58px);letter-spacing:1px}
@@ -40,7 +41,7 @@
 .brand-card{min-height:158px}
 .brand-card img{height:76px}
 .site-footer{margin-top:0}
-@media(max-width:600px){.hero{padding:12px 0 18px}.featured-label{right:9px;bottom:9px;font-size:9px;padding:7px 9px;letter-spacing:.4px}.slider-arrows{padding:0 6px}.slider-arrows button{width:25px;height:25px;font-size:19px}.slider-dots{margin-top:7px;gap:6px}.slider-dots button{width:6px;height:6px}.firm-banner-link,.firm-banner-fallback{min-height:190px}.firm-banner-fallback{padding:25px 6%}.firm-banner-fallback span{font-size:10px}.firm-banner-fallback em{font-size:11px;padding:8px 11px}.mark-section{padding:38px 0 54px}.mark-section h2{font-size:24px}.brand-card{min-height:125px}.brand-card img{height:54px}}
+@media(max-width:600px){.hero{padding:12px 0 18px}.featured-label{right:9px;bottom:9px;font-size:9px;padding:7px 9px;letter-spacing:.4px}.slider-arrows{padding:0 6px}.slider-arrows button{width:25px;height:25px;font-size:19px}.slider-dots{margin-top:7px;gap:6px}.slider-dots button{width:6px;height:6px}.firm-banner-link,.firm-banner-fallback,.cihat-banner-link{min-height:190px}.cihat-banner-image{height:190px}.cihat-banner-copy{padding:22px 6%}.cihat-banner-copy span{font-size:9px}.cihat-banner-copy em{font-size:11px;padding:8px 11px}.firm-banner-fallback{padding:25px 6%}.firm-banner-fallback span{font-size:10px}.firm-banner-fallback em{font-size:11px;padding:8px 11px}.mark-section{padding:38px 0 54px}.mark-section h2{font-size:24px}.brand-card{min-height:125px}.brand-card img{height:54px}}
 </style>
 </head>
 <body>
@@ -54,6 +55,13 @@
       <div class="featured-label">ÖNE ÇIKAN FİRMALAR</div>
     </div>
     <div class="hero-slide" data-slide="1">
+      <a class="cihat-banner-link" href="/firma/cihat-hyundai" aria-label="Cihat Hyundai firma profilini incele">
+        <img class="hero-banner cihat-banner-image" data-src="/images/firms/cihat-hyundai/galeri/accent-admire-dizel-yarim-blok.JPEG" loading="lazy" decoding="async" alt="Cihat Hyundai Hyundai yedek parça fotoğrafı">
+        <div class="cihat-banner-copy"><span>ÖNE ÇIKAN SPONSORLU FİRMA</span><strong>CİHAT HYUNDAI</strong><small>Hyundai &amp; Kia Sıfır ve Çıkma Yedek Parça</small><em>Firma profilini incele&nbsp; ›</em></div>
+      </a>
+      <div class="featured-label">SPONSORLU FİRMA</div>
+    </div>
+    <div class="hero-slide" data-slide="2">
       <a class="firm-banner-link" href="/firma/oto-bahtiyar" aria-label="Oto Bahtiyar firma profilini incele">
         <img class="hero-banner firm-banner-image" data-src="/oto-bahtiyar-banner.PNG" loading="lazy" decoding="async" alt="Oto Bahtiyar öne çıkan firma bannerı" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="firm-banner-fallback"><span>ÖNE ÇIKAN FİRMA</span><strong>OTO BAHTİYAR</strong><small>Hyundai &amp; Kia Yedek Parça</small><em>Firma profilini incele&nbsp; ›</em></div>
