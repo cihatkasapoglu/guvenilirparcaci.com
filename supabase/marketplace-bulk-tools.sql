@@ -49,8 +49,7 @@ begin
     update public.gp_listings l
     set price = coalesce(rec.price, l.price),
         price_type = coalesce(rec.price_type, l.price_type),
-        stock_quantity = coalesce(rec.stock_quantity, l.stock_quantity),
-        updated_at = now()
+        stock_quantity = coalesce(rec.stock_quantity, l.stock_quantity)
     where l.id = rec.listing_id
       and public.gp_can_manage_firm(l.firm_id);
 
