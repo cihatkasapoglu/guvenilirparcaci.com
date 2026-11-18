@@ -51,10 +51,10 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action = body.action;
     const listingId = typeof body.listingId === "string" ? body.listingId : null;
-    if (!["create", "update", "publish", "withdraw", "delete"].includes(action)) {
+    if (!["create", "update", "publish", "withdraw", "delete", "delete_image", "reorder_images"].includes(action)) {
       return json({ error: "İşlem türü geçersiz." }, 400);
     }
-    if (["update", "publish", "withdraw", "delete"].includes(action) && !listingId) {
+    if (["update", "publish", "withdraw", "delete", "delete_image", "reorder_images"].includes(action) && !listingId) {
       return json({ error: "İlan numarası gereklidir." }, 400);
     }
 
@@ -107,6 +107,53 @@ Deno.serve(async (req) => {
       });
       if (error) return json({ error: error.message || "İlan yayınlanamadı." }, 400);
       return json({ success: true, ...data });
+    }
+
+    if (action === "reorder_images") {
+      const imageIds = body.imageIds;
+      if (!Array.isArray(imageIds) || imageIds.length < 1 || imageIds.length > 5 ||
+          imageIds.some((id: unknown) => typeof id !== "string")) {
+        return json({ error: "Fotoğraf sıralaması geçersiz." }, 400);
+      }
+      const { error } = await admin.rpc("set_listing_image_order", {
+        p_firm_id: firm.id, p_listing_id: listingId, p_image_ids: imageIds,
+      });
+      if (error) return json({ error: error.message || "Fotoğraf sıralaması kaydedilemedi." }, 400);
+      return json({ success: true });
+    }
+
+    if (action === "delete_image") {
+      const imageId = typeof body.imageId === "string" ? body.imageId : "";
+      if (!imageId) return json({ error: "Fotoğraf kaydı belirtilmedi." }, 400);
+      const { data: image, error: imageError } = await admin.from("listing_images")
+        .select("id,r2_object_key").eq("id", imageId).eq("listing_id", listingId).maybeSingle();
+      if (imageError || !image) return json({ error: "Fotoğraf bulunamadı." }, 404);
+      const accountId = Deno.env.get("R2_ACCOUNT_ID");
+      const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
+      const secretAccessKey = Deno.env.get("R2_SECRET_ACCESS_KEY");
+      const bucket = Deno.env.get("R2_BUCKET_NAME");
+      if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
+        return json({ error: "R2 silme ayarları tamamlanmamış." }, 500);
+      }
+      const s3 = new S3Client({
+        region: "auto",
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        credentials: { accessKeyId, secretAccessKey },
+      });
+      await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: image.r2_object_key }));
+      const { error: removeError } = await admin.from("listing_images")
+        .delete().eq("id", imageId).eq("listing_id", listingId);
+      if (removeError) return json({ error: "Fotoğraf kaydı silinemedi." }, 500);
+      const { data: remaining, error: remainingError } = await admin.from("listing_images")
+        .select("id").eq("listing_id", listingId).order("display_order");
+      if (remainingError) return json({ error: "Kalan fotoğraflar sıralanamadı." }, 500);
+      if (remaining?.length) {
+        const { error: orderError } = await admin.rpc("set_listing_image_order", {
+          p_firm_id: firm.id, p_listing_id: listingId, p_image_ids: remaining.map((x: {id:string}) => x.id),
+        });
+        if (orderError) return json({ error: "Fotoğraf silindi ancak sıralama güncellenemedi." }, 500);
+      }
+      return json({ success: true });
     }
 
     if (action === "withdraw") {
