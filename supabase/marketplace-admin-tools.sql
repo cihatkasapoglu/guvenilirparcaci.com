@@ -179,4 +179,40 @@ $function$;
 revoke all on function public.gp_admin_review_listing(uuid,text,text) from public;
 grant execute on function public.gp_admin_review_listing(uuid,text,text) to authenticated;
 
+create or replace function public.gp_admin_listing_counts()
+returns table (
+  total_count bigint,
+  draft_count bigint,
+  pending_count bigint,
+  active_count bigint,
+  rejected_count bigint,
+  sold_count bigint,
+  expired_count bigint
+)
+language plpgsql
+stable
+security invoker
+set search_path = public, auth
+as $function$
+begin
+  if not public.gp_is_admin() then
+    raise exception 'Bu işlem için site yöneticisi yetkisi gerekiyor.';
+  end if;
+
+  return query
+  select
+    count(*)::bigint,
+    count(*) filter (where l.status = 'draft')::bigint,
+    count(*) filter (where l.status = 'pending')::bigint,
+    count(*) filter (where l.status = 'active')::bigint,
+    count(*) filter (where l.status = 'rejected')::bigint,
+    count(*) filter (where l.status = 'sold')::bigint,
+    count(*) filter (where l.status = 'expired')::bigint
+  from public.gp_listings l;
+end;
+$function$;
+
+revoke all on function public.gp_admin_listing_counts() from public;
+grant execute on function public.gp_admin_listing_counts() to authenticated;
+
 commit;
