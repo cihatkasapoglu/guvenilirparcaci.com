@@ -233,3 +233,26 @@ After the domain and dynamic endpoint are live:
 4. Check indexing and sitemap processing reports for errors.
 
 Do not submit the dynamic sitemap before its proxy is enabled. The source code is prepared but is not deployed, and the current sitemap is not yet dynamically populated.
+
+
+## Türkçe kurulum rehberi ve tam dağıtım listesi
+
+Yeni Supabase projesinin oluşturulması, 001-010 migration sırası, e-posta doğrulama ayarları, Edge Function secrets, Cloudflare R2 hazırlığı, iki yönetici hesabı, ön yüz yer tutucuları ve canlıya geçiş kontrolleri için [Supabase ve Cloudflare R2 Kurulum Rehberi](../KURULUM_REHBERI.md) dosyasını izleyin.
+
+Tüm Edge Function'ların toplu dağıtım komutları:
+
+```bash
+supabase functions deploy complete-firm-registration
+supabase functions deploy submit-payment-notice
+supabase functions deploy manage-listing
+supabase functions deploy r2-create-upload-url
+supabase functions deploy r2-finalize-upload
+supabase functions deploy r2-manage-listing-images
+supabase functions deploy r2-create-firm-upload-url
+supabase functions deploy r2-finalize-firm-upload
+supabase functions deploy admin-management
+supabase functions deploy public-interactions
+supabase functions deploy public-sitemap
+```
+
+Bu komutlar yalnızca Supabase projesi oluşturulduktan, migration'lar uygulandıktan ve gerekli secret değerleri girildikten sonra çalıştırılmalıdır. Kaynak dosyaların GitHub'da bulunması dağıtıldıkları anlamına gelmez.
