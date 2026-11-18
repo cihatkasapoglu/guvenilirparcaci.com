@@ -325,11 +325,24 @@ $("importCsvBtn").addEventListener("click",async()=>{
  }catch(err){message("csvMessage","Aktarım tamamlanamadı: "+err.message,"error");}
  finally{$("importCsvBtn").disabled=false;}
 });
-$("downloadPriceCsv").addEventListener("click",()=>{
- const rows=[["listing_id","title","price","price_type","stock_quantity"],...listings.map(x=>[x.id,x.title,x.price??"",x.price_type||"contact",x.stock_quantity??0])];
- const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
- const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8"});
- const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="guvenilirparcaci-fiyat-stok.csv";a.click();URL.revokeObjectURL(url);
+$("downloadPriceCsv").addEventListener("click",async()=>{
+ const button=$("downloadPriceCsv");button.disabled=true;
+ try{
+  const all=[];let offset=0;
+  while(true){
+   const {data,error}=await db.from("gp_listings").select("id,title,price,price_type,stock_quantity").eq("firm_id",firm.id).order("created_at",{ascending:false}).range(offset,offset+999);
+   if(error)throw error;
+   all.push(...(data||[]));
+   if((data||[]).length<1000)break;
+   offset+=1000;
+   if(all.length>10000)throw new Error("10.000 üzeri ilan için sunucu taraflı dışa aktarma özelliği gereklidir.");
+  }
+  const rows=[["listing_id","title","price","price_type","stock_quantity"],...all.map(x=>[x.id,x.title,x.price??"",x.price_type||"contact",x.stock_quantity??0])];
+  const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
+  const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="guvenilirparcaci-fiyat-stok.csv";a.click();URL.revokeObjectURL(url);
+ }catch(err){alert("CSV dışa aktarılamadı: "+err.message);}
+ finally{button.disabled=false;}
 });
 $("updateCsvBtn").addEventListener("click",async()=>{
  const file=$("updateCsvFile").files?.[0];if(!file){message("updateCsvMessage","Önce güncelleme CSV dosyasını seçin.","error");return;}
