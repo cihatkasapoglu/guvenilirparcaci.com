@@ -68,7 +68,7 @@ for each row execute procedure public.create_company_for_new_user();
 -- Firma veya ilan sahibi kendi hesabını/ilanını yönetici onayı olmadan yayına alamaz.
 create or replace function public.protect_marketplace_approval()
 returns trigger language plpgsql
-as $
+as $approval$
 begin
   if (auth.jwt()->'app_metadata'->>'role') is distinct from 'admin' then
     if tg_table_name = 'companies' and new.status is distinct from old.status then
@@ -80,7 +80,7 @@ begin
   end if;
   return new;
 end;
-$;
+$approval$;
 
 drop trigger if exists protect_company_approval on public.companies;
 create trigger protect_company_approval before update on public.companies
