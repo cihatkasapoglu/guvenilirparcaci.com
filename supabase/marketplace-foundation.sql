@@ -412,13 +412,28 @@ using (public.gp_can_access_firm(firm_id) or public.gp_is_admin());
 drop policy if exists gp_listings_firm_insert on public.gp_listings;
 create policy gp_listings_firm_insert on public.gp_listings
 for insert to authenticated
-with check (public.gp_can_manage_firm(firm_id));
+with check (
+  public.gp_can_manage_firm(firm_id)
+  and exists (select 1 from public.gp_firms f where f.id = firm_id and f.status = 'active')
+);
 
 drop policy if exists gp_listings_firm_update on public.gp_listings;
 create policy gp_listings_firm_update on public.gp_listings
 for update to authenticated
-using (public.gp_can_manage_firm(firm_id) or public.gp_is_admin())
-with check (public.gp_can_manage_firm(firm_id) or public.gp_is_admin());
+using (
+  public.gp_is_admin()
+  or (
+    public.gp_can_manage_firm(firm_id)
+    and exists (select 1 from public.gp_firms f where f.id = firm_id and f.status = 'active')
+  )
+)
+with check (
+  public.gp_is_admin()
+  or (
+    public.gp_can_manage_firm(firm_id)
+    and exists (select 1 from public.gp_firms f where f.id = firm_id and f.status = 'active')
+  )
+);
 
 drop policy if exists gp_listings_firm_delete on public.gp_listings;
 create policy gp_listings_firm_delete on public.gp_listings
@@ -457,6 +472,7 @@ with check (
     select 1 from public.gp_listings l
     where l.id = gp_listing_images.listing_id
       and public.gp_can_manage_firm(l.firm_id)
+      and exists (select 1 from public.gp_firms f where f.id = l.firm_id and f.status = 'active')
   )
 );
 
@@ -467,14 +483,26 @@ using (
   exists (
     select 1 from public.gp_listings l
     where l.id = gp_listing_images.listing_id
-      and (public.gp_can_manage_firm(l.firm_id) or public.gp_is_admin())
+      and (
+        public.gp_is_admin()
+        or (
+          public.gp_can_manage_firm(l.firm_id)
+          and exists (select 1 from public.gp_firms f where f.id = l.firm_id and f.status = 'active')
+        )
+      )
   )
 )
 with check (
   exists (
     select 1 from public.gp_listings l
     where l.id = gp_listing_images.listing_id
-      and (public.gp_can_manage_firm(l.firm_id) or public.gp_is_admin())
+      and (
+        public.gp_is_admin()
+        or (
+          public.gp_can_manage_firm(l.firm_id)
+          and exists (select 1 from public.gp_firms f where f.id = l.firm_id and f.status = 'active')
+        )
+      )
   )
 );
 
