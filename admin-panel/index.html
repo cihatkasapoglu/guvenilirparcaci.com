@@ -92,7 +92,7 @@ $("loginBtn").onclick=async()=>{try{if(!configured)throw new Error("Önce admin-
 async function enter(){const {data:{session}}=await supabase.auth.getSession();if(!session)return;$("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");try{await refresh();}catch(e){showMessage(e.message,true);}}
 $("logout").onclick=async()=>{await supabase.auth.signOut();location.reload();};
 $("nav").onclick=e=>{const b=e.target.closest("button[data-kind]");if(!b)return;currentKind=b.dataset.kind;page=1;document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x===b));loadList();};
-$("featuredSettings").onclick=()=>modal("Öne çıkarma ayarları",[{name:"priceTry",label:"Ücret (TL)",type:"number",value:299},{name:"durationDays",label:"Süre (gün)",type:"number",value:7}],v=>api({action:"set_featured_settings",priceTry:Number(v.priceTry),durationDays:Number(v.durationDays)}));
+$("featuredSettings").onclick=async()=>{try{const s=await api({action:"get_featured_settings"});modal("Öne çıkarma ayarları",[{name:"priceTry",label:"Ücret (TL)",type:"number",value:s.priceTry},{name:"durationDays",label:"Süre (gün)",type:"number",value:s.durationDays}],v=>api({action:"set_featured_settings",priceTry:Number(v.priceTry),durationDays:Number(v.durationDays)}));}catch(e){showMessage(e.message,true);}};
 $("refresh").onclick=refresh;$("prev").onclick=()=>{if(page>1){page--;loadList();}};$("next").onclick=()=>{if(page*20<total){page++;loadList();}};
 if(configured){supabase.auth.onAuthStateChange((_event,session)=>{if(session)enter();});enter();}else{$("loginMsg").textContent="Kurulum bekleniyor: Supabase URL ve anon key değerleri girilmelidir.";$("loginMsg").className="notice";}
 </script>
