@@ -90,6 +90,12 @@
 <div class="field"><label for="csvFile">CSV dosyası</label><input id="csvFile" type="file" accept=".csv,text/csv"></div>
 <p class="muted">Gerekli sütunlar: title, category_slug, condition. Durum değerleri: new, used, reconditioned. Fiyat türü: fixed, contact, negotiable. Fotoğraflar CSV ile aktarılmaz.</p>
 <div class="actions"><button class="btn red" id="importCsvBtn" type="button">İlanları içe aktar</button><span id="csvMessage" class="muted"></span></div>
+<hr style="border:0;border-top:1px solid #e8ecef;margin:22px 0">
+<h3>Toplu fiyat ve stok güncelleme</h3>
+<p class="muted">Önce mevcut ilanlarınızı CSV olarak indirin. listing_id sütununu değiştirmeden fiyat, fiyat türü ve stok sütunlarını düzenleyip dosyayı tekrar yükleyin.</p>
+<div class="actions"><button class="btn light" id="downloadPriceCsv" type="button">Mevcut ilanlarımı CSV indir</button></div>
+<div class="field" style="margin-top:12px"><label for="updateCsvFile">Düzenlenmiş fiyat/stok CSV dosyası</label><input id="updateCsvFile" type="file" accept=".csv,text/csv"></div>
+<div class="actions"><button class="btn red" id="updateCsvBtn" type="button">Fiyat ve stokları güncelle</button><span id="updateCsvMessage" class="muted"></span></div>
 </section>
 <section class="panel-card">
 <div class="section-title"><h2>İlanlarım</h2><span class="muted">Taslak, onay bekleyen ve yayındaki ilanlarınız</span></div>
@@ -307,6 +313,42 @@ $("importCsvBtn").addEventListener("click",async()=>{
   $("csvFile").value="";message("csvMessage",inserted+" ilan onay kuyruğuna gönderildi. "+duplicates+" mükerrer kayıt atlandı.","success");await loadListings();
  }catch(err){message("csvMessage","Aktarım tamamlanamadı: "+err.message,"error");}
  finally{$("importCsvBtn").disabled=false;}
+});
+$("downloadPriceCsv").addEventListener("click",()=>{
+ const rows=[["listing_id","title","price","price_type","stock_quantity"],...listings.map(x=>[x.id,x.title,x.price??"",x.price_type||"contact",x.stock_quantity??0])];
+ const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\\r\\n");
+ const blob=new Blob(["\\uFEFF",csv],{type:"text/csv;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="guvenilirparcaci-fiyat-stok.csv";a.click();URL.revokeObjectURL(url);
+});
+$("updateCsvBtn").addEventListener("click",async()=>{
+ const file=$("updateCsvFile").files?.[0];if(!file){message("updateCsvMessage","Önce güncelleme CSV dosyasını seçin.","error");return;}
+ if(firmRole==="viewer"){message("updateCsvMessage","Bu hesapta güncelleme yetkisi yok.","error");return;}
+ $("updateCsvBtn").disabled=true;message("updateCsvMessage","Dosya kontrol ediliyor…");
+ try{
+  const records=parseCsv(await file.text());
+  if(!records.length)throw new Error("CSV dosyasında satır bulunamadı.");
+  if(records.length>500)throw new Error("Tek dosyada en fazla 500 ilan güncellenebilir.");
+  const updates=[],seen=new Set();
+  for(let i=0;i<records.length;i++){
+   const r=records[i],line=i+2;
+   if(!r.listing_id)throw new Error(line+". satırda listing_id eksik.");
+   if(seen.has(r.listing_id))throw new Error(line+". satırda aynı ilan numarası birden fazla kez kullanılmış.");
+   seen.add(r.listing_id);
+   const price=r.price==null||r.price===""?null:csvNumber(r.price);
+   const stock=r.stock_quantity==null||r.stock_quantity===""?null:Number(r.stock_quantity);
+   if(Number.isNaN(price))throw new Error(line+". satırda fiyat sayısal olmalıdır.");
+   if(stock!==null&&(!Number.isInteger(stock)||stock<0))throw new Error(line+". satırda stok sıfır veya pozitif tam sayı olmalıdır.");
+   const priceType=r.price_type==null||r.price_type===""?null:r.price_type;
+   if(priceType&&!["fixed","contact","negotiable"].includes(priceType))throw new Error(line+". satırda fiyat türü hatalı.");
+   if(price===null&&stock===null&&priceType===null)continue;
+   updates.push({listing_id:r.listing_id,price,stock_quantity:stock,price_type:priceType});
+  }
+  if(!updates.length)throw new Error("Güncellenecek fiyat veya stok bilgisi bulunamadı.");
+  const {data,error}=await db.rpc("gp_firm_bulk_update_listing_values",{p_updates:updates});
+  if(error)throw error;
+  $("updateCsvFile").value="";message("updateCsvMessage",data+" ilan güncellendi.","success");await loadListings();
+ }catch(err){message("updateCsvMessage","Güncelleme tamamlanamadı: "+err.message,"error");}
+ finally{$("updateCsvBtn").disabled=false;}
 });
 function editListing(id){
  const x=listings.find(v=>v.id===id);if(!x)return;editingId=id;
