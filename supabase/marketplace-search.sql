@@ -1,3 +1,5 @@
+begin;
+
 -- Public listing search RPC with bounded, count-free pagination.
 -- Run after marketplace-foundation.sql.
 -- Returns one extra-row has_more signal rather than calculating an expensive exact count.
@@ -106,3 +108,5 @@ $function$;
 
 revoke all on function public.gp_search_listings(text,uuid,text,text,text,text,text,text,numeric,numeric,integer,integer) from public;
 grant execute on function public.gp_search_listings(text,uuid,text,text,text,text,text,text,numeric,numeric,integer,integer) to anon, authenticated;
+
+commit;
