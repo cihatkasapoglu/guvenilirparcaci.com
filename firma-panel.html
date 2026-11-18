@@ -246,7 +246,7 @@ $("downloadCsvTemplate").addEventListener("click",()=>{
   ["Hyundai Accent Era D4FA Komple Motor","motor-mekanik-01","used","Hyundai","Accent Era","2006","2012","D4FA","","","12500","negotiable","1","Firma ile görüşünüz","Ankara","Yenimahalle","Ürün durumu ve uyumlu araç bilgileri"]
  ];
  const csv=rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");
- const blob=new Blob(["\\uFEFF",csv],{type:"text/csv;charset=utf-8"});
+ const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8"});
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="guvenilirparcaci-ilan-sablonu.csv";a.click();URL.revokeObjectURL(url);
 });
 $("importCsvBtn").addEventListener("click",async()=>{
