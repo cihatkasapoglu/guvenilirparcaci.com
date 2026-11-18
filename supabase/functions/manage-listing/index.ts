@@ -128,6 +128,14 @@ Deno.serve(async (req) => {
       const { data: image, error: imageError } = await admin.from("listing_images")
         .select("id,r2_object_key").eq("id", imageId).eq("listing_id", listingId).maybeSingle();
       if (imageError || !image) return json({ error: "Fotoğraf bulunamadı." }, 404);
+      if (listing.status === "published") {
+        const { count, error: countError } = await admin.from("listing_images")
+          .select("id", { count: "exact", head: true }).eq("listing_id", listingId);
+        if (countError) return json({ error: "Fotoğraf sayısı kontrol edilemedi." }, 500);
+        if ((count ?? 0) <= 1) {
+          return json({ error: "Yayındaki ilanın en az bir fotoğrafı kalmalıdır. Önce yeni fotoğraf ekleyin." }, 409);
+        }
+      }
       const accountId = Deno.env.get("R2_ACCOUNT_ID");
       const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
       const secretAccessKey = Deno.env.get("R2_SECRET_ACCESS_KEY");
