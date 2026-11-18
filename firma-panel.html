@@ -85,6 +85,12 @@
 <div class="actions span-2"><button id="saveBtn" class="btn red" type="submit">İlanı onaya gönder</button><span id="formMessage" class="muted"></span></div>
 </form>
 </section>
+<section class="panel-card" id="csvImportCard">
+<div class="section-title"><div><h2>Toplu CSV ilan aktarımı</h2><p class="muted">Excel'de hazırladığınız tabloyu CSV UTF-8 olarak kaydedip yükleyin. Her dosyada en fazla 500 ilan aktarabilirsiniz.</p></div><button class="btn light" id="downloadCsvTemplate" type="button">CSV şablonunu indir</button></div>
+<div class="field"><label for="csvFile">CSV dosyası</label><input id="csvFile" type="file" accept=".csv,text/csv"></div>
+<p class="muted">Gerekli sütunlar: title, category_slug, condition. Durum değerleri: new, used, reconditioned. Fiyat türü: fixed, contact, negotiable. Fotoğraflar CSV ile aktarılmaz.</p>
+<div class="actions"><button class="btn red" id="importCsvBtn" type="button">İlanları içe aktar</button><span id="csvMessage" class="muted"></span></div>
+</section>
 <section class="panel-card">
 <div class="section-title"><h2>İlanlarım</h2><span class="muted">Taslak, onay bekleyen ve yayındaki ilanlarınız</span></div>
 <div id="listings" class="listing-grid"><p class="muted">İlanlar yükleniyor…</p></div>
@@ -101,7 +107,7 @@ const cfg=window.GP_SUPABASE_CONFIG;
 const $=id=>document.getElementById(id);
 if(!cfg||!window.supabase){$("loginError").textContent="Supabase bağlantısı yüklenemedi.";return;}
 const db=window.supabase.createClient(cfg.url,cfg.anonKey);
-let currentUser=null, firm=null, firmRole="viewer", listings=[], editingId=null;
+let currentUser=null, firm=null, firmRole="viewer", listings=[], categories=[], editingId=null;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const slug=s=>String(s||"").toLocaleLowerCase("tr-TR").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/ı/g,"i").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,110);
 const statusLabel=s=>({draft:"Taslak",pending:"Onay bekliyor",active:"Yayında",sold:"Satıldı",expired:"Süresi doldu",rejected:"Reddedildi"}[s]||s);
@@ -209,6 +215,98 @@ $("listingForm").addEventListener("submit",async e=>{
   resetForm();$("images").value="";message("formMessage","İlanınız yönetici onayına gönderildi.","success");await loadListings();
  }catch(err){message("formMessage","İşlem tamamlanamadı: "+err.message,"error");}
  finally{$("saveBtn").disabled=false;}
+});
+function parseCsv(text){
+ const first=(text.split(/\r?\n/,1)[0]||"");
+ const delimiter=(first.split(";").length>first.split(",").length)?";":",";
+ const rows=[];let row=[],field="",quoted=false;
+ for(let i=0;i<text.length;i++){
+  const ch=text[i],next=text[i+1];
+  if(ch==='"'&&quoted&&next==='"'){field+='"';i++;continue;}
+  if(ch==='"'){quoted=!quoted;continue;}
+  if(ch===delimiter&&!quoted){row.push(field);field="";continue;}
+  if((ch==="\n"||ch==="\r")&&!quoted){if(ch==="\r"&&next==="\n")i++;row.push(field);if(row.some(x=>x.trim()!==""))rows.push(row);row=[];field="";continue;}
+  field+=ch;
+ }
+ row.push(field);if(row.some(x=>x.trim()!==""))rows.push(row);
+ if(!rows.length)return [];
+ const headers=rows.shift().map(x=>x.trim().toLowerCase().replace(/^\uFEFF/,""));
+ return rows.map(values=>Object.fromEntries(headers.map((h,i)=>[h,(values[i]||"").trim()])));
+}
+function csvNumber(value){
+ if(value==null||value==="")return null;
+ let s=String(value).trim().replace(/\s/g,"");
+ if(s.includes(",")&&s.includes("."))s=s.replace(/\./g,"").replace(",",".");
+ else s=s.replace(",",".");
+ const n=Number(s);return Number.isFinite(n)?n:NaN;
+}
+$("downloadCsvTemplate").addEventListener("click",()=>{
+ const rows=[
+  ["title","category_slug","condition","vehicle_brand","vehicle_model","vehicle_year_from","vehicle_year_to","engine_code","oem_code","part_number","price","price_type","stock_quantity","warranty_info","city","district","description"],
+  ["Hyundai Accent Era D4FA Komple Motor","motor-mekanik-01","used","Hyundai","Accent Era","2006","2012","D4FA","","","12500","negotiable","1","Firma ile görüşünüz","Ankara","Yenimahalle","Ürün durumu ve uyumlu araç bilgileri"]
+ ];
+ const csv=rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");
+ const blob=new Blob(["\\uFEFF",csv],{type:"text/csv;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="guvenilirparcaci-ilan-sablonu.csv";a.click();URL.revokeObjectURL(url);
+});
+$("importCsvBtn").addEventListener("click",async()=>{
+ const file=$("csvFile").files?.[0];if(!file){message("csvMessage","Önce bir CSV dosyası seçin.","error");return;}
+ if(firmRole==="viewer"){message("csvMessage","Bu hesapta ilan ekleme yetkisi yok.","error");return;}
+ $("importCsvBtn").disabled=true;message("csvMessage","CSV dosyası okunuyor…");
+ try{
+  const records=parseCsv(await file.text());
+  if(!records.length)throw new Error("CSV dosyasında aktarılacak satır bulunamadı.");
+  if(records.length>500)throw new Error("Bir dosyada en fazla 500 ilan aktarabilirsiniz.");
+  const categoryBySlug=new Map(categories.map(x=>[x.slug,x.id]));
+  const seen=new Set(),prepared=[];
+  for(let i=0;i<records.length;i++){
+   const r=records[i],line=i+2;
+   if(!r.title||!r.category_slug||!r.condition)throw new Error(line+". satır: title, category_slug ve condition zorunludur.");
+   if(!["new","used","reconditioned"].includes(r.condition))throw new Error(line+". satır: condition new, used veya reconditioned olmalıdır.");
+   const categoryId=categoryBySlug.get(r.category_slug);
+   if(!categoryId)throw new Error(line+". satır: kategori bulunamadı ("+r.category_slug+").");
+   const price=csvNumber(r.price);
+   if(Number.isNaN(price))throw new Error(line+". satır: fiyat sayısal olmalıdır.");
+   const priceType=r.price_type||"contact";
+   if(!["fixed","contact","negotiable"].includes(priceType))throw new Error(line+". satır: price_type fixed, contact veya negotiable olmalıdır.");
+   if(priceType==="fixed"&&price===null)throw new Error(line+". satır: fixed fiyat için price zorunludur.");
+   const stock=r.stock_quantity===""?1:Number(r.stock_quantity);
+   if(!Number.isInteger(stock)||stock<0)throw new Error(line+". satır: stock_quantity sıfır veya pozitif tam sayı olmalıdır.");
+   const yearFrom=r.vehicle_year_from?Number(r.vehicle_year_from):null,yearTo=r.vehicle_year_to?Number(r.vehicle_year_to):null;
+   if((yearFrom!==null&&!Number.isInteger(yearFrom))||(yearTo!==null&&!Number.isInteger(yearTo)))throw new Error(line+". satır: model yılı tam sayı olmalıdır.");
+   const key=[r.part_number,r.vehicle_brand,r.vehicle_model,r.condition].join("|").toLocaleLowerCase("tr-TR");
+   if(r.part_number&&seen.has(key))continue;
+   if(r.part_number)seen.add(key);
+   prepared.push({
+    firm_id:firm.id,category_id:categoryId,title:r.title.slice(0,150),
+    slug:slug(r.title)+"-"+crypto.randomUUID().slice(0,8),description:r.description||null,
+    condition:r.condition,vehicle_brand:r.vehicle_brand||null,vehicle_model:r.vehicle_model||null,
+    vehicle_year_from:yearFrom,vehicle_year_to:yearTo,engine_code:r.engine_code||null,
+    oem_code:r.oem_code||null,part_number:r.part_number||null,price,
+    price_type:priceType,stock_quantity:stock,warranty_info:r.warranty_info||null,
+    city:r.city||firm.city||null,district:r.district||firm.district||null,status:"pending"
+   });
+  }
+  if(!prepared.length)throw new Error("Aktarılabilecek yeni ilan bulunamadı.");
+  let inserted=0,duplicates=0;
+  const batchSize=50;
+  for(let i=0;i<prepared.length;i+=batchSize){
+   const batch=prepared.slice(i,i+batchSize);
+   const parts=[...new Set(batch.map(x=>x.part_number).filter(Boolean))];
+   let existingKeys=new Set();
+   if(parts.length){
+    const old=await db.from("gp_listings").select("part_number,vehicle_brand,vehicle_model,condition").eq("firm_id",firm.id).in("part_number",parts);
+    if(old.error)throw old.error;
+    existingKeys=new Set((old.data||[]).map(x=>[x.part_number,x.vehicle_brand,x.vehicle_model,x.condition].join("|").toLocaleLowerCase("tr-TR")));
+   }
+   const fresh=batch.filter(x=>!x.part_number||!existingKeys.has([x.part_number,x.vehicle_brand,x.vehicle_model,x.condition].join("|").toLocaleLowerCase("tr-TR")));
+   duplicates+=batch.length-fresh.length;
+   if(fresh.length){const result=await db.from("gp_listings").insert(fresh);if(result.error)throw result.error;inserted+=fresh.length;}
+   message("csvMessage",inserted+" ilan eklendi, "+duplicates+" mükerrer kayıt atlandı…");
+  }
+  $("csvFile").value="";message("csvMessage",inserted+" ilan onay kuyruğuna gönderildi. "+duplicates+" mükerrer kayıt atlandı.","success");await loadListings();
+ }catch(err){message("csvMessage","Aktarım tamamlanamadı: "+err.message,"error");}
+ finally{$("importCsvBtn").disabled=false;}
 });
 function editListing(id){
  const x=listings.find(v=>v.id===id);if(!x)return;editingId=id;
