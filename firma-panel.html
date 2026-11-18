@@ -156,7 +156,7 @@ async function resolveFirm(){
 }
 async function loadListings(){
  const [pageRes,countRes]=await Promise.all([
-  db.from("gp_listings").select("*,gp_categories(name)").eq("firm_id",firm.id).order("updated_at",{ascending:false}).range((listingPage-1)*listingPageSize,listingPage*listingPageSize),
+  db.from("gp_listings").select("*,gp_categories(name)").eq("firm_id",firm.id).order("updated_at",{ascending:false}).order("id",{ascending:false}).range((listingPage-1)*listingPageSize,listingPage*listingPageSize),
   db.rpc("gp_firm_listing_counts",{p_firm_id:firm.id})
  ]);
  if(pageRes.error||countRes.error)throw pageRes.error||countRes.error;
