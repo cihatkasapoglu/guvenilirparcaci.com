@@ -47,6 +47,11 @@
 <button class="btn red" type="submit">Giriş yap</button>
 </form>
 <p id="loginError" class="error"></p>
+<button id="forgotPasswordBtn" class="btn light" type="button" style="width:100%;margin-top:8px">Şifremi unuttum</button>
+<form id="recoveryForm" class="panel-form hidden" style="grid-template-columns:1fr;margin-top:14px">
+<div class="field"><label for="newPassword">Yeni şifre</label><input id="newPassword" type="password" minlength="8" autocomplete="new-password" placeholder="En az 8 karakter" required></div>
+<button class="btn red" type="submit">Yeni şifreyi kaydet</button><p id="recoveryMessage" class="muted"></p>
+</form>
 <p class="muted"><a href="https://wa.me/908505102110?text=Merhaba%2C%20G%C3%BCvenilirPar%C3%A7ac%C4%B1%20firma%20paneli%20i%C3%A7in%20hesap%20ba%C5%9Fvurusu%20yapmak%20istiyorum." target="_blank" rel="noopener">Firma hesabı başvurusu</a></p>
 </section>
 
@@ -407,6 +412,23 @@ async function dashboardStart(){
  try{await resolveFirm();await loadLookups();await loadListings();show("dashboard");}
  catch(err){show("login");message("loginError",err.message,"error");}
 }
+$("forgotPasswordBtn").addEventListener("click",async()=>{
+ const email=$("email").value.trim();
+ if(!email){message("loginError","Önce e-posta adresinizi yazın.","error");$("email").focus();return;}
+ $("forgotPasswordBtn").disabled=true;
+ const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
+ $("forgotPasswordBtn").disabled=false;
+ if(error)message("loginError","Şifre yenileme bağlantısı gönderilemedi: "+error.message,"error");
+ else message("loginError","Şifre yenileme bağlantısı e-posta adresinize gönderildi. Gelen kutusu ve spam klasörünü kontrol edin.","success");
+});
+$("recoveryForm").addEventListener("submit",async e=>{
+ e.preventDefault();const password=$("newPassword").value;
+ if(password.length<8){$("recoveryMessage").textContent="Şifre en az 8 karakter olmalıdır.";return;}
+ const {error}=await db.auth.updateUser({password});
+ if(error){$("recoveryMessage").textContent="Şifre güncellenemedi: "+error.message;return;}
+ await db.auth.signOut();$("recoveryForm").classList.add("hidden");$("loginForm").classList.remove("hidden");$("forgotPasswordBtn").classList.remove("hidden");$("newPassword").value="";
+ message("loginError","Şifreniz güncellendi. Yeni şifrenizle giriş yapabilirsiniz.","success");
+});
 $("loginForm").addEventListener("submit",async e=>{e.preventDefault();message("loginError","");const {error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error){message("loginError","Giriş başarısız: "+error.message,"error");return;}await dashboardStart();});
 $("logoutBtn").addEventListener("click",async()=>{await db.auth.signOut();firm=null;show("login");});
 $("refreshBtn").addEventListener("click",()=>loadListings().catch(err=>alert(err.message)));
@@ -418,7 +440,7 @@ $("listings").addEventListener("click",e=>{
  const del=e.target.closest("[data-delete]");if(del)deleteListing(del.dataset.delete);
  const sold=e.target.closest("[data-sold]");if(sold)markSold(sold.dataset.sold);
 });
-db.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"){firm=null;show("login");}else if(event==="SIGNED_IN"&&session){currentUser=session.user;dashboardStart().catch(err=>message("loginError",err.message,"error"));}});
+db.auth.onAuthStateChange((event,session)=>{if(event==="PASSWORD_RECOVERY"){show("login");$("loginForm").classList.add("hidden");$("forgotPasswordBtn").classList.add("hidden");$("recoveryForm").classList.remove("hidden");$("recoveryMessage").textContent="Yeni şifrenizi belirleyin.";}else if(event==="SIGNED_OUT"){firm=null;show("login");}else if(event==="SIGNED_IN"&&session){currentUser=session.user;dashboardStart().catch(err=>message("loginError",err.message,"error"));}});
 dashboardStart().catch(err=>message("loginError",err.message,"error"));
 })();
 </script>
