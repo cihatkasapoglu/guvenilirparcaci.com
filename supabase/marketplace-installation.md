@@ -19,6 +19,8 @@ Bu dosyalar `marketplace-foundation` dalında hazırlanmıştır. Henüz Supabas
    - Yönetici tarafından firma kullanıcısı atama ve ilan onaylama fonksiyonları.
 7. `supabase/marketplace-search.sql`
    - Arama, filtreleme ve sayfalama RPC fonksiyonu.
+8. `supabase/marketplace-bulk-tools.sql`
+   - Firmaların kendi ilanlarında fiyat ve stok bilgilerini toplu güncellemesi.
 
 Dosyaları sırayla açıp tamamını SQL Editor'e yapıştırın ve çalıştırın. Bir adım hata verirse sonraki dosyaya geçmeyin; hatayı çözmeden devam etmek bağımlılık sorunlarına yol açabilir.
 
