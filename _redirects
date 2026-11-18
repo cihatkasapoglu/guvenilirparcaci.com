@@ -1,0 +1,3 @@
+# Cloudflare Pages clean URLs for firm and listing detail pages
+/firma/*  /firma.html  200
+/ilan/*    /ilan.html   200
