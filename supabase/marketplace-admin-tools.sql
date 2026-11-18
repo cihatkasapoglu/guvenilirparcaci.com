@@ -228,10 +228,10 @@ begin
     count(*)::bigint,
     count(*) filter (where l.status = 'draft')::bigint,
     count(*) filter (where l.status = 'pending')::bigint,
-    count(*) filter (where l.status = 'active')::bigint,
+    count(*) filter (where l.status = 'active' and (l.expires_at is null or l.expires_at > now()))::bigint,
     count(*) filter (where l.status = 'rejected')::bigint,
     count(*) filter (where l.status = 'sold')::bigint,
-    count(*) filter (where l.status = 'expired')::bigint
+    count(*) filter (where l.status = 'expired' or (l.status = 'active' and l.expires_at <= now()))::bigint
   from public.gp_listings l;
 end;
 $function$;
