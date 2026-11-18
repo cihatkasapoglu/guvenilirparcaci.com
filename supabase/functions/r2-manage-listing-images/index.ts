@@ -91,22 +91,18 @@ Deno.serve(async (req) => {
         .from("listing_images").delete().eq("id", imageId).eq("listing_id", listingId);
       if (deleteRowError) return json({ error: "Fotoğraf kaydı silinemedi." }, 500);
 
-      // Database deletion is authoritative. If R2 deletion fails, a cleanup job can retry it.
+      const { error: orderError } = await admin.rpc("set_listing_image_order", {
+        p_firm_id: firm.id,
+        p_listing_id: listingId,
+        p_image_ids: remaining.map((image) => image.id),
+      });
+      if (orderError) return json({ error: "Fotoğraf sıralaması güncellenemedi." }, 500);
+
+      // Database deletion is authoritative. If R2 deletion fails, the orphan can be cleaned later.
       try {
         await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: target.r2_object_key }));
       } catch {
         return json({ warning: "Fotoğraf kaydı silindi; dosyanın fiziksel temizliği daha sonra tekrar denenecek." }, 202);
-      }
-
-      for (let i = 0; i < remaining.length; i++) {
-        const { error } = await admin.from("listing_images")
-          .update({ display_order: 10 + i, is_cover: false }).eq("id", remaining[i].id);
-        if (error) return json({ error: "Fotoğraf sıralaması güncellenemedi." }, 500);
-      }
-      for (let i = 0; i < remaining.length; i++) {
-        const { error } = await admin.from("listing_images")
-          .update({ display_order: i + 1, is_cover: i === 0 }).eq("id", remaining[i].id);
-        if (error) return json({ error: "Fotoğraf sıralaması güncellenemedi." }, 500);
       }
       return json({ success: true, images: remaining.length });
     }
@@ -133,19 +129,12 @@ Deno.serve(async (req) => {
       return json({ error: "Sıralama listesi ilandaki tüm fotoğrafları tam olarak içermeli." }, 400);
     }
 
-    // Move rows to temporary unique positions first so swaps cannot violate the unique order index.
-    for (let i = 0; i < imageIds.length; i++) {
-      const { error } = await admin.from("listing_images")
-        .update({ display_order: 10 + i, is_cover: false })
-        .eq("id", imageIds[i]).eq("listing_id", listingId);
-      if (error) return json({ error: "Fotoğraf sıralaması güncellenemedi." }, 500);
-    }
-    for (let i = 0; i < imageIds.length; i++) {
-      const { error } = await admin.from("listing_images")
-        .update({ display_order: i + 1, is_cover: i === 0 })
-        .eq("id", imageIds[i]).eq("listing_id", listingId);
-      if (error) return json({ error: "Fotoğraf sıralaması kaydedilemedi." }, 500);
-    }
+    const { error: orderError } = await admin.rpc("set_listing_image_order", {
+      p_firm_id: firm.id,
+      p_listing_id: listingId,
+      p_image_ids: imageIds,
+    });
+    if (orderError) return json({ error: "Fotoğraf sıralaması kaydedilemedi." }, 500);
     return json({ success: true, images: imageIds.length });
   } catch (_error) {
     return json({ error: "Fotoğraf işlemi tamamlanamadı." }, 500);
