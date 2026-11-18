@@ -45,9 +45,10 @@ Beklenen ilk aktarım: 28 marka, 5 firma, 15 ana kategori, 89 alt kategori ve 19
 
 1. Supabase Dashboard → Authentication → URL Configuration bölümünde `https://guvenilirparcaci.com/firma-panel.html` adresini Redirect URLs listesine ekleyin. Şifre yenileme bağlantıları bu sayfaya döner.
 2. Supabase Dashboard → Authentication → Users bölümünden firma kullanıcısına ait hesabı oluşturun.
-2. Web sitesinde `/yonetim-ilanlar.html` sayfasını yönetici hesabıyla açın.
-3. Firma kullanıcısı tanımlama bölümünde firmayı, Auth kullanıcısının e-posta adresini ve rolünü seçin.
-4. Kullanıcı `/firma-panel.html` adresinden giriş yapabilir.
+3. Web sitesinde `/yonetim-ilanlar.html` sayfasını yönetici hesabıyla açın.
+4. Firma henüz kayıtlı değilse “Yeni firma ekle” bölümünden firma profilini ve araç markalarını oluşturun.
+5. Firma kullanıcısı tanımlama bölümünde firmayı, Auth kullanıcısının e-posta adresini ve rolünü seçin.
+6. Kullanıcı `/firma-panel.html` adresinden giriş yapabilir.
 
 Kullanıcılar kendilerini başka bir firmaya bağlayamaz. Firma yetkisini yalnızca site yöneticisi verir.
 
