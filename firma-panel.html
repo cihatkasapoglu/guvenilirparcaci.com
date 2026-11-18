@@ -30,7 +30,7 @@
 .listing h3{font-size:15px;margin:0 0 5px}.listing p{font-size:12px;color:#68747e;margin:4px 0}
 .tag{display:inline-block;border-radius:30px;padding:4px 8px;background:#edf1f4;font-size:11px;font-weight:750}
 .tag.active{background:#e4f5e9;color:#16743b}.tag.pending{background:#fff2d8;color:#8a5b00}.tag.rejected{background:#fde8e7;color:#a82e29}
-.hidden{display:none!important}.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.hidden{display:none!important}.pagination{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:18px}.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 @media(max-width:760px){.listing-grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){.panel-form{grid-template-columns:1fr}.span-2{grid-column:auto}.listing{grid-template-columns:76px minmax(0,1fr)}.listing img{width:76px;height:76px}.panel-card{padding:15px}}
 </style>
@@ -99,7 +99,7 @@
 </section>
 <section class="panel-card">
 <div class="section-title"><h2>İlanlarım</h2><span class="muted">Taslak, onay bekleyen ve yayındaki ilanlarınız</span></div>
-<div id="listings" class="listing-grid"><p class="muted">İlanlar yükleniyor…</p></div>
+<div id="listings" class="listing-grid"><p class="muted">İlanlar yükleniyor…</p></div><div class="pagination"><button class="btn light" id="prevListingsBtn" type="button" disabled>Önceki</button><span id="listingPageLabel" class="muted">Sayfa 1</span><button class="btn light" id="nextListingsBtn" type="button" disabled>Sonraki</button></div>
 </section>
 </section>
 </main>
@@ -113,7 +113,8 @@ const cfg=window.GP_SUPABASE_CONFIG;
 const $=id=>document.getElementById(id);
 if(!cfg||!window.supabase){$("loginError").textContent="Supabase bağlantısı yüklenemedi.";return;}
 const db=window.supabase.createClient(cfg.url,cfg.anonKey);
-let currentUser=null, firm=null, firmRole="viewer", listings=[], categories=[], editingId=null;
+let currentUser=null, firm=null, firmRole="viewer", listings=[], categories=[], editingId=null, listingPage=1, listingsHasMore=false;
+const listingPageSize=50;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const slug=s=>String(s||"").toLocaleLowerCase("tr-TR").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/ı/g,"i").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,110);
 const statusLabel=s=>({draft:"Taslak",pending:"Onay bekliyor",active:"Yayında",sold:"Satıldı",expired:"Süresi doldu",rejected:"Reddedildi"}[s]||s);
@@ -149,17 +150,27 @@ async function resolveFirm(){
  $("district").value=firm.district||"";
 }
 async function loadListings(){
- const {data,error}=await db.from("gp_listings").select("*,gp_categories(name)").eq("firm_id",firm.id).order("updated_at",{ascending:false});
- if(error)throw error;
- listings=data||[];
+ const [pageRes,countRes]=await Promise.all([
+  db.from("gp_listings").select("*,gp_categories(name)").eq("firm_id",firm.id).order("updated_at",{ascending:false}).range((listingPage-1)*listingPageSize,listingPage*listingPageSize),
+  db.rpc("gp_firm_listing_counts",{p_firm_id:firm.id})
+ ]);
+ if(pageRes.error||countRes.error)throw pageRes.error||countRes.error;
+ const pageRows=pageRes.data||[];
+ if(!pageRows.length&&listingPage>1){listingPage--;return loadListings();}
+ listingsHasMore=pageRows.length>listingPageSize;
+ listings=pageRows.slice(0,listingPageSize);
+ const counts=countRes.data?.[0]||{};
  const ids=listings.map(x=>x.id);
  let images=[];
  if(ids.length){const res=await db.from("gp_listing_images").select("listing_id,storage_path,is_cover,sort_order").in("listing_id",ids).order("sort_order");if(res.error)throw res.error;images=res.data||[];}
  const imageMap={};images.forEach(img=>(imageMap[img.listing_id]??=[]).push(img));
- $("statTotal").textContent=listings.length;
- $("statActive").textContent=listings.filter(x=>x.status==="active").length;
- $("statPending").textContent=listings.filter(x=>x.status==="pending").length;
- $("statSold").textContent=listings.filter(x=>x.status==="sold").length;
+ $("statTotal").textContent=counts.total_count??0;
+ $("statActive").textContent=counts.active_count??0;
+ $("statPending").textContent=counts.pending_count??0;
+ $("statSold").textContent=counts.sold_count??0;
+ $("listingPageLabel").textContent="Sayfa "+listingPage+(listingsHasMore?" · devamı var":" · son sayfa");
+ $("prevListingsBtn").disabled=listingPage<=1;
+ $("nextListingsBtn").disabled=!listingsHasMore;
  $("listings").innerHTML=listings.length?listings.map(item=>{
   const img=(imageMap[item.id]||[]).find(x=>x.is_cover)||(imageMap[item.id]||[])[0];
   const src=img?db.storage.from("gp-listing-images").getPublicUrl(img.storage_path).data.publicUrl:"";
@@ -386,6 +397,8 @@ async function dashboardStart(){
 $("loginForm").addEventListener("submit",async e=>{e.preventDefault();message("loginError","");const {error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error){message("loginError","Giriş başarısız: "+error.message,"error");return;}await dashboardStart();});
 $("logoutBtn").addEventListener("click",async()=>{await db.auth.signOut();firm=null;show("login");});
 $("refreshBtn").addEventListener("click",()=>loadListings().catch(err=>alert(err.message)));
+$("prevListingsBtn").addEventListener("click",()=>{if(listingPage>1){listingPage--;loadListings().catch(err=>alert(err.message));}});
+$("nextListingsBtn").addEventListener("click",()=>{if(listingsHasMore){listingPage++;loadListings().catch(err=>alert(err.message));}});
 $("resetFormBtn").addEventListener("click",resetForm);
 $("listings").addEventListener("click",e=>{
  const edit=e.target.closest("[data-edit]");if(edit)editListing(edit.dataset.edit);
