@@ -125,7 +125,11 @@ Deno.serve(async (req) => {
       uploadUrl,
       objectKey,
       expiresIn: 300,
-      requiredHeaders: {\n        "Content-Type": contentType,\n        "x-amz-meta-firm-id": firm.id,\n        "x-amz-meta-listing-id": listingId,\n      },
+      requiredHeaders: {
+        "Content-Type": contentType,
+        "x-amz-meta-firm-id": firm.id,
+        "x-amz-meta-listing-id": listingId,
+      },
     });
   } catch (_error) {
     return json({ error: "Fotoğraf yükleme bağlantısı oluşturulamadı." }, 500);
