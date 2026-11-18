@@ -43,17 +43,23 @@ Deno.serve(async (req) => {
     const to = from + pageSize - 1;
 
     if (action === "dashboard") {
-      const [firms, listings, pendingPayments, complaints, memberships] = await Promise.all([
+      const [firms, listings, pendingPayments, complaints, memberships, users, favorites, views] = await Promise.all([
         admin.from("firms").select("id", { count: "exact", head: true }),
         admin.from("listings").select("id", { count: "exact", head: true }),
         admin.from("payment_notifications").select("id", { count: "exact", head: true }).eq("status", "pending"),
         admin.from("complaints").select("id", { count: "exact", head: true }).in("status", ["new", "reviewing"]),
         admin.from("memberships").select("id", { count: "exact", head: true }).eq("status", "active").gt("ends_at", new Date().toISOString()),
+        admin.from("profiles").select("id", { count: "exact", head: true }),
+        admin.from("favorites").select("listing_id", { count: "exact", head: true }),
+        admin.from("listing_views").select("id", { count: "exact", head: true }),
       ]);
+      const failed = [firms,listings,pendingPayments,complaints,memberships,users,favorites,views].find(x=>x.error);
+      if (failed) return json({ error: "Gösterge paneli istatistikleri alınamadı." }, 500);
       return json({ success: true, stats: {
         firms: firms.count ?? 0, listings: listings.count ?? 0,
         pendingPayments: pendingPayments.count ?? 0, openComplaints: complaints.count ?? 0,
-        activeMemberships: memberships.count ?? 0,
+        activeMemberships: memberships.count ?? 0, users: users.count ?? 0,
+        favorites: favorites.count ?? 0, views: views.count ?? 0,
       }});
     }
 
@@ -91,6 +97,17 @@ Deno.serve(async (req) => {
       if (error) return json({ error: "Firma durumu değiştirilemedi." }, 400);
       await admin.from("admin_logs").insert({ admin_user_id: user.id, action: "firm_status_updated", target_type: "firm", target_id: firm.id, details: { status: body.status } });
       return json({ success: true, firm });
+    }
+
+    if (action === "moderate_listing") {
+      if (typeof body.listingId !== "string" || !["withdrawn", "removed"].includes(body.status)) return json({ error: "İlan denetim bilgileri geçersiz." }, 400);
+      const { data: listing, error } = await admin.from("listings")
+        .update({ status: body.status, updated_at: new Date().toISOString() })
+        .eq("id", body.listingId).select("id,title,status,firm_id").single();
+      if (error) return json({ error: "İlanın durumu değiştirilemedi." }, 400);
+      const note = typeof body.adminNote === "string" ? body.adminNote.slice(0, 2000) : "";
+      await admin.from("admin_logs").insert({ admin_user_id: user.id, action: "listing_moderated", target_type: "listing", target_id: listing.id, details: { status: listing.status, note } });
+      return json({ success: true, listing });
     }
 
     if (action === "update_package") {
