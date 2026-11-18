@@ -131,3 +131,8 @@ The seller panel currently expects the public catalogue tables and owner-read RL
 ### Seller photo management update
 
 Apply `202611190009_listing_image_management.sql` after migrations 001-008. It adds the service-role-only RPC used to safely reorder a seller's own listing photos and set the first photo as the cover. The `manage-listing` Edge Function now supports `delete_image` and `reorder_images`; the seller panel displays thumbnails when `R2_PUBLIC_BASE_URL` is configured and provides move/delete controls. Set that public delivery base URL in the seller panel source before hosting. Never expose R2 credentials in the browser.
+
+
+## Public marketplace pages
+
+The first public buyer-facing pages are in `marketplace/index.html` (search and filters) and `marketplace/ilan.html` (listing detail and seller contact). They use the Supabase anon/publishable key only and rely on the public listing and firm-directory RLS policies. Before hosting, replace the Supabase URL/key placeholders and `R2_PUBLIC_BASE_URL_BURAYA` with the public R2 custom-domain base URL. Host the files at the intended public routes and configure the listing-detail route/SEO metadata as the site routing is finalized. These pages are source files only; they are not deployed.
