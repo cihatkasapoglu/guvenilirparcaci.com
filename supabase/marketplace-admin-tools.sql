@@ -7,6 +7,57 @@ alter table public.gp_listings add column if not exists reviewed_by uuid referen
 alter table public.gp_listings add column if not exists reviewed_at timestamptz;
 alter table public.gp_listings add column if not exists rejection_reason text;
 
+create or replace function public.gp_admin_create_firm(
+  p_firm_id text,
+  p_name text,
+  p_phone text default null,
+  p_whatsapp text default null,
+  p_address text default null,
+  p_city text default null,
+  p_district text default null,
+  p_website text default null,
+  p_short_description text default null,
+  p_description text default null,
+  p_brand_ids text[] default '{}'::text[]
+)
+returns text
+language plpgsql
+security definer
+set search_path = public, auth
+as $function$
+begin
+  if not public.gp_is_admin() then
+    raise exception 'Bu işlem için site yöneticisi yetkisi gerekiyor.';
+  end if;
+
+  if p_firm_id is null or trim(p_firm_id) = '' or p_name is null or trim(p_name) = '' then
+    raise exception 'Firma adı ve firma kısa adresi zorunludur.';
+  end if;
+
+  insert into public.gp_firms(
+    id,name,slug,phone,whatsapp,address,city,district,website,
+    short_description,description,status,is_verified
+  )
+  values(
+    trim(p_firm_id),trim(p_name),trim(p_firm_id),nullif(trim(p_phone),''),
+    nullif(regexp_replace(coalesce(p_whatsapp,''),'[^0-9]','','g'),''),
+    nullif(trim(p_address),''),nullif(trim(p_city),''),nullif(trim(p_district),''),
+    nullif(trim(p_website),''),nullif(trim(p_short_description),''),
+    nullif(trim(p_description),''),'active',false
+  );
+
+  insert into public.gp_firm_brands(firm_id,brand_id)
+  select trim(p_firm_id), brand_id
+  from unnest(coalesce(p_brand_ids,'{}'::text[])) as brand_id
+  on conflict do nothing;
+
+  return trim(p_firm_id);
+end;
+$function$;
+
+revoke all on function public.gp_admin_create_firm(text,text,text,text,text,text,text,text,text,text,text[]) from public;
+grant execute on function public.gp_admin_create_firm(text,text,text,text,text,text,text,text,text,text,text[]) to authenticated;
+
 create or replace function public.gp_admin_assign_firm_user(
   p_firm_id text,
   p_user_id uuid,
