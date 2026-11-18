@@ -397,6 +397,7 @@ create policy gp_listings_public_read on public.gp_listings
 for select to anon, authenticated
 using (
   status = 'active'
+  and (expires_at is null or expires_at > now())
   and exists (
     select 1 from public.gp_firms f
     where f.id = gp_listings.firm_id
@@ -449,6 +450,7 @@ using (
     join public.gp_firms f on f.id = l.firm_id
     where l.id = gp_listing_images.listing_id
       and l.status = 'active'
+      and (l.expires_at is null or l.expires_at > now())
       and public.gp_firm_publicly_visible(f.id)
   )
 );
@@ -590,7 +592,7 @@ security invoker
 set search_path = public, auth
 as $function$
 begin
-  if not public.gp_is_admin() then
+  if not public.gp_is_admin() and current_user not in ('postgres','service_role') then
     if tg_op = 'INSERT' and new.status not in ('draft','pending') then
       raise exception 'Yeni ilanlar yönetici onayı olmadan yayınlanamaz.';
     end if;
