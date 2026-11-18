@@ -67,6 +67,7 @@ Deno.serve(async (request) => {
       const firmPages = Math.ceil((firmCount || 0) / PAGE_SIZE);
       const entries = [
         indexEntry(sitemapUrl("/sitemap-static.xml")),
+        indexEntry(sitemapUrl("/sitemap-catalog.xml")),
         ...Array.from({ length: listingPages }, (_, i) =>
           indexEntry(sitemapUrl("/sitemap-listings.xml?page=" + (i + 1)))),
         ...Array.from({ length: firmPages }, (_, i) =>
