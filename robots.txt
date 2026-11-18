@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /firma-panel/
+Disallow: /admin-panel/
+Sitemap: https://guvenilirparcaci.com/sitemap.xml
