@@ -205,19 +205,24 @@ After creating the Supabase project, applying all database migrations, and setti
 supabase functions deploy public-sitemap
 ```
 
-### Connect the public domain
+### Connect the public domain (Cloudflare Pages)
 
-For Cloudflare Pages, add this proxy rule to the root `_redirects` file after replacing `YOUR_PROJECT_REF` with the real Supabase project reference:
+The repository includes Cloudflare Pages Functions:
+- `functions/sitemap.xml.ts`
+- `functions/sitemap-listings.xml.ts`
+- `functions/sitemap-firms.xml.ts`
+- shared proxy: `functions/_shared/sitemap-proxy.ts`
 
-```text
-/sitemap.xml https://YOUR_PROJECT_REF.supabase.co/functions/v1/public-sitemap 200
-/sitemap-listings.xml /functions/v1/public-sitemap?type=listings 200
-/sitemap-firms.xml /functions/v1/public-sitemap?type=firms 200
-```
+Cloudflare Pages automatically routes these files to the matching XML endpoints. In Cloudflare Pages project settings, add the environment variable `SUPABASE_URL` with the real Supabase Project URL. Do not add the service-role key to Cloudflare Pages; the proxy only needs the project URL, and the Supabase Edge Function uses the public anon key.
 
-The two query-parameter rewrites above are relative to the site and are only suitable if a Pages Function proxy is implemented. For a direct Supabase proxy, use explicit absolute Supabase function URLs with the corresponding `?type=` query string, or implement a Cloudflare Pages Function at `functions/sitemap-listings.xml.ts` and `functions/sitemap-firms.xml.ts`. Do not add these routes before the project reference exists and the function is deployed.
+Deploy the Supabase Edge Function first, then deploy the website to Cloudflare Pages. The `functions/sitemap.xml.ts` route proxies `/sitemap.xml` to the sitemap index. The listing and firm routes preserve the requested `?page=` query parameter.
 
-For other hosting providers, configure equivalent reverse-proxy rewrites to the Supabase function. Keep `sitemap-static.xml` as a separate static file. The existing `sitemap.xml` remains a static fallback until the dynamic proxy is enabled.
+For a hosting provider other than Cloudflare Pages, configure equivalent server-side proxy routes to:
+- `https://YOUR_PROJECT_REF.supabase.co/functions/v1/public-sitemap`
+- `https://YOUR_PROJECT_REF.supabase.co/functions/v1/public-sitemap?type=listings&page=1`
+- `https://YOUR_PROJECT_REF.supabase.co/functions/v1/public-sitemap?type=firms&page=1`
+
+Do not expose service-role credentials in browser code or static redirects.
 
 ### Google Search Console
 
