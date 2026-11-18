@@ -54,6 +54,7 @@ using (
     where l.id::text = (storage.foldername(name))[2]
       and l.firm_id = (storage.foldername(name))[1]
       and public.gp_can_manage_firm(l.firm_id)
+      and exists (select 1 from public.gp_firms f where f.id = l.firm_id and f.status = 'active')
   )
 )
 with check (
@@ -65,6 +66,7 @@ with check (
     where l.id::text = (storage.foldername(name))[2]
       and l.firm_id = (storage.foldername(name))[1]
       and public.gp_can_manage_firm(l.firm_id)
+      and exists (select 1 from public.gp_firms f where f.id = l.firm_id and f.status = 'active')
   )
 );
 
