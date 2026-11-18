@@ -90,7 +90,11 @@ Deno.serve(async (req) => {
         p_compatibilities: cleanCompatibilities,
       });
       if (saveError) return json({ error: saveError.message || "İlan kaydedilemedi." }, 400);
-      return json({ success: true, listingId: savedId, status: "draft" });
+      const { data: savedListing, error: readError } = await admin.from("listings")
+        .select("id,status,expires_at,slug").eq("id", savedId).eq("firm_id", firm.id).single();
+      if (readError || !savedListing) return json({ error: "İlan kaydedildi ancak son durumu okunamadı." }, 500);
+      return json({ success: true, listingId: savedId, status: savedListing.status,
+        expiresAt: savedListing.expires_at, slug: savedListing.slug });
     }
 
     const { data: listing, error: listingError } = await admin.from("listings")
