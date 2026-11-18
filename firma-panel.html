@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#111820">
+<title>Firma İlan Paneli | GüvenilirParçacı</title>
+<link rel="stylesheet" href="site.css">
+<style>
+:root{color-scheme:light}
+.panel-wrap{max-width:1180px;margin:34px auto 80px;padding:0 18px;color:#18232c}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.panel-head h1{font-size:clamp(24px,3vw,32px);margin:0}.muted{color:#66727d;font-size:13px;line-height:1.6}
+.panel-card{background:#fff;border:1px solid #e5e9ed;border-radius:14px;padding:20px;margin:16px 0;box-shadow:0 5px 22px #15202b08}
+.login-card{max-width:430px;margin:70px auto}
+.panel-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.field label{display:block;font-size:12px;font-weight:750;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;min-height:43px;padding:10px 12px;border:1px solid #d6dce1;border-radius:9px;background:#fff;font:inherit;color:#18232c}
+.field textarea{min-height:110px;resize:vertical}.span-2{grid-column:1/-1}
+.btn{border:0;border-radius:9px;padding:11px 16px;background:#202a33;color:white;font-weight:750;cursor:pointer}
+.btn.red{background:#df493f}.btn.light{background:#edf1f4;color:#25313a}.btn:disabled{opacity:.55;cursor:wait}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.error{color:#b42318;font-size:13px;white-space:pre-wrap}.success{color:#16743b;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.stat{background:#fff;border:1px solid #e5e9ed;border-radius:12px;padding:15px}.stat span{display:block;color:#68747e;font-size:12px}.stat strong{display:block;font-size:24px;margin-top:5px}
+.listing-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.listing{border:1px solid #e5e9ed;border-radius:12px;padding:14px;display:grid;grid-template-columns:100px minmax(0,1fr);gap:13px}
+.listing img{width:100px;height:92px;object-fit:cover;border-radius:8px;background:#f0f2f4}
+.listing h3{font-size:15px;margin:0 0 5px}.listing p{font-size:12px;color:#68747e;margin:4px 0}
+.tag{display:inline-block;border-radius:30px;padding:4px 8px;background:#edf1f4;font-size:11px;font-weight:750}
+.tag.active{background:#e4f5e9;color:#16743b}.tag.pending{background:#fff2d8;color:#8a5b00}.tag.rejected{background:#fde8e7;color:#a82e29}
+.hidden{display:none!important}.pagination{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:18px}.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+@media(max-width:760px){.listing-grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.panel-form{grid-template-columns:1fr}.span-2{grid-column:auto}.listing{grid-template-columns:76px minmax(0,1fr)}.listing img{width:76px;height:76px}.panel-card{padding:15px}}
+</style>
+</head>
+<body>
+<div id="siteHeader"></div>
+<main class="panel-wrap">
+<section id="loginView" class="panel-card login-card">
+<h1>Firma Girişi</h1>
+<p class="muted">Firmanıza tanımlanmış kullanıcı hesabıyla giriş yapın. Firma hesabınız henüz oluşturulmadıysa başvuru için bizimle iletişime geçin.</p>
+<form id="loginForm" class="panel-form" style="grid-template-columns:1fr">
+<div class="field"><label for="email">E-posta</label><input id="email" type="email" required autocomplete="username"></div>
+<div class="field"><label for="password">Şifre</label><input id="password" type="password" required autocomplete="current-password"></div>
+<button class="btn red" type="submit">Giriş yap</button>
+</form>
+<p id="loginError" class="error"></p>
+<button id="forgotPasswordBtn" class="btn light" type="button" style="width:100%;margin-top:8px">Şifremi unuttum</button>
+<form id="recoveryForm" class="panel-form hidden" style="grid-template-columns:1fr;margin-top:14px">
+<div class="field"><label for="newPassword">Yeni şifre</label><input id="newPassword" type="password" minlength="8" autocomplete="new-password" placeholder="En az 8 karakter" required></div>
+<button class="btn red" type="submit">Yeni şifreyi kaydet</button><p id="recoveryMessage" class="muted"></p>
+</form>
+<p class="muted"><a href="https://wa.me/908505102110?text=Merhaba%2C%20G%C3%BCvenilirPar%C3%A7ac%C4%B1%20firma%20paneli%20i%C3%A7in%20hesap%20ba%C5%9Fvurusu%20yapmak%20istiyorum." target="_blank" rel="noopener">Firma hesabı başvurusu</a></p>
+</section>
+
+<section id="dashboard" class="hidden">
+<div class="panel-head">
+<div><h1>Firma İlan Paneli</h1><p class="muted" id="firmLabel">Firma hesabınız</p></div>
+<div class="actions"><button class="btn light" id="refreshBtn" type="button">Yenile</button><button class="btn light" id="logoutBtn" type="button">Güvenli çıkış</button></div>
+</div>
+<div class="stats">
+<div class="stat"><span>Toplam ilan</span><strong id="statTotal">0</strong></div>
+<div class="stat"><span>Yayında</span><strong id="statActive">0</strong></div>
+<div class="stat"><span>Onay bekleyen</span><strong id="statPending">0</strong></div>
+<div class="stat"><span>Satıldı</span><strong id="statSold">0</strong></div>
+</div>
+<section class="panel-card" id="editorCard">
+<div class="section-title"><div><h2 id="formHeading">Yeni ilan ekle</h2><p class="muted">İlanlar yönetici incelemesinden sonra yayınlanır. İlanı düzenlediğinizde yeniden onaya gönderilir.</p></div><button id="resetFormBtn" class="btn light" type="button">Formu temizle</button></div>
+<form id="listingForm" class="panel-form">
+<div class="field span-2"><label for="title">İlan başlığı *</label><input id="title" maxlength="150" required placeholder="Örn. Hyundai Accent Era 1.5 CRDi D4FA Komple Motor"></div>
+<div class="field"><label for="category">Kategori *</label><select id="category" required><option value="">Kategori seçin</option></select></div>
+<div class="field"><label for="condition">Ürün durumu *</label><select id="condition" required><option value="new">Sıfır</option><option value="used">Çıkma</option><option value="reconditioned">Revizyonlu</option></select></div>
+<div class="field"><label for="vehicleBrand">Araç markası</label><select id="vehicleBrand"><option value="">Marka seçin</option></select></div>
+<div class="field"><label for="vehicleModel">Araç modeli</label><input id="vehicleModel" maxlength="100" placeholder="Örn. Accent Era"></div>
+<div class="field"><label for="yearFrom">Model yılı başlangıç</label><input id="yearFrom" type="number" min="1900" max="2200" placeholder="2006"></div>
+<div class="field"><label for="yearTo">Model yılı bitiş</label><input id="yearTo" type="number" min="1900" max="2200" placeholder="2012"></div>
+<div class="field"><label for="engineCode">Motor kodu</label><input id="engineCode" maxlength="60" placeholder="Örn. D4FA"></div>
+<div class="field"><label for="oemCode">OEM kodu</label><input id="oemCode" maxlength="100"></div>
+<div class="field"><label for="partNumber">Parça numarası</label><input id="partNumber" maxlength="100"></div>
+<div class="field"><label for="priceType">Fiyat türü</label><select id="priceType"><option value="contact">Fiyat için iletişime geçin</option><option value="fixed">Sabit fiyat</option><option value="negotiable">Pazarlık payı var</option></select></div>
+<div class="field"><label for="price">Fiyat (TL)</label><input id="price" type="number" min="0" step="0.01" placeholder="Fiyat girilmediyse boş bırakın"></div>
+<div class="field"><label for="stock">Stok adedi</label><input id="stock" type="number" min="0" step="1" value="1"></div>
+<div class="field"><label for="warranty">Garanti bilgisi</label><input id="warranty" maxlength="180" placeholder="Varsa garanti koşulları"></div>
+<div class="field"><label for="city">Şehir</label><input id="city" maxlength="80" placeholder="Ankara"></div>
+<div class="field"><label for="district">İlçe</label><input id="district" maxlength="80" placeholder="Yenimahalle"></div>
+<div class="field span-2"><label for="description">Ürün açıklaması</label><textarea id="description" maxlength="5000" placeholder="Ürünün durumu, uyumlu araçlar ve diğer bilgileri yazın."></textarea></div>
+<div class="field span-2"><label for="images">Ürün fotoğrafları (en fazla 10 adet; JPEG, PNG, WebP veya AVIF; her biri en fazla 5 MB)</label><input id="images" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple><p class="muted">Fotoğraflar ilanınıza ait ayrı depolama alanında tutulur. İlk fotoğraf kapak görseli olur.</p></div>
+<div class="actions span-2"><button id="saveBtn" class="btn red" type="submit">İlanı onaya gönder</button><span id="formMessage" class="muted"></span></div>
+</form>
+</section>
+<section class="panel-card" id="csvImportCard">
+<div class="section-title"><div><h2>Toplu CSV ilan aktarımı</h2><p class="muted">Excel (.xlsx, .xls) veya CSV UTF-8 dosyanızı yükleyin. Her dosyada en fazla 500 ilan aktarabilirsiniz.</p></div><button class="btn light" id="downloadCsvTemplate" type="button">CSV şablonunu indir</button></div>
+<div class="field"><label for="csvFile">CSV dosyası</label><input id="csvFile" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"></div>
+<p class="muted">Gerekli sütunlar: title, category_slug, condition. Durum değerleri: new, used, reconditioned. Fiyat türü: fixed, contact, negotiable. Fotoğraflar CSV ile aktarılmaz.</p>
+<div class="actions"><button class="btn red" id="importCsvBtn" type="button">İlanları içe aktar</button><span id="csvMessage" class="muted"></span></div>
+<hr style="border:0;border-top:1px solid #e8ecef;margin:22px 0">
+<h3>Toplu fiyat ve stok güncelleme</h3>
+<p class="muted">Önce mevcut ilanlarınızı CSV olarak indirin. listing_id sütununu değiştirmeden fiyat, fiyat türü ve stok sütunlarını düzenleyip dosyayı tekrar yükleyin.</p>
+<div class="actions"><button class="btn light" id="downloadPriceCsv" type="button">Mevcut ilanlarımı CSV indir</button></div>
+<div class="field" style="margin-top:12px"><label for="updateCsvFile">Düzenlenmiş fiyat/stok CSV dosyası</label><input id="updateCsvFile" type="file" accept=".csv,text/csv"></div>
+<div class="actions"><button class="btn red" id="updateCsvBtn" type="button">Fiyat ve stokları güncelle</button><span id="updateCsvMessage" class="muted"></span></div>
+</section>
+<section class="panel-card">
+<div class="section-title"><h2>İlanlarım</h2><span class="muted">Taslak, onay bekleyen ve yayındaki ilanlarınız</span></div>
+<div id="listings" class="listing-grid"><p class="muted">İlanlar yükleniyor…</p></div><div class="pagination"><button class="btn light" id="prevListingsBtn" type="button" disabled>Önceki</button><span id="listingPageLabel" class="muted">Sayfa 1</span><button class="btn light" id="nextListingsBtn" type="button" disabled>Sonraki</button></div>
+</section>
+</section>
+</main>
+<div id="siteFooter"></div>
+<script src="shared.js?v=marketplace1"></script>
+<script src="supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script>
+(function(){
+const cfg=window.GP_SUPABASE_CONFIG;
+const $=id=>document.getElementById(id);
+if(!cfg||!window.supabase){$("loginError").textContent="Supabase bağlantısı yüklenemedi.";return;}
+const db=window.supabase.createClient(cfg.url,cfg.anonKey);
+let currentUser=null, firm=null, firmRole="viewer", listings=[], categories=[], editingId=null, listingPage=1, listingsHasMore=false;
+const listingPageSize=50;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const slug=s=>String(s||"").toLocaleLowerCase("tr-TR").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/ı/g,"i").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,110);
+const statusLabel=s=>({draft:"Taslak",pending:"Onay bekliyor",active:"Yayında",sold:"Satıldı",expired:"Süresi doldu",rejected:"Reddedildi"}[s]||s);
+function message(id,text,kind){$(id).textContent=text||"";$(id).className=kind||"muted";}
+function show(view){$("loginView").classList.toggle("hidden",view!=="login");$("dashboard").classList.toggle("hidden",view!=="dashboard");}
+function resetForm(){
+ editingId=null;$("listingForm").reset();$("stock").value="1";$("formHeading").textContent="Yeni ilan ekle";$("saveBtn").textContent="İlanı onaya gönder";message("formMessage","");
+}
+async function loadLookups(){
+ const [cats,brands]=await Promise.all([
+  db.from("gp_categories").select("id,name,slug,parent_id,sort_order").eq("is_active",true).order("sort_order"),
+  db.from("gp_vehicle_brands").select("id,name").eq("is_active",true).order("sort_order")
+ ]);
+ if(cats.error||brands.error)throw cats.error||brands.error;
+ categories=cats.data||[];
+ const roots=categories.filter(x=>!x.parent_id);
+ const children=cats.data||[];
+ $("category").innerHTML='<option value="">Kategori seçin</option>'+roots.map(root=>'<optgroup label="'+esc(root.name)+'">'+children.filter(c=>c.parent_id===root.id).map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join("")+'</optgroup>').join("")+
+  roots.filter(root=>!children.some(c=>c.parent_id===root.id)).map(root=>'<option value="'+root.id+'">'+esc(root.name)+'</option>').join("");
+ $("vehicleBrand").innerHTML='<option value="">Marka seçin</option>'+(brands.data||[]).map(b=>'<option value="'+esc(b.name)+'">'+esc(b.name)+'</option>').join("");
+}
+async function resolveFirm(){
+ const {data,error}=await db.from("gp_firm_users").select("firm_id,role").eq("user_id",currentUser.id);
+ if(error)throw error;
+ if(!data?.length)throw new Error("Bu kullanıcıya henüz firma yetkisi tanımlanmamış. Firma yöneticisiyle iletişime geçin.");
+ const firmId=data[0].firm_id;
+ const {data:firmData,error:firmError}=await db.from("gp_firms").select("*").eq("id",firmId).single();
+ if(firmError)throw firmError;
+ if(firmData.status!=="active")throw new Error("Firmanız şu anda aktif değil. Lütfen GüvenilirParçacı yönetimiyle iletişime geçin.");
+ firm=firmData;firmRole=data[0].role;
+ $("firmLabel").textContent=firm.name+" · "+(firmRole==="owner"?"Firma sahibi":firmRole==="admin"?"Firma yöneticisi":firmRole==="editor"?"İlan editörü":"Görüntüleme yetkisi");
+ $("editorCard").classList.toggle("hidden",firmRole==="viewer");
+ $("city").value=firm.city||"";
+ $("district").value=firm.district||"";
+}
+async function loadListings(){
+ const [pageRes,countRes]=await Promise.all([
+  db.from("gp_listings").select("*,gp_categories(name)").eq("firm_id",firm.id).order("updated_at",{ascending:false}).order("id",{ascending:false}).range((listingPage-1)*listingPageSize,listingPage*listingPageSize),
+  db.rpc("gp_firm_listing_counts",{p_firm_id:firm.id})
+ ]);
+ if(pageRes.error||countRes.error)throw pageRes.error||countRes.error;
+ const pageRows=pageRes.data||[];
+ if(!pageRows.length&&listingPage>1){listingPage--;return loadListings();}
+ listingsHasMore=pageRows.length>listingPageSize;
+ listings=pageRows.slice(0,listingPageSize);
+ const counts=countRes.data?.[0]||{};
+ const ids=listings.map(x=>x.id);
+ let images=[];
+ if(ids.length){const res=await db.from("gp_listing_images").select("listing_id,storage_path,is_cover,sort_order").in("listing_id",ids).order("sort_order");if(res.error)throw res.error;images=res.data||[];}
+ const imageMap={};images.forEach(img=>(imageMap[img.listing_id]??=[]).push(img));
+ $("statTotal").textContent=counts.total_count??0;
+ $("statActive").textContent=counts.active_count??0;
+ $("statPending").textContent=counts.pending_count??0;
+ $("statSold").textContent=counts.sold_count??0;
+ $("listingPageLabel").textContent="Sayfa "+listingPage+(listingsHasMore?" · devamı var":" · son sayfa");
+ $("prevListingsBtn").disabled=listingPage<=1;
+ $("nextListingsBtn").disabled=!listingsHasMore;
+ $("listings").innerHTML=listings.length?listings.map(item=>{
+  const img=(imageMap[item.id]||[]).find(x=>x.is_cover)||(imageMap[item.id]||[])[0];
+  const src=img?db.storage.from("gp-listing-images").getPublicUrl(img.storage_path).data.publicUrl:"";
+  const price=item.price==null?"Fiyat için iletişim":Number(item.price).toLocaleString("tr-TR",{style:"currency",currency:"TRY"});
+  const displayStatus=item.status==="active"&&item.expires_at&&new Date(item.expires_at)<=new Date()?"expired":item.status;
+  return '<article class="listing">'+(src?'<img src="'+esc(src)+'" alt="" loading="lazy">':'<div style="width:100px;height:92px;border-radius:8px;background:#f0f2f4;display:grid;place-items:center;color:#89939b;font-size:11px">Fotoğraf yok</div>')+'<div><h3>'+esc(item.title)+'</h3><p>'+esc(item.gp_categories?.name||"Kategori seçilmedi")+' · '+esc(item.vehicle_brand||"Marka belirtilmedi")+' '+esc(item.vehicle_model||"")+'</p><p><strong>'+esc(price)+'</strong> · '+esc(item.condition==="new"?"Sıfır":item.condition==="used"?"Çıkma":"Revizyonlu")+'</p><p><span class="tag '+esc(displayStatus)+'">'+esc(statusLabel(displayStatus))+'</span></p><div class="actions" style="margin-top:8px"><button class="btn light" type="button" data-edit="'+item.id+'">Düzenle</button><button class="btn light" type="button" data-sold="'+item.id+'">Satıldı</button><button class="btn light" type="button" data-delete="'+item.id+'">Sil</button></div></div></article>';
+ }).join(""):'<p class="muted">Henüz ilan eklemediniz. İlk ilanınızı yukarıdaki formdan oluşturabilirsiniz.</p>';
+ if(firmRole==="viewer")$("listings").querySelectorAll("[data-edit],[data-sold],[data-delete]").forEach(btn=>btn.remove());
+}
+function formPayload(){
+ const price=$("price").value.trim();
+ return {
+  firm_id:firm.id,category_id:$("category").value||null,title:$("title").value.trim(),slug:slug($("title").value)+"-"+(editingId||crypto.randomUUID().slice(0,8)),
+  description:$("description").value.trim()||null,condition:$("condition").value,
+  vehicle_brand:$("vehicleBrand").value||null,vehicle_model:$("vehicleModel").value.trim()||null,
+  vehicle_year_from:$("yearFrom").value?Number($("yearFrom").value):null,vehicle_year_to:$("yearTo").value?Number($("yearTo").value):null,
+  engine_code:$("engineCode").value.trim()||null,oem_code:$("oemCode").value.trim()||null,part_number:$("partNumber").value.trim()||null,
+  price:price?Number(price):null,price_type:$("priceType").value,stock_quantity:Number($("stock").value||0),
+  warranty_info:$("warranty").value.trim()||null,city:$("city").value.trim()||null,district:$("district").value.trim()||null,
+  status:"pending"
+ };
+}
+async function uploadImages(listingId,files){
+ if(!files.length)return;
+ const existing=await db.from("gp_listing_images").select("id,is_cover,sort_order").eq("listing_id",listingId).order("sort_order");
+ if(existing.error)throw existing.error;
+ const rows=existing.data||[];
+ if(rows.length+files.length>10)throw new Error("Bir ilana en fazla 10 fotoğraf ekleyebilirsiniz. Mevcut fotoğraf sayısı: "+rows.length);
+ for(let i=0;i<files.length;i++){
+  const file=files[i];
+  if(!["image/jpeg","image/png","image/webp","image/avif"].includes(file.type))throw new Error(file.name+": Desteklenmeyen fotoğraf formatı.");
+  if(file.size>5*1024*1024)throw new Error(file.name+": Fotoğraf 5 MB sınırını aşıyor.");
+  const ext=({ "image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/avif":"avif"})[file.type];
+  const path=firm.id+"/"+listingId+"/"+crypto.randomUUID()+"."+ext;
+  const uploaded=await db.storage.from("gp-listing-images").upload(path,file,{contentType:file.type,upsert:false});
+  if(uploaded.error)throw uploaded.error;
+  const inserted=await db.from("gp_listing_images").insert({listing_id:listingId,storage_path:path,alt_text:$("title").value.trim(),sort_order:rows.length+i,is_cover:rows.length===0&&i===0});
+  if(inserted.error){await db.storage.from("gp-listing-images").remove([path]);throw inserted.error;}
+ }
+}
+$("listingForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ if(!firm)return;
+ const payload=formPayload();
+ if(payload.price_type==="fixed"&&payload.price===null){message("formMessage","Sabit fiyat seçtiğinizde fiyat alanını doldurun.","error");return;}
+ if(payload.vehicle_year_from&&payload.vehicle_year_to&&payload.vehicle_year_to<payload.vehicle_year_from){message("formMessage","Bitiş yılı başlangıç yılından küçük olamaz.","error");return;}
+ const files=Array.from($("images").files||[]);
+ $("saveBtn").disabled=true;message("formMessage","İlan kaydediliyor ve fotoğraflar yükleniyor…");
+ try{
+  let listingId=editingId;
+  if(editingId){
+   const {firm_id:unusedFirmId,...updatePayload}=payload;\n   const {error}=await db.from("gp_listings").update(updatePayload).eq("id",editingId).eq("firm_id",firm.id);
+   if(error)throw error;
+  }else{
+   const {data,error}=await db.from("gp_listings").insert({...payload,status:"draft"}).select("id").single();
+   if(error)throw error;listingId=data.id;
+  }
+  await uploadImages(listingId,files);
+  if(!editingId){const {error}=await db.from("gp_listings").update({status:"pending",updated_at:new Date().toISOString()}).eq("id",listingId);if(error)throw error;}
+  resetForm();$("images").value="";message("formMessage","İlanınız yönetici onayına gönderildi.","success");await loadListings();
+ }catch(err){message("formMessage","İşlem tamamlanamadı: "+err.message,"error");}
+ finally{$("saveBtn").disabled=false;}
+});
+function parseCsv(text){
+ const first=(text.split(/\r?\n/,1)[0]||"");
+ const delimiter=(first.split(";").length>first.split(",").length)?";":",";
+ const rows=[];let row=[],field="",quoted=false;
+ for(let i=0;i<text.length;i++){
+  const ch=text[i],next=text[i+1];
+  if(ch==='"'&&quoted&&next==='"'){field+='"';i++;continue;}
+  if(ch==='"'){quoted=!quoted;continue;}
+  if(ch===delimiter&&!quoted){row.push(field);field="";continue;}
+  if((ch==="\n"||ch==="\r")&&!quoted){if(ch==="\r"&&next==="\n")i++;row.push(field);if(row.some(x=>x.trim()!==""))rows.push(row);row=[];field="";continue;}
+  field+=ch;
+ }
+ row.push(field);if(row.some(x=>x.trim()!==""))rows.push(row);
+ if(!rows.length)return [];
+ const headers=rows.shift().map(x=>x.trim().toLowerCase().replace(/^\uFEFF/,""));
+ return rows.map(values=>Object.fromEntries(headers.map((h,i)=>[h,(values[i]||"").trim()])));
+}
+async function parseImportFile(file){
+ const name=String(file.name||"").toLocaleLowerCase("tr-TR");
+ if(name.endsWith(".xlsx")||name.endsWith(".xls")){
+  if(!window.XLSX)throw new Error("Excel okuyucusu yüklenemedi. Dosyayı CSV UTF-8 olarak kaydedip tekrar deneyin.");
+  const workbook=XLSX.read(await file.arrayBuffer(),{type:"array",cellDates:false});
+  const firstSheet=workbook.Sheets[workbook.SheetNames[0]];
+  if(!firstSheet)throw new Error("Excel dosyasında çalışma sayfası bulunamadı.");
+  return XLSX.utils.sheet_to_json(firstSheet,{defval:"",raw:false}).map(row=>{
+   const normalized={};
+   Object.entries(row).forEach(([key,value])=>{normalized[String(key).trim().toLowerCase()]=String(value??"").trim();});
+   return normalized;
+  });
+ }
+ return parseCsv(await file.text());
+}
+function csvNumber(value){
+ if(value==null||value==="")return null;
+ let s=String(value).trim().replace(/\s/g,"");
+ if(s.includes(",")&&s.includes("."))s=s.replace(/\./g,"").replace(",",".");
+ else s=s.replace(",",".");
+ const n=Number(s);return Number.isFinite(n)?n:NaN;
+}
+$("downloadCsvTemplate").addEventListener("click",()=>{
+ const rows=[
+  ["title","category_slug","condition","vehicle_brand","vehicle_model","vehicle_year_from","vehicle_year_to","engine_code","oem_code","part_number","price","price_type","stock_quantity","warranty_info","city","district","description"],
+  ["Hyundai Accent Era D4FA Komple Motor","motor-mekanik-01","used","Hyundai","Accent Era","2006","2012","D4FA","","","12500","negotiable","1","Firma ile görüşünüz","Ankara","Yenimahalle","Ürün durumu ve uyumlu araç bilgileri"]
+ ];
+ const csv=rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");
+ const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="guvenilirparcaci-ilan-sablonu.csv";a.click();URL.revokeObjectURL(url);
+});
+$("importCsvBtn").addEventListener("click",async()=>{
+ const file=$("csvFile").files?.[0];if(!file){message("csvMessage","Önce bir CSV dosyası seçin.","error");return;}
+ if(firmRole==="viewer"){message("csvMessage","Bu hesapta ilan ekleme yetkisi yok.","error");return;}
+ $("importCsvBtn").disabled=true;message("csvMessage","CSV dosyası okunuyor…");
+ try{
+  const records=await parseImportFile(file);
+  if(!records.length)throw new Error("CSV dosyasında aktarılacak satır bulunamadı.");
+  if(records.length>500)throw new Error("Bir dosyada en fazla 500 ilan aktarabilirsiniz.");
+  const categoryBySlug=new Map(categories.map(x=>[x.slug,x.id]));
+  const seen=new Set(),prepared=[];
+  for(let i=0;i<records.length;i++){
+   const r=records[i],line=i+2;
+   if(!r.title||!r.category_slug||!r.condition)throw new Error(line+". satır: title, category_slug ve condition zorunludur.");
+   if(!["new","used","reconditioned"].includes(r.condition))throw new Error(line+". satır: condition new, used veya reconditioned olmalıdır.");
+   const categoryId=categoryBySlug.get(r.category_slug);
+   if(!categoryId)throw new Error(line+". satır: kategori bulunamadı ("+r.category_slug+").");
+   const price=csvNumber(r.price);
+   if(Number.isNaN(price))throw new Error(line+". satır: fiyat sayısal olmalıdır.");
+   const priceType=r.price_type||"contact";
+   if(!["fixed","contact","negotiable"].includes(priceType))throw new Error(line+". satır: price_type fixed, contact veya negotiable olmalıdır.");
+   if(priceType==="fixed"&&price===null)throw new Error(line+". satır: fixed fiyat için price zorunludur.");
+   const stock=r.stock_quantity==null||r.stock_quantity===""?1:Number(r.stock_quantity);
+   if(!Number.isInteger(stock)||stock<0)throw new Error(line+". satır: stock_quantity sıfır veya pozitif tam sayı olmalıdır.");
+   const yearFrom=r.vehicle_year_from?Number(r.vehicle_year_from):null,yearTo=r.vehicle_year_to?Number(r.vehicle_year_to):null;
+   if((yearFrom!==null&&!Number.isInteger(yearFrom))||(yearTo!==null&&!Number.isInteger(yearTo)))throw new Error(line+". satır: model yılı tam sayı olmalıdır.");
+   const key=[r.part_number,r.vehicle_brand,r.vehicle_model,r.condition].join("|").toLocaleLowerCase("tr-TR");
+   if(r.part_number&&seen.has(key))continue;
+   if(r.part_number)seen.add(key);
+   prepared.push({
+    firm_id:firm.id,category_id:categoryId,title:r.title.slice(0,150),
+    slug:slug(r.title)+"-"+crypto.randomUUID().slice(0,8),description:r.description||null,
+    condition:r.condition,vehicle_brand:r.vehicle_brand||null,vehicle_model:r.vehicle_model||null,
+    vehicle_year_from:yearFrom,vehicle_year_to:yearTo,engine_code:r.engine_code||null,
+    oem_code:r.oem_code||null,part_number:r.part_number||null,price,
+    price_type:priceType,stock_quantity:stock,warranty_info:r.warranty_info||null,
+    city:r.city||firm.city||null,district:r.district||firm.district||null,status:"pending"
+   });
+  }
+  if(!prepared.length)throw new Error("Aktarılabilecek yeni ilan bulunamadı.");
+  let inserted=0,duplicates=0;
+  const batchSize=50;
+  for(let i=0;i<prepared.length;i+=batchSize){
+   const batch=prepared.slice(i,i+batchSize);
+   const parts=[...new Set(batch.map(x=>x.part_number).filter(Boolean))];
+   let existingKeys=new Set();
+   if(parts.length){
+    const old=await db.from("gp_listings").select("part_number,vehicle_brand,vehicle_model,condition").eq("firm_id",firm.id).in("part_number",parts);
+    if(old.error)throw old.error;
+    existingKeys=new Set((old.data||[]).map(x=>[x.part_number,x.vehicle_brand,x.vehicle_model,x.condition].join("|").toLocaleLowerCase("tr-TR")));
+   }
+   const fresh=batch.filter(x=>!x.part_number||!existingKeys.has([x.part_number,x.vehicle_brand,x.vehicle_model,x.condition].join("|").toLocaleLowerCase("tr-TR")));
+   duplicates+=batch.length-fresh.length;
+   if(fresh.length){const result=await db.from("gp_listings").insert(fresh);if(result.error)throw result.error;inserted+=fresh.length;}
+   message("csvMessage",inserted+" ilan eklendi, "+duplicates+" mükerrer kayıt atlandı…");
+  }
+  $("csvFile").value="";message("csvMessage",inserted+" ilan onay kuyruğuna gönderildi. "+duplicates+" mükerrer kayıt atlandı.","success");await loadListings();
+ }catch(err){message("csvMessage","Aktarım tamamlanamadı: "+err.message,"error");}
+ finally{$("importCsvBtn").disabled=false;}
+});
+$("downloadPriceCsv").addEventListener("click",async()=>{
+ const button=$("downloadPriceCsv");button.disabled=true;
+ try{
+  const all=[];let offset=0;
+  while(true){
+   const {data,error}=await db.from("gp_listings").select("id,title,price,price_type,stock_quantity").eq("firm_id",firm.id).order("created_at",{ascending:false}).order("id",{ascending:false}).range(offset,offset+999);
+   if(error)throw error;
+   all.push(...(data||[]));
+   if((data||[]).length<1000)break;
+   offset+=1000;
+   if(all.length>10000)throw new Error("10.000 üzeri ilan için sunucu taraflı dışa aktarma özelliği gereklidir.");
+  }
+  const rows=[["listing_id","title","price","price_type","stock_quantity"],...all.map(x=>[x.id,x.title,x.price??"",x.price_type||"contact",x.stock_quantity??0])];
+  const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
+  const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="guvenilirparcaci-fiyat-stok.csv";a.click();URL.revokeObjectURL(url);
+ }catch(err){alert("CSV dışa aktarılamadı: "+err.message);}
+ finally{button.disabled=false;}
+});
+$("updateCsvBtn").addEventListener("click",async()=>{
+ const file=$("updateCsvFile").files?.[0];if(!file){message("updateCsvMessage","Önce güncelleme CSV dosyasını seçin.","error");return;}
+ if(firmRole==="viewer"){message("updateCsvMessage","Bu hesapta güncelleme yetkisi yok.","error");return;}
+ $("updateCsvBtn").disabled=true;message("updateCsvMessage","Dosya kontrol ediliyor…");
+ try{
+  const records=parseCsv(await file.text());
+  if(!records.length)throw new Error("CSV dosyasında satır bulunamadı.");
+  if(records.length>500)throw new Error("Tek dosyada en fazla 500 ilan güncellenebilir.");
+  const updates=[],seen=new Set();
+  for(let i=0;i<records.length;i++){
+   const r=records[i],line=i+2;
+   if(!r.listing_id)throw new Error(line+". satırda listing_id eksik.");
+   if(seen.has(r.listing_id))throw new Error(line+". satırda aynı ilan numarası birden fazla kez kullanılmış.");
+   seen.add(r.listing_id);
+   const price=r.price==null||r.price===""?null:csvNumber(r.price);
+   const stock=r.stock_quantity==null||r.stock_quantity===""?null:Number(r.stock_quantity);
+   if(Number.isNaN(price))throw new Error(line+". satırda fiyat sayısal olmalıdır.");
+   if(stock!==null&&(!Number.isInteger(stock)||stock<0))throw new Error(line+". satırda stok sıfır veya pozitif tam sayı olmalıdır.");
+   const priceType=r.price_type==null||r.price_type===""?null:r.price_type;
+   if(priceType&&!["fixed","contact","negotiable"].includes(priceType))throw new Error(line+". satırda fiyat türü hatalı.");
+   if(price===null&&stock===null&&priceType===null)continue;
+   updates.push({listing_id:r.listing_id,price,stock_quantity:stock,price_type:priceType});
+  }
+  if(!updates.length)throw new Error("Güncellenecek fiyat veya stok bilgisi bulunamadı.");
+  const {data,error}=await db.rpc("gp_firm_bulk_update_listing_values",{p_updates:updates});
+  if(error)throw error;
+  $("updateCsvFile").value="";message("updateCsvMessage",data+" ilan güncellendi.","success");await loadListings();
+ }catch(err){message("updateCsvMessage","Güncelleme tamamlanamadı: "+err.message,"error");}
+ finally{$("updateCsvBtn").disabled=false;}
+});
+function editListing(id){
+ const x=listings.find(v=>v.id===id);if(!x)return;editingId=id;
+ $("formHeading").textContent="İlanı düzenle";$("saveBtn").textContent="Değişiklikleri kaydet";
+ $("title").value=x.title||"";$("category").value=x.category_id||"";$("condition").value=x.condition||"used";
+ $("vehicleBrand").value=x.vehicle_brand||"";$("vehicleModel").value=x.vehicle_model||"";
+ $("yearFrom").value=x.vehicle_year_from||"";$("yearTo").value=x.vehicle_year_to||"";
+ $("engineCode").value=x.engine_code||"";$("oemCode").value=x.oem_code||"";$("partNumber").value=x.part_number||"";
+ $("priceType").value=x.price_type||"contact";$("price").value=x.price??"";$("stock").value=x.stock_quantity??1;
+ $("warranty").value=x.warranty_info||"";$("city").value=x.city||"";$("district").value=x.district||"";$("description").value=x.description||"";
+ $("images").value="";message("formMessage","Mevcut ilan düzenlendiğinde yeniden yönetici onayına gönderilir.");
+ $("listingForm").scrollIntoView({behavior:"smooth",block:"start"});
+}
+async function deleteListing(id){
+ if(!confirm("Bu ilanı ve fotoğraflarını silmek istediğinizden emin misiniz?"))return;
+ const imgs=await db.from("gp_listing_images").select("storage_path").eq("listing_id",id);
+ if(imgs.error){alert(imgs.error.message);return;}
+ const paths=(imgs.data||[]).map(x=>x.storage_path);
+ if(paths.length){const removed=await db.storage.from("gp-listing-images").remove(paths);if(removed.error){alert("Fotoğraflar silinemedi: "+removed.error.message);return;}}
+ const {error}=await db.from("gp_listings").delete().eq("id",id).eq("firm_id",firm.id);
+ if(error){alert(error.message);return;}await loadListings();
+}
+async function markSold(id){
+ if(!confirm("İlanı satıldı olarak işaretlemek istiyor musunuz?"))return;
+ const {error}=await db.from("gp_listings").update({status:"sold"}).eq("id",id).eq("firm_id",firm.id);
+ if(error)alert(error.message);else await loadListings();
+}
+async function dashboardStart(){
+ const {data:{session}}=await db.auth.getSession();
+ if(!session){show("login");return;}
+ currentUser=session.user;
+ try{await resolveFirm();await loadLookups();await loadListings();show("dashboard");}
+ catch(err){show("login");message("loginError",err.message,"error");}
+}
+$("forgotPasswordBtn").addEventListener("click",async()=>{
+ const email=$("email").value.trim();
+ if(!email){message("loginError","Önce e-posta adresinizi yazın.","error");$("email").focus();return;}
+ $("forgotPasswordBtn").disabled=true;
+ const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
+ $("forgotPasswordBtn").disabled=false;
+ if(error)message("loginError","Şifre yenileme bağlantısı gönderilemedi: "+error.message,"error");
+ else message("loginError","Şifre yenileme bağlantısı e-posta adresinize gönderildi. Gelen kutusu ve spam klasörünü kontrol edin.","success");
+});
+$("recoveryForm").addEventListener("submit",async e=>{
+ e.preventDefault();const password=$("newPassword").value;
+ if(password.length<8){$("recoveryMessage").textContent="Şifre en az 8 karakter olmalıdır.";return;}
+ const {error}=await db.auth.updateUser({password});
+ if(error){$("recoveryMessage").textContent="Şifre güncellenemedi: "+error.message;return;}
+ await db.auth.signOut();$("recoveryForm").classList.add("hidden");$("loginForm").classList.remove("hidden");$("forgotPasswordBtn").classList.remove("hidden");$("newPassword").value="";
+ message("loginError","Şifreniz güncellendi. Yeni şifrenizle giriş yapabilirsiniz.","success");
+});
+$("loginForm").addEventListener("submit",async e=>{e.preventDefault();message("loginError","");const {error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error){message("loginError","Giriş başarısız: "+error.message,"error");return;}await dashboardStart();});
+$("logoutBtn").addEventListener("click",async()=>{await db.auth.signOut();firm=null;show("login");});
+$("refreshBtn").addEventListener("click",()=>loadListings().catch(err=>alert(err.message)));
+$("prevListingsBtn").addEventListener("click",()=>{if(listingPage>1){listingPage--;loadListings().catch(err=>alert(err.message));}});
+$("nextListingsBtn").addEventListener("click",()=>{if(listingsHasMore){listingPage++;loadListings().catch(err=>alert(err.message));}});
+$("resetFormBtn").addEventListener("click",resetForm);
+$("listings").addEventListener("click",e=>{
+ const edit=e.target.closest("[data-edit]");if(edit)editListing(edit.dataset.edit);
+ const del=e.target.closest("[data-delete]");if(del)deleteListing(del.dataset.delete);
+ const sold=e.target.closest("[data-sold]");if(sold)markSold(sold.dataset.sold);
+});
+db.auth.onAuthStateChange((event,session)=>{if(event==="PASSWORD_RECOVERY"){show("login");$("loginForm").classList.add("hidden");$("forgotPasswordBtn").classList.add("hidden");$("recoveryForm").classList.remove("hidden");$("recoveryMessage").textContent="Yeni şifrenizi belirleyin.";}else if(event==="SIGNED_OUT"){firm=null;show("login");}else if(event==="SIGNED_IN"&&session){currentUser=session.user;dashboardStart().catch(err=>message("loginError",err.message,"error"));}});
+dashboardStart().catch(err=>message("loginError",err.message,"error"));
+})();
+</script>
+</body>
+</html>

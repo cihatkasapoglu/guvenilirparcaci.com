@@ -3,15 +3,58 @@
  if(!root)return;
  const path=decodeURIComponent(location.pathname.replace(/\/+$/,""));
  const pathMatch=path.match(/^\/firma\/([^/]+)$/);
- const id=(pathMatch&&pathMatch[1])||new URLSearchParams(location.search).get("firma");
- let f=(window.GP_FIRMS||[]).find(x=>x.id===id&&x.approved);
+ const routeValue=(pathMatch&&pathMatch[1])||null;
+ const queryId=new URLSearchParams(location.search).get("firma");
+ const id=routeValue||queryId;
+ const staticFirm=(window.GP_FIRMS||[]).find(x=>(x.id===id||x.slug===id)&&x.approved)||null;
+ let f=null;
  try{
   const cfg=window.GP_SUPABASE_CONFIG;
-  if(f&&cfg){
-   const response=await fetch(cfg.url+"/rest/v1/rpc/gp_public_membership_status",{method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.anonKey,"Authorization":"Bearer "+cfg.anonKey},body:"{}"});
-   if(response.ok){const rows=await response.json();const state=(rows||[]).find(x=>x.firm_id===f.id);if(state&&!state.active)f=null;}
+  if(cfg){
+   const headers={"apikey":cfg.anonKey,"Authorization":"Bearer "+cfg.anonKey};
+   const lookupColumn=routeValue?"slug":"id";
+   const response=await fetch(cfg.url+"/rest/v1/gp_firms?"+lookupColumn+"=eq."+encodeURIComponent(id)+"&select=*",{headers});
+   if(response.ok){
+    const rows=await response.json();
+    if(rows&&rows.length){
+     const firm=rows[0];
+     const [brandResponse,imageResponse]=await Promise.all([
+      fetch(cfg.url+"/rest/v1/gp_firm_brands?firm_id=eq."+encodeURIComponent(firm.id)+"&select=brand_id",{headers}),
+      fetch(cfg.url+"/rest/v1/gp_firm_images?firm_id=eq."+encodeURIComponent(firm.id)+"&select=image_url&order=sort_order.asc",{headers})
+     ]);
+     const brandRows=brandResponse.ok?await brandResponse.json():[];
+     const imageRows=imageResponse.ok?await imageResponse.json():[];
+     f={
+      id:firm.id,slug:firm.slug,name:firm.name,brands:(brandRows||[]).map(x=>x.brand_id),
+      logo:firm.logo_url||"",address:firm.address||"",phone:firm.phone||"",
+      phone2:firm.phone_secondary||"",whatsapp:firm.whatsapp||"",
+      whatsapp2:firm.whatsapp_secondary||"",website:firm.website||"",
+      hours:firm.hours||"",shortDescription:firm.short_description||"",
+      description:firm.description||"",rating:firm.rating||null,
+      sponsored:!!firm.sponsored,approved:true,
+      photos:(imageRows||[]).map(x=>x.image_url)
+     };
+    }else{
+     f=staticFirm;
+    }
+   }else if(response.status===404){
+    // Backward compatibility if the database migration/data import is not yet installed.
+    f=staticFirm;
+    if(f){
+     const membershipResponse=await fetch(cfg.url+"/rest/v1/rpc/gp_public_membership_status",{method:"POST",headers:{...headers,"Content-Type":"application/json"},body:"{}"});
+     if(membershipResponse.ok){
+      const rows=await membershipResponse.json();
+      const state=(rows||[]).find(x=>x.firm_id===f.id);
+      if(state&&!state.active)f=null;
+     }
+    }
+   }
+  }else{
+   f=staticFirm;
   }
- }catch(error){console.warn("Üyelik durumu kontrol edilemedi:",error);}
+ }catch(error){
+  console.warn("Firma bilgileri yüklenemedi:",error);
+ }
 
  const e=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const setMeta=(name,content,property=false)=>{let el=document.querySelector((property?'meta[property="':'meta[name="')+name+'"]');if(!el){el=document.createElement("meta");el.setAttribute(property?"property":"name",name);document.head.appendChild(el);}el.setAttribute("content",content);};
@@ -24,15 +67,16 @@
  const firmBrands=(f.brands||[]).map(id=>(window.GP_BRANDS||[]).find(b=>b.id===id)?.name||id);
  document.title=f.name+" | "+firmBrands.join(" ve ")+" Yedek Parça Firması | GüvenilirParçacı";
  const firmDescription=((f.description||f.shortDescription||"Otomotiv yedek parça alanında faaliyet gösteren firma.")+" Faaliyet gösterdiği markalar: "+firmBrands.join(", ")+". Firma iletişim ve işletme bilgileri.").slice(0,300);
- setMeta("description",firmDescription);setMeta("robots","index,follow");setMeta("og:type","profile",true);setMeta("og:title",document.title,true);setMeta("og:description",firmDescription,true);setMeta("og:url","https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id),true);
+ setMeta("description",firmDescription);setMeta("robots","index,follow");setMeta("og:type","profile",true);setMeta("og:title",document.title,true);setMeta("og:description",firmDescription,true);const firmUrl="https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.slug||f.id);
+ setMeta("og:url",firmUrl,true);
  const firmImage=f.logo||((f.photos||[])[0]||"");if(firmImage){const absoluteImage=new URL(firmImage,location.origin).href;setMeta("og:image",absoluteImage,true);setMeta("twitter:image",absoluteImage);}
  setMeta("twitter:card","summary");setMeta("twitter:title",document.title);setMeta("twitter:description",firmDescription);
- setSchema({"@context":"https://schema.org","@type":"Organization","name":f.name,"url":"https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id),"description":firmDescription,"telephone":[f.phone,f.phone2].filter(Boolean),"email":f.email||undefined,"image":firmImage?new URL(firmImage,location.origin).href:undefined,"sameAs":f.website?[f.website]:undefined,"address":f.address?{"@type":"PostalAddress","streetAddress":f.address,"addressCountry":"TR"}:undefined,"knowsAbout":firmBrands});
- setSchema({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Ana Sayfa","item":"https://guvenilirparcaci.com/"},{"@type":"ListItem","position":2,"name":"Firma Profili","item":"https://guvenilirparcaci.com/markalar.html"},{"@type":"ListItem","position":3,"name":f.name,"item":"https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id)}]},"gp-firm-breadcrumb-schema");
+ setSchema({"@context":"https://schema.org","@type":"Organization","name":f.name,"url":firmUrl,"description":firmDescription,"telephone":[f.phone,f.phone2].filter(Boolean),"email":f.email||undefined,"image":firmImage?new URL(firmImage,location.origin).href:undefined,"sameAs":f.website?[f.website]:undefined,"address":f.address?{"@type":"PostalAddress","streetAddress":f.address,"addressCountry":"TR"}:undefined,"knowsAbout":firmBrands});
+ setSchema({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Ana Sayfa","item":"https://guvenilirparcaci.com/"},{"@type":"ListItem","position":2,"name":"Firma Profili","item":"https://guvenilirparcaci.com/markalar.html"},{"@type":"ListItem","position":3,"name":f.name,"item":firmUrl}]},"gp-firm-breadcrumb-schema");
 
  let canonical=document.querySelector('link[rel="canonical"]');
  if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical);}
- canonical.href="https://guvenilirparcaci.com/firma/"+encodeURIComponent(f.id);
+ canonical.href=firmUrl;
  root.innerHTML='<a class="back-link" href="/'+encodeURIComponent((f.brands||[])[0]||"")+'-yedek-parca">← Firma listesine dön</a><div class="brand-heading"><div class="brand-heading-logo">'+(f.logo?'<img src="'+e(f.logo)+'" alt="">':'<strong>'+e(f.name.slice(0,1))+'</strong>')+'</div><div><div class="kicker">Firma profili</div><h1>'+e(f.name)+'</h1><p>'+e(f.shortDescription||"Otomotiv yedek parça firması")+'</p></div></div><div class="profile-layout"><section class="profile-card"><h2>Firma hakkında</h2><p>'+e(f.description||"Firma hakkında detaylı bilgi henüz eklenmedi.")+'</p><div class="profile-meta"><div><b>Adres</b><span>'+e(f.address||"Bilgi eklenmedi")+'</span></div><div><b>Faaliyet gösterdiği markalar</b><span>'+e((f.brands||[]).map(id=>(window.GP_BRANDS||[]).find(b=>b.id===id)?.name||id).join(", ")||"Bilgi eklenmedi")+'</span></div><div><b>Çalışma saatleri</b><span>'+e(f.hours||"Bilgi eklenmedi")+'</span></div></div><div class="gallery">'+(f.photos&&f.photos.length?(f.photos||[]).map((p,i)=>'<button class="gallery-item" type="button" data-gallery-index="'+i+'" aria-label="Fotoğrafı büyüt"><img src="'+e(p)+'" alt="'+e(f.name)+' firma fotoğrafı" loading="lazy"></button>').join(""):(f.photoSlots?'<div class="gallery-placeholder" style="grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px"><div style="aspect-ratio:4/3;border:1px dashed #cbd2d8;border-radius:10px;display:grid;place-items:center;color:#7b858c;font-size:12px;background:#f7f8f9">Firma fotoğrafı 1</div><div style="aspect-ratio:4/3;border:1px dashed #cbd2d8;border-radius:10px;display:grid;place-items:center;color:#7b858c;font-size:12px;background:#f7f8f9">Firma fotoğrafı 2</div><div style="aspect-ratio:4/3;border:1px dashed #cbd2d8;border-radius:10px;display:grid;place-items:center;color:#7b858c;font-size:12px;background:#f7f8f9">Firma fotoğrafı 3</div></div>':""))+'</div></section><aside class="contact-card"><h3>İletişim bilgileri</h3>'+(f.phone?'<a class="contact-link" href="tel:'+e(f.phone)+'">Telefon: '+e(f.phone)+'</a>':"")+(f.phone2?'<a class="contact-link" href="tel:'+e(f.phone2)+'">İkinci telefon: '+e(f.phone2)+'</a>':"")+(f.whatsapp?'<a class="contact-link" target="_blank" rel="noopener" href="https://wa.me/'+e(f.whatsapp.replace(/\D/g,""))+'?text='+encodeURIComponent("Merhaba, GüvenilirParçacı üzerinden "+f.name+" firmasına ulaşıyorum. Yedek parça ve firma bilgileriniz hakkında bilgi almak istiyorum.")+'">WhatsApp ile iletişim</a>':"")+(f.whatsapp2?'<a class="contact-link" target="_blank" rel="noopener" href="https://wa.me/'+e(f.whatsapp2.replace(/\D/g,""))+'?text='+encodeURIComponent("Merhaba, GüvenilirParçacı üzerinden "+f.name+" firmasına ulaşıyorum. Yedek parça ve firma bilgileriniz hakkında bilgi almak istiyorum.")+'">WhatsApp ile iletişim (ikinci hat)</a>':"")+(f.website?'<a class="contact-link" target="_blank" rel="noopener" href="'+e(f.website)+'">Web sitesi ↗</a>':"")+(f.email?'<a class="contact-link" href="mailto:'+e(f.email)+'">E-posta: '+e(f.email)+'</a>':"")+'</aside></div>';
  root.insertAdjacentHTML("beforeend",'<nav class="profile-brand-links" aria-label="Firmanın marka rehberleri"><strong>İlgili marka rehberleri</strong><div>'+(f.brands||[]).map(id=>{const b=(window.GP_BRANDS||[]).find(x=>x.id===id);return b?'<a href="/'+encodeURIComponent(b.id)+'-yedek-parca">'+e(b.name)+' yedek parça</a>':"";}).join("")+'</div></nav>');
  const galleryImages=Array.from(root.querySelectorAll(".gallery-item img"));

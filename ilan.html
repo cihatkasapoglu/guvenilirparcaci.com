@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="tr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111820"><meta name="robots" content="index,follow,max-image-preview:large">
+<title>Yedek Parça İlanı | GüvenilirParçacı</title>
+<meta name="description" content="GüvenilirParçacı üzerinde otomotiv yedek parça ilanını inceleyin ve ilan sahibi firmayla iletişime geçin.">
+<link rel="canonical" href="https://guvenilirparcaci.com/ilan.html">
+<link rel="stylesheet" href="site.css">
+<style>
+.detail-wrap{max-width:1120px;margin:35px auto 75px;padding:0 18px;color:#18232c}
+.back{display:inline-block;color:#65717a;text-decoration:none;font-size:13px;margin-bottom:16px}
+.detail-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);gap:22px;align-items:start}
+.card{background:#fff;border:1px solid #e5e9ed;border-radius:14px;padding:20px}
+h1{font-size:clamp(24px,3vw,34px);line-height:1.2;margin:8px 0 12px}
+.muted{color:#66727d;font-size:13px;line-height:1.65}
+.main-photo{width:100%;height:410px;object-fit:contain;background:#f2f4f5;border-radius:10px}
+.thumbs{display:flex;gap:8px;overflow:auto;margin-top:10px}
+.thumbs button{padding:0;border:2px solid transparent;background:#f1f3f5;border-radius:8px;flex:0 0 76px;height:70px;overflow:hidden;cursor:pointer}
+.thumbs button.selected{border-color:#df493f}.thumbs img{width:100%;height:100%;object-fit:cover}
+.price{font-size:26px;font-weight:850;margin:12px 0}
+.condition{display:inline-block;padding:5px 9px;border-radius:30px;background:#edf1f4;font-size:11px;font-weight:800}
+.specs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:18px;border-top:1px solid #edf0f2}
+.spec{padding:12px 8px;border-bottom:1px solid #edf0f2}.spec small{display:block;color:#77828b;font-size:11px}.spec strong{font-size:13px}
+.contact{position:sticky;top:20px}.contact h2{font-size:20px;margin:0 0 10px}.contact-name{font-size:17px;font-weight:850}.contact-actions{display:grid;gap:9px;margin-top:16px}.contact-actions a{display:block;text-align:center;padding:12px;border-radius:9px;text-decoration:none;font-weight:800;background:#edf1f4;color:#26313a}.contact-actions a.primary{background:#df493f;color:#fff}.description{white-space:pre-wrap;line-height:1.8;font-size:14px;color:#43505a;margin-top:18px}
+.empty{padding:45px;text-align:center;background:#fff;border:1px solid #e5e9ed;border-radius:14px;color:#65717a}
+@media(max-width:800px){.detail-grid{grid-template-columns:1fr}.contact{position:static}.main-photo{height:320px}}
+@media(max-width:480px){.card{padding:14px}.main-photo{height:260px}.specs{grid-template-columns:1fr 1fr}}
+</style></head>
+<body><div id="siteHeader"></div>
+<main class="detail-wrap"><a class="back" href="/ilanlar.html">← Tüm ilanlara dön</a><div id="detail"><div class="empty">İlan bilgileri yükleniyor…</div></div></main>
+<div id="siteFooter"></div>
+<script src="shared.js?v=marketplace1"></script><script src="supabase-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async function(){
+const cfg=window.GP_SUPABASE_CONFIG,root=document.getElementById("detail");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const meta=(name,value,property=false)=>{let el=document.querySelector((property?'meta[property="':'meta[name="')+name+'"]');if(!el){el=document.createElement("meta");el.setAttribute(property?"property":"name",name);document.head.appendChild(el);}el.setAttribute("content",value);};
+if(!cfg||!window.supabase){root.innerHTML='<div class="empty">İlan bağlantısı kurulamadı.</div>';return;}
+const path=decodeURIComponent(location.pathname.replace(/\/+$/,""));
+const routeMatch=path.match(/^\/ilan\/([^/]+)$/);
+const routeSlug=routeMatch&&routeMatch[1];
+const id=new URLSearchParams(location.search).get("id");
+if(!routeSlug&&!id){root.innerHTML='<div class="empty">İlan numarası bulunamadı. <a href="/ilanlar.html">İlanlara dönün.</a></div>';return;}
+const db=window.supabase.createClient(cfg.url,cfg.anonKey);
+try{
+ let listingQuery=db.from("gp_listings").select("*,gp_firms(name,slug,phone,phone_secondary,whatsapp,whatsapp_secondary,address,city,district,website),gp_categories(name)").eq("status","active");
+ if(routeSlug)listingQuery=listingQuery.eq("slug",routeSlug);
+ else listingQuery=listingQuery.eq("id",id);
+ const {data:x,error}=await listingQuery.limit(1).maybeSingle();
+ if(error||!x)throw error||new Error("İlan bulunamadı.");
+ const {data:imgs,error:imgError}=await db.from("gp_listing_images").select("storage_path,alt_text,is_cover,sort_order").eq("listing_id",x.id).order("sort_order");
+ if(imgError)throw imgError;
+ const photos=(imgs||[]).map(i=>({url:db.storage.from("gp-listing-images").getPublicUrl(i.storage_path).data.publicUrl,alt:i.alt_text||x.title}));
+ const firm=x.gp_firms||{};
+ const cond=x.condition==="new"?"Sıfır":x.condition==="used"?"Çıkma":"Revizyonlu";
+ const price=x.price==null||x.price_type==="contact"?"Fiyat için iletişim":Number(x.price).toLocaleString("tr-TR",{style:"currency",currency:x.currency||"TRY"});
+ const car=[x.vehicle_brand,x.vehicle_model,x.vehicle_year_from,x.vehicle_year_to].filter(Boolean).join(" ");
+ const title=x.title+" | "+(x.vehicle_brand||"Yedek Parça")+" Yedek Parça İlanı | GüvenilirParçacı";
+ const desc=(x.description||x.title+" için "+cond.toLocaleLowerCase("tr-TR")+" yedek parça ilanı. "+(firm.name||"İlan sahibi firma")+" ile doğrudan iletişime geçin.").slice(0,300);
+ document.title=title;meta("description",desc);meta("og:title",title,true);meta("og:description",desc,true);meta("og:type","product",true);const listingUrl="https://guvenilirparcaci.com/ilan/"+encodeURIComponent(x.slug||x.id);
+ meta("og:url",listingUrl,true);if(photos[0])meta("og:image",photos[0].url,true);
+ const canonical=document.querySelector('link[rel="canonical"]');if(canonical)canonical.href=listingUrl;
+ const specs=[["Ürün durumu",cond],["Kategori",x.gp_categories?.name],["Araç markası",x.vehicle_brand],["Araç modeli",x.vehicle_model],["Model yılı",x.vehicle_year_from||x.vehicle_year_to?(x.vehicle_year_from||"")+" – "+(x.vehicle_year_to||""):""],["Motor kodu",x.engine_code],["OEM kodu",x.oem_code],["Parça numarası",x.part_number],["Stok adedi",x.stock_quantity],["Garanti",x.warranty_info],["Konum",[x.city,x.district].filter(Boolean).join(", ")]].filter(p=>p[1]!==null&&p[1]!==undefined&&p[1]!=="");
+ const phone=(firm.phone||"").replace(/[^0-9+]/g,""),phone2=(firm.phone_secondary||"").replace(/[^0-9+]/g,"");
+ const wa=(firm.whatsapp||"").replace(/\D/g,""),wa2=(firm.whatsapp_secondary||"").replace(/\D/g,"");
+ root.innerHTML='<div class="detail-grid"><section><div class="card">'+(photos[0]?'<img id="mainPhoto" class="main-photo" src="'+esc(photos[0].url)+'" alt="'+esc(photos[0].alt)+'">':'<div class="main-photo" style="display:grid;place-items:center;color:#7a858e">Fotoğraf eklenmemiş</div>')+(photos.length>1?'<div class="thumbs">'+photos.map((p,i)=>'<button type="button" class="'+(i===0?"selected":"")+'" data-photo="'+i+'"><img src="'+esc(p.url)+'" alt="'+esc(p.alt)+'"></button>').join("")+'</div>':"")+'<span class="condition">'+cond+'</span><h1>'+esc(x.title)+'</h1><div class="price">'+esc(price)+'</div><p class="muted">'+esc(car||x.gp_categories?.name||"Otomotiv yedek parça")+'</p><div class="specs">'+specs.map(p=>'<div class="spec"><small>'+esc(p[0])+'</small><strong>'+esc(p[1])+'</strong></div>').join("")+'</div><div class="description">'+esc(x.description||"İlan sahibi firma ile iletişime geçerek ürünün stok, uyumluluk, garanti ve teslimat bilgilerini teyit edebilirsiniz.")+'</div></div></section><aside class="contact"><div class="card"><h2>İlan sahibi firma</h2><div class="contact-name">'+esc(firm.name||"Yedek parça firması")+'</div><p class="muted">'+esc([firm.city,firm.district].filter(Boolean).join(", "))+'</p><p class="muted">'+esc(firm.address||"")+'</p><div class="contact-actions">'+(phone?'<a class="primary" href="tel:'+esc(phone)+'">Telefonla ara</a>':"")+(phone2?'<a href="tel:'+esc(phone2)+'">İkinci telefon</a>':"")+(wa?'<a href="https://wa.me/'+esc(wa)+'?text='+encodeURIComponent("Merhaba, GüvenilirParçacı üzerinden "+x.title+" ilanınızı gördüm. Ürün hakkında bilgi alabilir miyim?")+'" target="_blank" rel="noopener">WhatsApp ile yaz</a>':"")+(wa2?'<a href="https://wa.me/'+esc(wa2)+'?text='+encodeURIComponent("Merhaba, GüvenilirParçacı üzerinden "+x.title+" ilanınızı gördüm. Ürün hakkında bilgi alabilir miyim?")+'" target="_blank" rel="noopener">İkinci WhatsApp hattı</a>':"")+'<a href="/firma/'+encodeURIComponent(firm.slug||x.firm_id)+'">Firma profilini incele</a></div></div></aside></div>';
+ root.querySelectorAll("[data-photo]").forEach(btn=>btn.addEventListener("click",()=>{const p=photos[Number(btn.dataset.photo)];const img=root.querySelector("#mainPhoto");if(img){img.src=p.url;img.alt=p.alt;}root.querySelectorAll("[data-photo]").forEach(b=>b.classList.toggle("selected",b===btn));}));
+ const schema={"@context":"https://schema.org","@type":"Product","name":x.title,"description":desc,"image":photos.map(p=>p.url),"sku":x.part_number||x.oem_code||undefined,"category":x.gp_categories?.name,"brand":x.vehicle_brand?{"@type":"Brand","name":x.vehicle_brand}:undefined,"offers":x.price!=null&&x.price_type!=="contact"?{"@type":"Offer","price":Number(x.price),"priceCurrency":x.currency||"TRY","availability":x.stock_quantity>0?"https://schema.org/InStock":"https://schema.org/OutOfStock","seller":{"@type":"Organization","name":firm.name}}:undefined};
+ const script=document.createElement("script");script.type="application/ld+json";script.textContent=JSON.stringify(schema);document.head.appendChild(script);
+}catch(err){meta("robots","noindex,follow");root.innerHTML='<div class="empty">Bu ilan bulunamadı veya artık yayında değil. <a href="/ilanlar.html">Diğer ilanları inceleyin.</a></div>';}
+})();
+</script></body></html>
