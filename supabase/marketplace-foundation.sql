@@ -458,7 +458,9 @@ begin
     if tg_op = 'UPDATE' and new.status = 'active' and old.status <> 'active' then
       raise exception 'İlanı yayına alma yetkisi yalnızca yöneticidedir.';
     end if;
-    if new.status in ('rejected','expired') then
+    if tg_op = 'UPDATE'
+       and new.status in ('rejected','expired')
+       and old.status is distinct from new.status then
       raise exception 'Bu ilan durumu yalnızca yönetici veya sistem tarafından atanabilir.';
     end if;
   end if;
