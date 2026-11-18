@@ -226,7 +226,7 @@ $("listingForm").addEventListener("submit",async e=>{
  try{
   let listingId=editingId;
   if(editingId){
-   const {error}=await db.from("gp_listings").update(payload).eq("id",editingId).eq("firm_id",firm.id);
+   const {firm_id:unusedFirmId,...updatePayload}=payload;\n   const {error}=await db.from("gp_listings").update(updatePayload).eq("id",editingId).eq("firm_id",firm.id);
    if(error)throw error;
   }else{
    const {data,error}=await db.from("gp_listings").insert({...payload,status:"draft"}).select("id").single();
@@ -402,7 +402,7 @@ async function deleteListing(id){
 }
 async function markSold(id){
  if(!confirm("İlanı satıldı olarak işaretlemek istiyor musunuz?"))return;
- const {error}=await db.from("gp_listings").update({status:"sold",updated_at:new Date().toISOString()}).eq("id",id).eq("firm_id",firm.id);
+ const {error}=await db.from("gp_listings").update({status:"sold"}).eq("id",id).eq("firm_id",firm.id);
  if(error)alert(error.message);else await loadListings();
 }
 async function dashboardStart(){
