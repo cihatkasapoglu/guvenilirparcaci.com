@@ -193,7 +193,7 @@ It creates:
 - `/sitemap.xml` — sitemap index
 - `/sitemap-static.xml` — the fixed homepage/category/brand directory URLs
 - `/sitemap-listings.xml?page=1` — active, published listing URLs in batches of up to 10,000
-- `/sitemap-firms.xml?page=1` — publicly visible firm storefront URLs in batches of up to 10,000
+- `/sitemap-firms.xml?page=1` — publicly visible firm storefront URLs in batches of up to 10,000\n- `/sitemap-catalog.xml` — active category, brand, and model pages
 
 The function queries in 1,000-row database batches to stay within common Supabase REST row limits. Sitemap index entries are calculated from exact public row counts. Responses are cacheable for 15 minutes in browsers and one hour at shared caches.
 
@@ -210,12 +210,12 @@ supabase functions deploy public-sitemap
 The repository includes Cloudflare Pages Functions:
 - `functions/sitemap.xml.ts`
 - `functions/sitemap-listings.xml.ts`
-- `functions/sitemap-firms.xml.ts`
+- `functions/sitemap-firms.xml.ts`\n- `functions/sitemap-catalog.xml.ts`
 - shared proxy: `functions/_shared/sitemap-proxy.ts`
 
 Cloudflare Pages automatically routes these files to the matching XML endpoints. In Cloudflare Pages project settings, add the environment variable `SUPABASE_URL` with the real Supabase Project URL. Do not add the service-role key to Cloudflare Pages; the proxy only needs the project URL, and the Supabase Edge Function uses the public anon key.
 
-Deploy the Supabase Edge Function first, then deploy the website to Cloudflare Pages. The `functions/sitemap.xml.ts` route proxies `/sitemap.xml` to the sitemap index. The listing and firm routes preserve the requested `?page=` query parameter.
+Deploy the Supabase Edge Function first, then deploy the website to Cloudflare Pages. The `functions/sitemap.xml.ts` route proxies `/sitemap.xml` to the sitemap index. The listing and firm routes preserve the requested `?page=` query parameter. The catalogue route includes active category, vehicle brand, and vehicle model pages; model pages use stable numeric model IDs to avoid duplicate model-slug conflicts.
 
 For a hosting provider other than Cloudflare Pages, configure equivalent server-side proxy routes to:
 - `https://YOUR_PROJECT_REF.supabase.co/functions/v1/public-sitemap`
