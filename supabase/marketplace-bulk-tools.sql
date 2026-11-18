@@ -13,7 +13,7 @@ declare
   rec record;
   v_count integer := 0;
 begin
-  if jsonb_typeof(p_updates) <> 'array' then
+  if p_updates is null or jsonb_typeof(p_updates) is distinct from 'array' then
     raise exception 'Güncelleme verisi bir JSON dizisi olmalıdır.';
   end if;
 
