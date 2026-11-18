@@ -24,7 +24,7 @@ async function showListings(){
 async function showListing(){
  const root=$("#listingDetail");if(!root||!db)return;
  const id=new URLSearchParams(location.search).get("id");if(!id){root.innerHTML='<div class="listing-empty">İlan bulunamadı.</div>';return;}
- const {data,error}=await db.from("listings").select("*,companies(name,phone,whatsapp,city,status)").eq("id",id).maybeSingle();
+ const {data,error}=await db.from("listings").select("*,companies(name,slug,phone,whatsapp,city,address,status)").eq("id",id).maybeSingle();
  if(error||!data){root.innerHTML='<div class="listing-empty">İlan bulunamadı veya yayından kaldırılmış.</div>';return;}
  const b=brands.find(x=>x.id===data.brand_id),img=data.images?.[0]||"https://placehold.co/900x675/f2f4f5/66727d?text=Yedek+Parca";
  const phone=(data.companies?.whatsapp||data.companies?.phone||"").replace(/\D/g,"");
