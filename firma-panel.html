@@ -61,7 +61,7 @@
 <div class="stat"><span>Onay bekleyen</span><strong id="statPending">0</strong></div>
 <div class="stat"><span>Satıldı</span><strong id="statSold">0</strong></div>
 </div>
-<section class="panel-card">
+<section class="panel-card" id="editorCard">
 <div class="section-title"><div><h2 id="formHeading">Yeni ilan ekle</h2><p class="muted">İlanlar yönetici incelemesinden sonra yayınlanır. İlanı düzenlediğinizde yeniden onaya gönderilir.</p></div><button id="resetFormBtn" class="btn light" type="button">Formu temizle</button></div>
 <form id="listingForm" class="panel-form">
 <div class="field span-2"><label for="title">İlan başlığı *</label><input id="title" maxlength="150" required placeholder="Örn. Hyundai Accent Era 1.5 CRDi D4FA Komple Motor"></div>
@@ -101,7 +101,7 @@ const cfg=window.GP_SUPABASE_CONFIG;
 const $=id=>document.getElementById(id);
 if(!cfg||!window.supabase){$("loginError").textContent="Supabase bağlantısı yüklenemedi.";return;}
 const db=window.supabase.createClient(cfg.url,cfg.anonKey);
-let currentUser=null, firm=null, listings=[], editingId=null;
+let currentUser=null, firm=null, firmRole="viewer", listings=[], editingId=null;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const slug=s=>String(s||"").toLocaleLowerCase("tr-TR").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/ı/g,"i").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,110);
 const statusLabel=s=>({draft:"Taslak",pending:"Onay bekliyor",active:"Yayında",sold:"Satıldı",expired:"Süresi doldu",rejected:"Reddedildi"}[s]||s);
@@ -130,8 +130,9 @@ async function resolveFirm(){
  const {data:firmData,error:firmError}=await db.from("gp_firms").select("*").eq("id",firmId).single();
  if(firmError)throw firmError;
  if(firmData.status!=="active")throw new Error("Firmanız şu anda aktif değil. Lütfen GüvenilirParçacı yönetimiyle iletişime geçin.");
- firm=firmData;
- $("firmLabel").textContent=firm.name+" · "+(data[0].role==="owner"?"Firma sahibi":data[0].role==="admin"?"Firma yöneticisi":data[0].role==="editor"?"İlan editörü":"Görüntüleme yetkisi");
+ firm=firmData;firmRole=data[0].role;
+ $("firmLabel").textContent=firm.name+" · "+(firmRole==="owner"?"Firma sahibi":firmRole==="admin"?"Firma yöneticisi":firmRole==="editor"?"İlan editörü":"Görüntüleme yetkisi");
+ $("editorCard").classList.toggle("hidden",firmRole==="viewer");
  $("city").value=firm.city||"";
  $("district").value=firm.district||"";
 }
@@ -153,6 +154,7 @@ async function loadListings(){
   const price=item.price==null?"Fiyat için iletişim":Number(item.price).toLocaleString("tr-TR",{style:"currency",currency:"TRY"});
   return '<article class="listing">'+(src?'<img src="'+esc(src)+'" alt="" loading="lazy">':'<div style="width:100px;height:92px;border-radius:8px;background:#f0f2f4;display:grid;place-items:center;color:#89939b;font-size:11px">Fotoğraf yok</div>')+'<div><h3>'+esc(item.title)+'</h3><p>'+esc(item.gp_categories?.name||"Kategori seçilmedi")+' · '+esc(item.vehicle_brand||"Marka belirtilmedi")+' '+esc(item.vehicle_model||"")+'</p><p><strong>'+esc(price)+'</strong> · '+esc(item.condition==="new"?"Sıfır":item.condition==="used"?"Çıkma":"Revizyonlu")+'</p><p><span class="tag '+esc(item.status)+'">'+esc(statusLabel(item.status))+'</span></p><div class="actions" style="margin-top:8px"><button class="btn light" type="button" data-edit="'+item.id+'">Düzenle</button><button class="btn light" type="button" data-sold="'+item.id+'">Satıldı</button><button class="btn light" type="button" data-delete="'+item.id+'">Sil</button></div></div></article>';
  }).join(""):'<p class="muted">Henüz ilan eklemediniz. İlk ilanınızı yukarıdaki formdan oluşturabilirsiniz.</p>';
+ if(firmRole==="viewer")$("listings").querySelectorAll("[data-edit],[data-sold],[data-delete]").forEach(btn=>btn.remove());
 }
 function formPayload(){
  const price=$("price").value.trim();
@@ -253,6 +255,5 @@ db.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"){firm=null;s
 dashboardStart().catch(err=>message("loginError",err.message,"error"));
 })();
 </script>
-<div id="siteFooter"></div>
 </body>
 </html>
