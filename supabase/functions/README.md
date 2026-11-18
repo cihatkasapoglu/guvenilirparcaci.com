@@ -96,3 +96,16 @@ Deploy these additional functions after migrations 006 and 007:
 supabase functions deploy complete-firm-registration
 supabase functions deploy submit-payment-notice
 ```
+
+
+## Admin panel
+
+The responsive admin UI source is in `admin-panel/index.html`. Before publishing it, replace the two placeholders in the file with the Supabase Project URL and publishable/anon key. Never put the service-role key in this file.
+
+Apply migration `202611190008_admin_controls.sql` after migrations 001-007, then deploy:
+
+```bash
+supabase functions deploy admin-management
+```
+
+Provision the two administrator Auth users and insert their UUIDs into `public.admin_users` using the secure SQL instructions in [ADMIN_PANEL.md](./ADMIN_PANEL.md). The panel can then be hosted at a private/noindex route. Authentication and administrator membership are checked by the Edge Function on every request.
