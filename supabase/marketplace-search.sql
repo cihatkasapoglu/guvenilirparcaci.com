@@ -64,6 +64,7 @@ as $function$
     join public.gp_firms f on f.id = l.firm_id
     left join public.gp_categories c on c.id = l.category_id
     where l.status = 'active'
+      and (l.expires_at is null or l.expires_at > now())
       and f.status = 'active'
       and public.gp_firm_publicly_visible(f.id)
       and (
