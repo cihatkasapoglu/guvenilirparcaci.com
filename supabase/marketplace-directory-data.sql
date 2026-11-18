@@ -137,7 +137,7 @@ insert into public.gp_firm_images(firm_id,image_url,sort_order) values
 ('cihat-hyundai','/images/firms/cihat-hyundai/galeri/accent-blue-cikma-parca.JPEG',2),
 ('cihat-hyundai','/images/firms/cihat-hyundai/galeri/accent-yumurta-kasa-cikma-kaput.JPEG',3),
 ('cihat-hyundai','/images/firms/cihat-hyundai/galeri/hyundai-accent-admire-cikma-yedek-parca-cihat-hyundai-yedek-parca-hyundai-accent-admire-parca-admire-cikma-parca.jpeg',4),
-('cihat-hyundai','/images/firms/cihat-hyundai/galeri/hyundai-accent-admire-yesil-cikma-yedek-yedek-parca-kaporta-bagaj-kapagi-komple-arka-camurluklar.jpeg',5),
+('cihat-hyundai','/images/firms/cihat-hyundai/galeri/hyundai-accent-admire-yesil-cikma-yedek-parca-kaporta-bagaj-kapagi-komple-arka-camurluklar.jpeg',5),
 ('cihat-hyundai','/images/firms/cihat-hyundai/galeri/hyundai-accent-milenyum-bagaj-kapagi-hatasiz-cihat-hyundai-yedek-parca.jpeg',6),
 ('cihat-hyundai','/images/firms/cihat-hyundai/galeri/hyundai-getz-sag-arka-camurluk-mavi.jpeg',7)
 on conflict (firm_id,image_url) do nothing;
