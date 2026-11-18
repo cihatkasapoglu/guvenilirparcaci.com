@@ -123,6 +123,8 @@ Deploy the seller functions after the required migrations:
 supabase functions deploy manage-listing
 supabase functions deploy r2-create-upload-url
 supabase functions deploy r2-finalize-upload
+supabase functions deploy r2-create-firm-upload-url
+supabase functions deploy r2-finalize-firm-upload
 ```
 
 The seller panel currently expects the public catalogue tables and owner-read RLS policies from migrations 001-002, listing workflow RPCs from migration 005, and the payment workflow from migrations 006-007. Configure the R2 public image delivery base URL separately before displaying uploaded images on the storefront. Live authentication, database, and upload tests remain pending until Supabase and R2 are provisioned.
