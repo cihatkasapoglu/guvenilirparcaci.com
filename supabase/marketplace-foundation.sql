@@ -195,14 +195,14 @@ language sql
 stable
 security definer
 set search_path = public, auth
-as $
+as $function$
   select exists (
     select 1 from public.gp_firm_users fu
     where fu.firm_id = p_firm_id
       and fu.user_id = auth.uid()
       and fu.role in ('owner','admin')
   );
-$;
+$function$;
 
 create or replace function public.gp_can_manage_firm(p_firm_id text)
 returns boolean
@@ -227,7 +227,7 @@ language sql
 stable
 security definer
 set search_path = public, auth
-as $
+as $function$
   select exists (
     select 1
     from public.gp_firms f
@@ -246,7 +246,7 @@ as $
         )
       )
   );
-$;
+$function$;
 
 revoke all on function public.gp_firm_publicly_visible(text) from public;
 grant execute on function public.gp_firm_publicly_visible(text) to anon, authenticated;
@@ -483,7 +483,7 @@ returns trigger
 language plpgsql
 security invoker
 set search_path = public, auth
-as $
+as $function$
 begin
   if not public.gp_is_admin() then
     if tg_op = 'INSERT' and new.status not in ('draft','pending') then
@@ -500,7 +500,7 @@ begin
   end if;
   return new;
 end;
-$;
+$function$;
 
 drop trigger if exists gp_listings_publication_guard on public.gp_listings;
 create trigger gp_listings_publication_guard
