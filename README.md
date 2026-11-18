@@ -7,6 +7,7 @@ Türkiye genelindeki otomotiv yedek parça firmalarının sıfır ve çıkma par
 - `/markalar.html` – Araç markaları
 - `/ilanlar.html` – Yayındaki ilanları arama ve filtreleme
 - `/ilan.html?id=...` – İlan detay sayfası
+- `/magaza.html?slug=...` – Firma mağazası ve firmanın ilanları
 - `/giris.html` – Firma üyeliği ve giriş
 - `/panel.html` – Firma profili, ilan ekleme ve ilan takibi
 - `/admin.html` – Firma ve ilan onay yönetimi
