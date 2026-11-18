@@ -19,8 +19,8 @@
     if(rows&&rows.length){
      const firm=rows[0];
      const [brandResponse,imageResponse]=await Promise.all([
-      fetch(cfg.url+"/rest/v1/gp_firm_brands?firm_id=eq."+encodeURIComponent(id)+"&select=brand_id",{headers}),
-      fetch(cfg.url+"/rest/v1/gp_firm_images?firm_id=eq."+encodeURIComponent(id)+"&select=image_url&order=sort_order.asc",{headers})
+      fetch(cfg.url+"/rest/v1/gp_firm_brands?firm_id=eq."+encodeURIComponent(firm.id)+"&select=brand_id",{headers}),
+      fetch(cfg.url+"/rest/v1/gp_firm_images?firm_id=eq."+encodeURIComponent(firm.id)+"&select=image_url&order=sort_order.asc",{headers})
      ]);
      const brandRows=brandResponse.ok?await brandResponse.json():[];
      const imageRows=imageResponse.ok?await imageResponse.json():[];
@@ -34,8 +34,10 @@
       sponsored:!!firm.sponsored,approved:true,
       photos:(imageRows||[]).map(x=>x.image_url)
      };
+    }else{
+     f=staticFirm;
     }
-   }else if(response.status===404||response.ok){
+   }else if(response.status===404){
     // Backward compatibility if the database migration/data import is not yet installed.
     f=staticFirm;
     if(f){
