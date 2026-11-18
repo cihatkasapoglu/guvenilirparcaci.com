@@ -25,10 +25,11 @@ Endpoint: `/functions/v1/admin-management`
 Tüm istekler POST JSON ve `Authorization: Bearer <access token>` gerektirir.
 
 Desteklenen action değerleri:
-- `dashboard`: toplam firma/ilan, bekleyen EFT, açık şikâyet, aktif üyelik sayıları.
+- `dashboard`: toplam firma/ilan, bekleyen EFT, açık şikâyet, aktif üyelik, kayıtlı kullanıcı, favori ve toplam görüntülenme sayıları.
 - `list`: `kind` olarak `firms`, `payments`, `complaints`, `listings`, `packages`, `featured`; `page` ve `pageSize` (en fazla 50).
 - `approve_payment` / `reject_payment`: `notificationId`, isteğe bağlı `adminNote`. EFT onayından önce banka hareketi kontrol edilmelidir.
 - `update_firm_status`: `firmId`, `status` (`active` veya `suspended`).
+- `moderate_listing`: `listingId`, `status` (`withdrawn` veya `removed`), zorunlu `adminNote`. Yayından kaldırma geri alınmaz; kalıcı kaldırma daha ağır bir denetim işlemidir. Her işlem yönetici kayıtlarına yazılır.
 - `update_package`: `packageId`, `listingQuota`, `priceTry`, `durationDays`, `isActive`.
 - `moderate_complaint`: `complaintId`, `status` (`new`, `reviewing`, `resolved`, `dismissed`), isteğe bağlı `adminNote`.
 - `set_featured_settings`: `priceTry`, `durationDays` (1-90 gün).
