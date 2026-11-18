@@ -54,9 +54,6 @@ begin
   if v_description = '' or char_length(v_description) < 20 or char_length(v_description) > 10000 then
     raise exception 'İlan açıklaması 20-10000 karakter arasında olmalıdır.';
   end if;
-  if v_slug = '' or char_length(v_slug) > 160 then
-    raise exception 'İlan bağlantı adı geçersiz.';
-  end if;
   if v_part_type not in ('new','used') then
     raise exception 'Parça türü geçersiz.';
   end if;
@@ -84,6 +81,9 @@ begin
   end if;
 
   if p_listing_id is null then
+    if v_slug = '' or char_length(v_slug) > 160 then
+      raise exception 'İlan bağlantı adı geçersiz.';
+    end if;
     insert into public.listings (
       firm_id, category_id, subcategory_id, part_type, title, slug, description,
       fuel_type, engine_code, oem_number, price_try, price_type, status
