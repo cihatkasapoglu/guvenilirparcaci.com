@@ -4,14 +4,52 @@
  const path=decodeURIComponent(location.pathname.replace(/\/+$/,""));
  const pathMatch=path.match(/^\/firma\/([^/]+)$/);
  const id=(pathMatch&&pathMatch[1])||new URLSearchParams(location.search).get("firma");
- let f=(window.GP_FIRMS||[]).find(x=>x.id===id&&x.approved);
+ const staticFirm=(window.GP_FIRMS||[]).find(x=>x.id===id&&x.approved)||null;
+ let f=null;
  try{
   const cfg=window.GP_SUPABASE_CONFIG;
-  if(f&&cfg){
-   const response=await fetch(cfg.url+"/rest/v1/rpc/gp_public_membership_status",{method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.anonKey,"Authorization":"Bearer "+cfg.anonKey},body:"{}"});
-   if(response.ok){const rows=await response.json();const state=(rows||[]).find(x=>x.firm_id===f.id);if(state&&!state.active)f=null;}
+  if(cfg){
+   const headers={"apikey":cfg.anonKey,"Authorization":"Bearer "+cfg.anonKey};
+   const response=await fetch(cfg.url+"/rest/v1/gp_firms?id=eq."+encodeURIComponent(id)+"&select=*",{headers});
+   if(response.ok){
+    const rows=await response.json();
+    if(rows&&rows.length){
+     const firm=rows[0];
+     const [brandResponse,imageResponse]=await Promise.all([
+      fetch(cfg.url+"/rest/v1/gp_firm_brands?firm_id=eq."+encodeURIComponent(id)+"&select=brand_id",{headers}),
+      fetch(cfg.url+"/rest/v1/gp_firm_images?firm_id=eq."+encodeURIComponent(id)+"&select=image_url&order=sort_order.asc",{headers})
+     ]);
+     const brandRows=brandResponse.ok?await brandResponse.json():[];
+     const imageRows=imageResponse.ok?await imageResponse.json():[];
+     f={
+      id:firm.id,name:firm.name,brands:(brandRows||[]).map(x=>x.brand_id),
+      logo:firm.logo_url||"",address:firm.address||"",phone:firm.phone||"",
+      phone2:firm.phone_secondary||"",whatsapp:firm.whatsapp||"",
+      whatsapp2:firm.whatsapp_secondary||"",website:firm.website||"",
+      hours:firm.hours||"",shortDescription:firm.short_description||"",
+      description:firm.description||"",rating:firm.rating||null,
+      sponsored:!!firm.sponsored,approved:true,
+      photos:(imageRows||[]).map(x=>x.image_url)
+     };
+    }
+   }else if(response.status===404){
+    // Backward compatibility before the marketplace database migration is installed.
+    f=staticFirm;
+    if(f){
+     const membershipResponse=await fetch(cfg.url+"/rest/v1/rpc/gp_public_membership_status",{method:"POST",headers:{...headers,"Content-Type":"application/json"},body:"{}"});
+     if(membershipResponse.ok){
+      const rows=await membershipResponse.json();
+      const state=(rows||[]).find(x=>x.firm_id===f.id);
+      if(state&&!state.active)f=null;
+     }
+    }
+   }
+  }else{
+   f=staticFirm;
   }
- }catch(error){console.warn("Üyelik durumu kontrol edilemedi:",error);}
+ }catch(error){
+  console.warn("Firma bilgileri yüklenemedi:",error);
+ }
 
  const e=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const setMeta=(name,content,property=false)=>{let el=document.querySelector((property?'meta[property="':'meta[name="')+name+'"]');if(!el){el=document.createElement("meta");el.setAttribute(property?"property":"name",name);document.head.appendChild(el);}el.setAttribute("content",content);};
