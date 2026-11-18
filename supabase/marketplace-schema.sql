@@ -71,11 +71,15 @@ returns trigger language plpgsql
 as $approval$
 begin
   if (auth.jwt()->'app_metadata'->>'role') is distinct from 'admin' then
-    if tg_table_name = 'companies' and new.status is distinct from old.status then
+    if tg_table_name = 'companies' and tg_op = 'UPDATE' and new.status is distinct from old.status then
       raise exception 'Firma onay durumu yalnızca yönetici tarafından değiştirilebilir.';
     end if;
-    if tg_table_name = 'listings' and new.status is distinct from old.status then
-      raise exception 'İlan yayın durumu yalnızca yönetici tarafından değiştirilebilir.';
+    if tg_table_name = 'listings' then
+      if tg_op = 'INSERT' and new.status <> 'pending' then
+        raise exception 'Yeni ilanlar yönetici onayı beklemelidir.';
+      elsif tg_op = 'UPDATE' and new.status is distinct from old.status then
+        raise exception 'İlan yayın durumu yalnızca yönetici tarafından değiştirilebilir.';
+      end if;
     end if;
   end if;
   return new;
@@ -87,7 +91,7 @@ create trigger protect_company_approval before update on public.companies
 for each row execute function public.protect_marketplace_approval();
 
 drop trigger if exists protect_listing_approval on public.listings;
-create trigger protect_listing_approval before update on public.listings
+create trigger protect_listing_approval before insert or update on public.listings
 for each row execute function public.protect_marketplace_approval();
 
 alter table public.companies enable row level security;
@@ -99,7 +103,7 @@ for select using (status = 'approved' or id = auth.uid() or (auth.jwt()->'app_me
 
 drop policy if exists "Company owners can update own profile" on public.companies;
 create policy "Company owners can update own profile" on public.companies
-for update using (id = auth.uid()) with check (id = auth.uid());
+for update using (id = auth.uid() or (auth.jwt()->'app_metadata'->>'role') = 'admin') with check (id = auth.uid() or (auth.jwt()->'app_metadata'->>'role') = 'admin');
 
 drop policy if exists "Public can view active listings" on public.listings;
 create policy "Public can view active listings" on public.listings
