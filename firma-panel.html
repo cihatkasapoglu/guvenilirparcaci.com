@@ -134,7 +134,7 @@ async function loadLookups(){
   db.from("gp_vehicle_brands").select("id,name").eq("is_active",true).order("sort_order")
  ]);
  if(cats.error||brands.error)throw cats.error||brands.error;
- const roots=(cats.data||[]).filter(x=>!x.parent_id);
+ categories=cats.data||[];\n const roots=categories.filter(x=>!x.parent_id);
  const children=cats.data||[];
  $("category").innerHTML='<option value="">Kategori seçin</option>'+roots.map(root=>'<optgroup label="'+esc(root.name)+'">'+children.filter(c=>c.parent_id===root.id).map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join("")+'</optgroup>').join("")+
   roots.filter(root=>!children.some(c=>c.parent_id===root.id)).map(root=>'<option value="'+root.id+'">'+esc(root.name)+'</option>').join("");
