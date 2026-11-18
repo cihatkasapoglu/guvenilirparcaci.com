@@ -19,7 +19,7 @@ async function showListings(){
  if(q)query=query.or("title.ilike.%"+q+"%,part_name.ilike.%"+q+"%,model.ilike.%"+q+"%,part_number.ilike.%"+q+"%");
  const {data,error}=await query;
  if(error){root.innerHTML='<div class="listing-empty">İlanlar şu anda yüklenemedi. Veritabanı kurulumu tamamlandığında burada yayınlanacak.</div>';return;}
- root.innerHTML=data?.length?data.map(listingCard).join(""):'<div class="listing-empty">Aramanıza uygun yayında ilan bulunamadı.</div>';
+ root.innerHTML=data?.length?'<div class="listing-grid">'+data.map(listingCard).join("")+'</div>':'<div class="listing-empty">Aramanıza uygun yayında ilan bulunamadı.</div>';
 }
 async function showListing(){
  const root=$("#listingDetail");if(!root||!db)return;
