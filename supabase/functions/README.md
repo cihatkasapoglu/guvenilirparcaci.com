@@ -109,3 +109,20 @@ supabase functions deploy admin-management
 ```
 
 Provision the two administrator Auth users and insert their UUIDs into `public.admin_users` using the secure SQL instructions in [ADMIN_PANEL.md](./ADMIN_PANEL.md). The panel can then be hosted at a private/noindex route. Authentication and administrator membership are checked by the Edge Function on every request.
+
+
+## Seller panel
+
+The responsive seller interface is in `seller-panel/index.html`. It includes sign-in/password reset, seller listing management, multi-model compatibility selection, R2 photo upload, publish/withdraw/delete, daily refresh usage, membership/payment notice history, and firm profile editing.
+
+Before hosting, replace `SUPABASE_PROJECT_URL_BURAYA` and `SUPABASE_ANON_KEY_BURAYA` in the file. Do not place the service-role key in browser code. Host this page over HTTPS at a private/noindex route such as `/firma-panel/`.
+
+Deploy the seller functions after the required migrations:
+
+```bash
+supabase functions deploy manage-listing
+supabase functions deploy r2-create-upload-url
+supabase functions deploy r2-finalize-upload
+```
+
+The seller panel currently expects the public catalogue tables and owner-read RLS policies from migrations 001-002, listing workflow RPCs from migration 005, and the payment workflow from migrations 006-007. Configure the R2 public image delivery base URL separately before displaying uploaded images on the storefront. Live authentication, database, and upload tests remain pending until Supabase and R2 are provisioned.
