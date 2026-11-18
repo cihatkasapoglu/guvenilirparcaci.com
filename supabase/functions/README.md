@@ -136,3 +136,16 @@ Apply `202611190009_listing_image_management.sql` after migrations 001-008. It a
 ## Public marketplace pages
 
 The first public buyer-facing pages are in `marketplace/index.html` (search and filters) and `marketplace/ilan.html` (listing detail and seller contact). They use the Supabase anon/publishable key only and rely on the public listing and firm-directory RLS policies. Before hosting, replace the Supabase URL/key placeholders and `R2_PUBLIC_BASE_URL_BURAYA` with the public R2 custom-domain base URL. Host the files at the intended public routes and configure the listing-detail route/SEO metadata as the site routing is finalized. These pages are source files only; they are not deployed.
+
+
+## Public firm storefront
+
+The public firm storefront source is `marketplace/firma.html`. It loads a firm by its public slug from `public_firm_directory`, displays the firm's logo/cover, description, address and phone/WhatsApp contact, and lists up to 100 currently published, unexpired listings. Business opening hours are not displayed.
+
+Listing detail pages link to the corresponding storefront. The current static route is:
+
+```
+/marketplace/firma.html?slug=firm-slug
+```
+
+A clean route such as `/firm-slug` requires a hosting rewrite rule. Configure that only after confirming the production hosting platform, and reserve system paths such as `/marketplace`, `/firma-panel`, and `/admin-panel`. This page is source only and requires the Supabase URL, anon key and R2 public base URL to be configured before deployment.
