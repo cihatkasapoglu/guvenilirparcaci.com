@@ -179,6 +179,30 @@ $function$;
 revoke all on function public.gp_admin_review_listing(uuid,text,text) from public;
 grant execute on function public.gp_admin_review_listing(uuid,text,text) to authenticated;
 
+create or replace function public.gp_expire_listings()
+returns integer
+language plpgsql
+security definer
+set search_path = public, auth
+as $function$
+declare
+  v_count integer;
+begin
+  update public.gp_listings
+  set status = 'expired'
+  where status = 'active'
+    and expires_at is not null
+    and expires_at <= now();
+
+  get diagnostics v_count = row_count;
+  return v_count;
+end;
+$function$;
+
+revoke all on function public.gp_expire_listings() from public;
+revoke all on function public.gp_expire_listings() from anon, authenticated;
+grant execute on function public.gp_expire_listings() to service_role;
+
 create or replace function public.gp_admin_listing_counts()
 returns table (
   total_count bigint,
