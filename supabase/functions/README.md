@@ -83,7 +83,16 @@ Do not run these commands until the project, bucket, CORS policy, and secrets ha
 
 - Add image resizing/thumbnail generation before public display.
 - Add scheduled orphan-object cleanup and verify deletion behavior.
-- Add image resizing/thumbnail generation before public display.\n- Add scheduled orphan-object cleanup and verify deletion behavior.\n- Add rate limits and abuse monitoring for upload URL creation.
 - Add rate limits and abuse monitoring for upload URL creation.
 - Do not expose the R2 S3 endpoint or secret credentials in browser code.
-\n\n## Firm registration and EFT membership\n\nSee [REGISTRATION_AND_PAYMENTS.md](./REGISTRATION_AND_PAYMENTS.md) for the verified-email firm registration flow, package selection, EFT notification, and admin approval steps.\n\nDeploy these additional functions after migrations 006 and 007:\n\n```bash\nsupabase functions deploy complete-firm-registration\nsupabase functions deploy submit-payment-notice\n```\n
+
+## Firm registration and EFT membership
+
+See [REGISTRATION_AND_PAYMENTS.md](./REGISTRATION_AND_PAYMENTS.md) for the verified-email firm registration flow, package selection, EFT notification, and admin approval steps.
+
+Deploy these additional functions after migrations 006 and 007:
+
+```bash
+supabase functions deploy complete-firm-registration
+supabase functions deploy submit-payment-notice
+```
