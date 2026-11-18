@@ -164,3 +164,22 @@ A clean route such as `/firm-slug` requires a hosting rewrite rule. Configure th
 - Apply `202611190010_public_interactions_indexes.sql` after the initial schema to optimize view and complaint queries.
 
 These are source changes only. Deploy the Edge Function and apply migrations in the Supabase project before enabling the feature in production. Configure email confirmation and redirect URLs in Supabase Auth for buyer registration.
+
+
+## Clean URLs and SEO
+
+The repository includes two hosting rewrite configurations:
+
+- `_redirects`: for Cloudflare Pages / Netlify-style static hosting.
+- `.htaccess`: for Apache hosting with `mod_rewrite`.
+
+Public URL formats:
+
+- Firm storefront: `https://guvenilirparcaci.com/firma-slug`
+- Listing detail: `https://guvenilirparcaci.com/ilan/LISTING-UUID/listing-title`
+
+The seller login route `/firma-panel/` is rewritten to `seller-panel/index.html`. Keep the rewrite file that matches the actual hosting platform at the website document root. Do not install both routing systems blindly; Apache uses `.htaccess`, while Cloudflare Pages/Netlify reads `_redirects`.
+
+Listing detail pages now set a canonical URL, a description based on the listing, Open Graph sharing metadata, a social sharing image when available, and Schema.org Product/Offer structured data. Firm storefronts use the firm slug as the canonical URL and publish AutoPartsStore structured data and social metadata. The old query-string detail URLs remain accepted for backward compatibility, but canonical tags point to the clean URLs.
+
+The current `sitemap.xml` lists the main public directory pages. It does not yet enumerate every live listing and firm dynamically. A dynamic sitemap should be connected after the production Supabase project and hosting rewrite/proxy are configured; do not add sample or invented listing URLs to the sitemap. Submit `https://guvenilirparcaci.com/sitemap.xml` in Google Search Console after deployment.
