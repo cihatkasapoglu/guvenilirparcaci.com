@@ -149,3 +149,16 @@ Listing detail pages link to the corresponding storefront. The current static ro
 ```
 
 A clean route such as `/firm-slug` requires a hosting rewrite rule. Configure that only after confirming the production hosting platform, and reserve system paths such as `/marketplace`, `/firma-panel`, and `/admin-panel`. This page is source only and requires the Supabase URL, anon key and R2 public base URL to be configured before deployment.
+
+
+## Buyer interactions
+
+- `supabase/functions/public-interactions/index.ts` handles public listing view recording and complaint submission. It uses the service role only inside the Edge Function; never expose that key in browser code.
+- Deploy the function as `public-interactions`. It needs the standard `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` secrets.
+- The endpoint records at most one view per listing, browser visitor identifier and Turkey-local calendar day. The visitor identifier is stored in the browser's local storage; the server stores only a SHA-256 hash combined with a truncated user-agent.
+- Complaint submissions validate email, reason and explanation, include a honeypot field and limit repeated complaints for the same listing/email to three per hour.
+- Favorites use the existing `favorites` table and authenticated-user RLS policies. Buyers can sign in/register on the listing detail page and review saved ads at `/marketplace/favorilerim.html`.
+- Sellers see per-listing view totals in the seller panel. The owner-read policy on `listing_views` is defined in migration `202611180003_marketplace_workflows.sql`.
+- Apply `202611190010_public_interactions_indexes.sql` after the initial schema to optimize view and complaint queries.
+
+These are source changes only. Deploy the Edge Function and apply migrations in the Supabase project before enabling the feature in production. Configure email confirmation and redirect URLs in Supabase Auth for buyer registration.
