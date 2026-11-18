@@ -60,7 +60,7 @@ Kullanıcılar kendilerini başka bir firmaya bağlayamaz. Firma yetkisini yaln�
 
 ## 5. Henüz tamamlanmamış işler
 
-- Mevcut `brands.js` statik firma dizisini doğrudan veritabanından okuyan firma profili sayfalarına geçiş.
+- Mevcut firma profilleri artık veritabanından okunur; `brands.js` yalnızca veritabanı geçişi yapılmamış eski kurulumlar için yedek olarak kalır.
 - Dinamik ilan sitemap'i ve SEO dostu ilan URL'leri.
 - Excel/CSV toplu ilan aktarımı ve toplu fiyat/stok güncellemesi.
 - Üyelik paketlerine göre ilan limitleri ve otomatik ilan süresi yönetimi.
