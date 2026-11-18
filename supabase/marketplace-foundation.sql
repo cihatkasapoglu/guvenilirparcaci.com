@@ -310,14 +310,20 @@ revoke all on public.gp_firms, public.gp_firm_users, public.gp_categories,
 grant select on public.gp_firms, public.gp_categories, public.gp_listings,
   public.gp_listing_images to anon, authenticated;
 grant select, insert, update, delete on public.gp_firm_users to authenticated;
-grant insert, delete on public.gp_listings to authenticated;
+grant delete on public.gp_listings to authenticated;
+grant insert (
+  firm_id,category_id,title,slug,description,condition,vehicle_brand,vehicle_model,
+  vehicle_year_from,vehicle_year_to,engine_code,oem_code,part_number,price,currency,
+  price_type,stock_quantity,warranty_info,city,district,attributes,status
+) on public.gp_listings to authenticated;
 grant update (
   category_id,title,slug,description,condition,vehicle_brand,vehicle_model,
   vehicle_year_from,vehicle_year_to,engine_code,oem_code,part_number,
   price,currency,price_type,stock_quantity,warranty_info,city,district,
   attributes,status
 ) on public.gp_listings to authenticated;
-grant insert, delete on public.gp_listing_images to authenticated;
+grant delete on public.gp_listing_images to authenticated;
+grant insert (listing_id,storage_path,alt_text,sort_order,is_cover) on public.gp_listing_images to authenticated;
 grant update (alt_text,sort_order,is_cover) on public.gp_listing_images to authenticated;
 revoke insert, update, delete on public.gp_firms from authenticated;
 revoke insert on public.gp_listing_reports from anon, authenticated;
