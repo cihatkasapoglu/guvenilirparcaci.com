@@ -309,9 +309,19 @@ revoke all on public.gp_firms, public.gp_firm_users, public.gp_categories,
 
 grant select on public.gp_firms, public.gp_categories, public.gp_listings,
   public.gp_listing_images to anon, authenticated;
-grant select, insert, update, delete on public.gp_firms,
-  public.gp_firm_users, public.gp_listings, public.gp_listing_images to authenticated;
-grant insert on public.gp_listing_reports to anon, authenticated;
+grant select, insert, update, delete on public.gp_firm_users to authenticated;
+grant insert, delete on public.gp_listings to authenticated;
+grant update (
+  category_id,title,slug,description,condition,vehicle_brand,vehicle_model,
+  vehicle_year_from,vehicle_year_to,engine_code,oem_code,part_number,
+  price,currency,price_type,stock_quantity,warranty_info,city,district,
+  attributes,status
+) on public.gp_listings to authenticated;
+grant insert, delete on public.gp_listing_images to authenticated;
+grant update (alt_text,sort_order,is_cover) on public.gp_listing_images to authenticated;
+revoke insert, update, delete on public.gp_firms from authenticated;
+revoke insert on public.gp_listing_reports from anon, authenticated;
+grant insert (listing_id,reporter_email,reason,details) on public.gp_listing_reports to anon, authenticated;
 grant select, update on public.gp_listing_reports to authenticated;
 grant select on public.gp_listing_events to authenticated;
 
@@ -324,12 +334,6 @@ drop policy if exists gp_firms_member_read on public.gp_firms;
 create policy gp_firms_member_read on public.gp_firms
 for select to authenticated
 using (public.gp_can_access_firm(id) or public.gp_is_admin());
-
-drop policy if exists gp_firms_member_update on public.gp_firms;
-create policy gp_firms_member_update on public.gp_firms
-for update to authenticated
-using (public.gp_can_administer_firm(id))
-with check (public.gp_can_administer_firm(id));
 
 drop policy if exists gp_firms_admin_manage on public.gp_firms;
 create policy gp_firms_admin_manage on public.gp_firms
