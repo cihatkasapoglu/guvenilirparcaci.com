@@ -126,3 +126,8 @@ supabase functions deploy r2-finalize-upload
 ```
 
 The seller panel currently expects the public catalogue tables and owner-read RLS policies from migrations 001-002, listing workflow RPCs from migration 005, and the payment workflow from migrations 006-007. Configure the R2 public image delivery base URL separately before displaying uploaded images on the storefront. Live authentication, database, and upload tests remain pending until Supabase and R2 are provisioned.
+
+
+### Seller photo management update
+
+Apply `202611190009_listing_image_management.sql` after migrations 001-008. It adds the service-role-only RPC used to safely reorder a seller's own listing photos and set the first photo as the cover. The `manage-listing` Edge Function now supports `delete_image` and `reorder_images`; the seller panel displays thumbnails when `R2_PUBLIC_BASE_URL` is configured and provides move/delete controls. Set that public delivery base URL in the seller panel source before hosting. Never expose R2 credentials in the browser.
