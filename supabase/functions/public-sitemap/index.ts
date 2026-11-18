@@ -57,7 +57,7 @@ Deno.serve(async (request) => {
     }
 
     if (type === "index") {
-      const [{ count: listingCount, error: listingError }, { count: firmCount, error: firmError }] = await Promise.all([
+      const [{ count: listingCount, error: listingError }, { count: firmCount, error: firmError }, { count: catalogCount, error: catalogError }] = await Promise.all([
         db.from("listings").select("id", { count: "exact", head: true })
           .eq("status", "published").gt("expires_at", new Date().toISOString()),
         db.from("public_firm_directory").select("id", { count: "exact", head: true }),
@@ -75,6 +75,28 @@ Deno.serve(async (request) => {
       return xmlResponse('<?xml version="1.0" encoding="UTF-8"?>' +
         '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
         entries.join("") + "</sitemapindex>");
+    }
+
+    if (type === "catalog") {
+      const [categories, brands, models] = await Promise.all([
+        db.from("categories").select("slug,updated_at").eq("is_active", true).order("slug"),
+        db.from("vehicle_brands").select("slug,updated_at").eq("is_active", true).order("slug"),
+        db.from("vehicle_models").select("id,slug,updated_at").eq("is_active", true).order("id"),
+      ]);
+      if (categories.error || brands.error || models.error) {
+        return xmlResponse("Could not load public catalogue", 503);
+      }
+      const entries = [
+        ...(categories.data || []).map((row) =>
+          urlEntry(sitemapUrl("/marketplace/kategori.html?slug=" + encodeURIComponent(row.slug)), row.updated_at)),
+        ...(brands.data || []).map((row) =>
+          urlEntry(sitemapUrl("/marketplace/marka.html?slug=" + encodeURIComponent(row.slug)), row.updated_at)),
+        ...(models.data || []).map((row) =>
+          urlEntry(sitemapUrl("/marketplace/model.html?id=" + encodeURIComponent(row.id)), row.updated_at)),
+      ];
+      return xmlResponse('<?xml version="1.0" encoding="UTF-8"?>' +
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
+        entries.join("") + "</urlset>");
     }
 
     if (type === "listings" || type === "firms") {
