@@ -87,7 +87,7 @@ async function loadFirms(){
 }
 async function loadQueue(){
  const [queueRes,countsRes]=await Promise.all([
-  db.from("gp_listings").select("*,gp_firms(name,phone),gp_categories(name)").in("status",["draft","pending"]).order("created_at",{ascending:true}).range((queuePage-1)*queuePageSize,queuePage*queuePageSize),
+  db.from("gp_listings").select("*,gp_firms(name,phone),gp_categories(name)").in("status",["draft","pending"]).order("created_at",{ascending:true}).order("id",{ascending:true}).range((queuePage-1)*queuePageSize,queuePage*queuePageSize),
   db.rpc("gp_admin_listing_counts")
  ]);
  if(queueRes.error||countsRes.error)throw queueRes.error||countsRes.error;
