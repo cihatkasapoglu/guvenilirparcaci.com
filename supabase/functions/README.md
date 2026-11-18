@@ -183,3 +183,48 @@ The seller login route `/firma-panel/` is rewritten to `seller-panel/index.html`
 Listing detail pages now set a canonical URL, a description based on the listing, Open Graph sharing metadata, a social sharing image when available, and Schema.org Product/Offer structured data. Firm storefronts use the firm slug as the canonical URL and publish AutoPartsStore structured data and social metadata. The old query-string detail URLs remain accepted for backward compatibility, but canonical tags point to the clean URLs.
 
 The current `sitemap.xml` lists the main public directory pages. It does not yet enumerate every live listing and firm dynamically. A dynamic sitemap should be connected after the production Supabase project and hosting rewrite/proxy are configured; do not add sample or invented listing URLs to the sitemap. Submit `https://guvenilirparcaci.com/sitemap.xml` in Google Search Console after deployment.
+
+
+## Dynamic XML sitemap and Google indexing
+
+The Edge Function `public-sitemap` generates an XML sitemap index using the public Supabase role (never the service-role key). Database row-level security controls which published listings are visible; the firm sitemap reads only `public_firm_directory`, which excludes firms without an active public membership.
+
+It creates:
+- `/sitemap.xml` — sitemap index
+- `/sitemap-static.xml` — the fixed homepage/category/brand directory URLs
+- `/sitemap-listings.xml?page=1` — active, published listing URLs in batches of up to 10,000
+- `/sitemap-firms.xml?page=1` — publicly visible firm storefront URLs in batches of up to 10,000
+
+The function queries in 1,000-row database batches to stay within common Supabase REST row limits. Sitemap index entries are calculated from exact public row counts. Responses are cacheable for 15 minutes in browsers and one hour at shared caches.
+
+### Deploy
+
+After creating the Supabase project, applying all database migrations, and setting the required function secrets, deploy:
+
+```bash
+supabase functions deploy public-sitemap
+```
+
+### Connect the public domain
+
+For Cloudflare Pages, add this proxy rule to the root `_redirects` file after replacing `YOUR_PROJECT_REF` with the real Supabase project reference:
+
+```text
+/sitemap.xml https://YOUR_PROJECT_REF.supabase.co/functions/v1/public-sitemap 200
+/sitemap-listings.xml /functions/v1/public-sitemap?type=listings 200
+/sitemap-firms.xml /functions/v1/public-sitemap?type=firms 200
+```
+
+The two query-parameter rewrites above are relative to the site and are only suitable if a Pages Function proxy is implemented. For a direct Supabase proxy, use explicit absolute Supabase function URLs with the corresponding `?type=` query string, or implement a Cloudflare Pages Function at `functions/sitemap-listings.xml.ts` and `functions/sitemap-firms.xml.ts`. Do not add these routes before the project reference exists and the function is deployed.
+
+For other hosting providers, configure equivalent reverse-proxy rewrites to the Supabase function. Keep `sitemap-static.xml` as a separate static file. The existing `sitemap.xml` remains a static fallback until the dynamic proxy is enabled.
+
+### Google Search Console
+
+After the domain and dynamic endpoint are live:
+1. Verify `guvenilirparcaci.com` in Google Search Console.
+2. Open Sitemaps and submit `https://guvenilirparcaci.com/sitemap.xml`.
+3. Inspect a sample firm URL and listing URL with URL Inspection.
+4. Check indexing and sitemap processing reports for errors.
+
+Do not submit the dynamic sitemap before its proxy is enabled. The source code is prepared but is not deployed, and the current sitemap is not yet dynamically populated.
