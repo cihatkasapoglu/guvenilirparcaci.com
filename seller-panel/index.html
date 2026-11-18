@@ -14,7 +14,6 @@
 <section id="login" class="card login">
 <h2>Firma hesabınıza giriş yapın</h2><p class="muted">Devam etmek için e-posta adresiniz doğrulanmış olmalıdır.</p>
 <p class="small">Henüz firmanız kayıtlı değil mi? <a href="/seller-panel/kayit.html">Firma hesabı oluşturun</a>.</p>
-<p class="small">Henüz firmanız kayıtlı değil mi? <a href="/seller-panel/kayit.html">Firma hesabı oluşturun</a>.</p>
 <label>E-posta</label><input id="email" type="email" autocomplete="username">
 <label>Şifre</label><input id="password" type="password" autocomplete="current-password">
 <div class="row" style="margin-top:16px"><button id="loginBtn">Giriş yap</button><button id="resetBtn" class="secondary">Şifremi unuttum</button></div>
@@ -69,7 +68,13 @@
 <h3 style="margin-top:24px">Ödeme bildirimlerim</h3><div id="payments"></div>
 </section>
 <section id="tab-firm" class="card hidden">
-<h2>Firma bilgilerim</h2><form id="firmForm"><div class="formgrid">
+<h2>Firma bilgilerim ve mağaza görünümü</h2>
+<div class="formgrid" style="margin-bottom:18px">
+<div><label>Firma logosu (JPG, PNG veya WebP; en fazla 5 MB)</label><input id="firmLogoFile" type="file" accept="image/jpeg,image/png,image/webp"><div class="photo-grid"><div class="photo-item"><img id="firmLogoPreview" alt="Firma logo önizlemesi"><div class="small">Mağaza logosu</div></div></div><button type="button" class="secondary" id="uploadLogo">Logoyu yükle</button></div>
+<div><label>Mağaza kapak fotoğrafı (JPG, PNG veya WebP; en fazla 5 MB)</label><input id="firmCoverFile" type="file" accept="image/jpeg,image/png,image/webp"><div class="photo-grid"><div class="photo-item"><img id="firmCoverPreview" alt="Kapak fotoğrafı önizlemesi"><div class="small">Mağaza kapak fotoğrafı</div></div></div><button type="button" class="secondary" id="uploadCover">Kapağı yükle</button></div>
+</div>
+<div class="notice">Mağazanızdaki logo, kapak fotoğrafı, firma açıklaması, adres, telefon ve WhatsApp bilgileri ziyaretçilere gösterilir. Çalışma saatleri gösterilmez.</div>
+<form id="firmForm"><div class="formgrid">
 <div><label>Firma adı</label><input id="firmName" required></div><div><label>Yetkili kişi</label><input id="contactName" required></div>
 <div><label>Telefon</label><input id="firmPhone" required></div><div><label>WhatsApp</label><input id="firmWhatsapp" required></div>
 <div><label>E-posta</label><input id="firmEmail" type="email" required></div><div><label>İl</label><input id="province" required></div>
@@ -96,7 +101,10 @@ function errorText(e){return e?.message||"İşlem tamamlanamadı.";}
 function showApp(on){$("login").classList.toggle("hidden",on);$("app").classList.toggle("hidden",!on);$("logout").classList.toggle("hidden",!on);}
 function tab(name){document.querySelectorAll("[id^=tab-]").forEach(x=>x.classList.add("hidden"));$("tab-"+name).classList.remove("hidden");document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));}
 async function loadFirm(){const {data,error}=await sb.from("firms").select("*").maybeSingle();if(error)throw error;if(!data)throw new Error("Bu kullanıcıya ait firma kaydı bulunamadı. Önce firma kaydınızı tamamlayın.");firm=data;
-const fields={firmName:"name",contactName:"contact_name",firmPhone:"phone",firmWhatsapp:"whatsapp",firmEmail:"email",province:"province",district:"district",address:"address",firmDescription:"description"};for(const [id,key] of Object.entries(fields))$(id).value=data[key]||"";}
+const fields={firmName:"name",contactName:"contact_name",firmPhone:"phone",firmWhatsapp:"whatsapp",firmEmail:"email",province:"province",district:"district",address:"address",firmDescription:"description"};for(const [id,key] of Object.entries(fields))$(id).value=data[key]||"";renderFirmPreviews();}
+function firmAssetUrl(key){if(!key||R2_PUBLIC_BASE_URL.includes("_BURAYA"))return "";return R2_PUBLIC_BASE_URL.replace(/\/$/,"")+"/"+key.split("/").map(encodeURIComponent).join("/");}
+function renderFirmPreviews(){for(const [id,key] of [["firmLogoPreview",firm?.logo_object_key],["firmCoverPreview",firm?.cover_object_key]]){const el=$(id),url=firmAssetUrl(key);el.src=url||"data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";el.style.display=url?"block":"none";}}
+async function uploadFirmAsset(assetType){const input=$(assetType==="logo"?"firmLogoFile":"firmCoverFile"),file=input.files?.[0];if(!file)throw new Error("Önce bir görsel seçin.");if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024)throw new Error("JPG, PNG veya WebP dosyası seçin. En fazla 5 MB olabilir.");const signed=await invoke("r2-create-firm-upload-url",{assetType,contentType:file.type,size:file.size});const put=await fetch(signed.uploadUrl,{method:"PUT",headers:signed.requiredHeaders,body:file});if(!put.ok)throw new Error("Görsel R2'ye yüklenemedi.");await invoke("r2-finalize-firm-upload",{assetType,objectKey:signed.objectKey});await loadFirm();input.value="";msg(assetType==="logo"?"Firma logosu güncellendi.":"Mağaza kapak fotoğrafı güncellendi.");}
 async function loadCatalog(){const [cats,brands,subs,pkgs]=await Promise.all([
 sb.from("categories").select("id,name").eq("is_active",true).order("sort_order"),
 sb.from("vehicle_brands").select("id,name").eq("is_active",true).order("name"),
@@ -169,6 +177,7 @@ $("existingPhotos").onclick=managePhotoClick;
 $("listingList").onclick=async e=>{const b=e.target.closest("button");if(!b)return;try{if(b.dataset.edit)await editListing(b.dataset.edit);else for(const [key,act] of [["refresh","refresh"],["publish","publish"],["withdraw","withdraw"],["delete","delete"]])if(b.dataset[key])await action(b.dataset[key],act);}catch(err){msg(errorText(err),true);}};
 $("package").onchange=()=>{const p=packages.find(x=>String(x.id)===$("package").value);if(p)$("amount").value=p.price_try;};
 $("paymentBtn").onclick=async()=>{try{const amount=Number($("amount").value);const senderName=$("sender").value.trim();if(!senderName||!amount||amount<=0)throw new Error("Gönderen adı ve tutarı girin.");$("paymentBtn").disabled=true;await invoke("submit-payment-notice",{packageId:Number($("package").value),senderName,amount});msg("Ödeme bildiriminiz yönetici onayına gönderildi. Banka kontrolünden sonra üyeliğiniz açılacaktır.");$("sender").value="";$("amount").value="";await loadPayments();await loadListings();}catch(e){msg(errorText(e),true);}finally{$("paymentBtn").disabled=false;}};
+$("uploadLogo").onclick=async()=>{try{$("uploadLogo").disabled=true;await uploadFirmAsset("logo");}catch(e){msg(errorText(e),true);}finally{$("uploadLogo").disabled=false;}};$("uploadCover").onclick=async()=>{try{$("uploadCover").disabled=true;await uploadFirmAsset("cover");}catch(e){msg(errorText(e),true);}finally{$("uploadCover").disabled=false;}};
 $("firmForm").onsubmit=async e=>{e.preventDefault();try{const vals={name:$("firmName").value.trim(),contact_name:$("contactName").value.trim(),phone:$("firmPhone").value.trim(),whatsapp:$("firmWhatsapp").value.trim(),email:$("firmEmail").value.trim(),province:$("province").value.trim(),district:$("district").value.trim(),address:$("address").value.trim(),description:$("firmDescription").value.trim()};const {error}=await sb.from("firms").update(vals).eq("id",firm.id);if(error)throw error;msg("Firma bilgileriniz kaydedildi.");await loadFirm();}catch(e){msg(errorText(e),true);}};
 boot().catch(e=>msg(errorText(e),true));
 </script>
