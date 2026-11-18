@@ -219,6 +219,37 @@ as $$
   );
 $$;
 
+-- Preserve the current directory's membership visibility behavior:
+-- firms without a membership row remain visible; firms with a row must be paid/active.
+create or replace function public.gp_firm_publicly_visible(p_firm_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, auth
+as $
+  select exists (
+    select 1
+    from public.gp_firms f
+    where f.id = p_firm_id
+      and f.status = 'active'
+      and (
+        not exists (
+          select 1 from public.gp_memberships m where m.firm_id = f.id
+        )
+        or exists (
+          select 1 from public.gp_memberships m
+          where m.firm_id = f.id
+            and m.status = 'active'
+            and m.ends_at is not null
+            and m.ends_at >= current_date
+        )
+      )
+  );
+$;
+
+revoke all on function public.gp_firm_publicly_visible(text) from public;
+grant execute on function public.gp_firm_publicly_visible(text) to anon, authenticated;
 revoke all on function public.gp_can_access_firm(text) from public;
 revoke all on function public.gp_can_administer_firm(text) from public;
 revoke all on function public.gp_can_manage_firm(text) from public;
@@ -250,7 +281,7 @@ grant select on public.gp_listing_events to authenticated;
 drop policy if exists gp_firms_public_read on public.gp_firms;
 create policy gp_firms_public_read on public.gp_firms
 for select to anon, authenticated
-using (status = 'active');
+using (public.gp_firm_publicly_visible(id));
 
 drop policy if exists gp_firms_member_read on public.gp_firms;
 create policy gp_firms_member_read on public.gp_firms
@@ -298,7 +329,8 @@ using (
   status = 'active'
   and exists (
     select 1 from public.gp_firms f
-    where f.id = gp_listings.firm_id and f.status = 'active'
+    where f.id = gp_listings.firm_id
+      and public.gp_firm_publicly_visible(f.id)
   )
 );
 
@@ -331,7 +363,8 @@ using (
     select 1 from public.gp_listings l
     join public.gp_firms f on f.id = l.firm_id
     where l.id = gp_listing_images.listing_id
-      and l.status = 'active' and f.status = 'active'
+      and l.status = 'active'
+      and public.gp_firm_publicly_visible(f.id)
   )
 );
 
