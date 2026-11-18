@@ -116,6 +116,16 @@ Deno.serve(async (req) => {
       return json({ success: true, complaint });
     }
 
+    if (action === "get_featured_settings") {
+      const { data, error } = await admin.from("site_settings")
+        .select("setting_key,setting_value")
+        .in("setting_key", ["featured_price", "featured_duration_days"]);
+      if (error) return json({ error: "Öne çıkarma ayarları alınamadı." }, 500);
+      const values = Object.fromEntries((data ?? []).map((x: any) => [x.setting_key, x.setting_value]));
+      return json({ success: true, priceTry: Number(values.featured_price ?? 299),
+        durationDays: Number(values.featured_duration_days ?? 7) });
+    }
+
     if (action === "set_featured_settings") {
       const price = Number(body.priceTry), days = Number(body.durationDays);
       if (!Number.isFinite(price) || !Number.isInteger(days)) return json({ error: "Öne çıkarma ayarları geçersiz." }, 400);
