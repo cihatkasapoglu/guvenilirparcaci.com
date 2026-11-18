@@ -45,6 +45,43 @@ $function$;
 revoke all on function public.gp_admin_assign_firm_user(text,uuid,text) from public;
 grant execute on function public.gp_admin_assign_firm_user(text,uuid,text) to authenticated;
 
+create or replace function public.gp_admin_assign_firm_user_by_email(
+  p_firm_id text,
+  p_email text,
+  p_role text default 'owner'
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $function$
+declare
+  v_user_id uuid;
+begin
+  if not public.gp_is_admin() then
+    raise exception 'Bu işlem için site yöneticisi yetkisi gerekiyor.';
+  end if;
+
+  if p_email is null or trim(p_email) = '' then
+    raise exception 'E-posta adresi zorunludur.';
+  end if;
+
+  select u.id into v_user_id
+  from auth.users u
+  where lower(u.email) = lower(trim(p_email))
+  limit 1;
+
+  if v_user_id is null then
+    raise exception 'Bu e-posta ile kayıtlı bir kullanıcı bulunamadı. Önce Supabase Authentication bölümünden kullanıcı hesabını oluşturun.';
+  end if;
+
+  return public.gp_admin_assign_firm_user(p_firm_id, v_user_id, p_role);
+end;
+$function$;
+
+revoke all on function public.gp_admin_assign_firm_user_by_email(text,text,text) from public;
+grant execute on function public.gp_admin_assign_firm_user_by_email(text,text,text) to authenticated;
+
 create or replace function public.gp_admin_review_listing(
   p_listing_id uuid,
   p_decision text,
