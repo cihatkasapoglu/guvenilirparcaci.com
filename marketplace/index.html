@@ -39,6 +39,7 @@ const modelId=$("model").value;if(modelId){const {data:co,error}=await sb.from("
 const sort=$("sort").value;if(sort==="low")query=query.order("price_try",{ascending:true,nullsFirst:false});else if(sort==="high")query=query.order("price_try",{ascending:false,nullsFirst:false});else query=query.order("published_at",{ascending:false}).order("created_at",{ascending:false});
 query=query.range(page*perPage,(page+1)*perPage-1);
 const {data,error,count}=await query;if(error)throw error;total=count||0;
+const now=new Date().toISOString();const {data:featuredRows,error:featuredError}=await sb.from("featured_listings").select("listing_id").eq("status","active").eq("payment_status","approved").lte("starts_at",now).gt("ends_at",now).in("listing_id",(data||[]).map(x=>x.id));if(featuredError)throw featuredError;const featuredIds=new Set((featuredRows||[]).map(x=>x.listing_id));data.sort((a,b)=>Number(featuredIds.has(b.id))-Number(featuredIds.has(a.id)));data.forEach(x=>x.is_featured=featuredIds.has(x.id));
 if(!data?.length){$("results").innerHTML='<div class="empty">Aramanıza uygun ilan bulunamadı.</div>';$("count").textContent="0 ilan";$("status").textContent="";$("pages").innerHTML="";return;}
 const ids=data.map(x=>x.id),firmIds=[...new Set(data.map(x=>x.firm_id))];
 const [images,firms,compat]=await Promise.all([
