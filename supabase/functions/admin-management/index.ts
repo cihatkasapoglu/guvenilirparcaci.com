@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
       if (kind === "firms") query = admin.from("firms").select("id,name,slug,email,phone,province,district,status,created_at", { count: "exact" }).order("created_at", { ascending: false });
       else if (kind === "payments") query = admin.from("payment_notifications").select("id,firm_id,package_id,membership_id,sender_name,amount_try,status,submitted_at,admin_note,firms(name),packages(name,listing_quota,price_try)", { count: "exact" }).order("submitted_at", { ascending: false });
       else if (kind === "complaints") query = admin.from("complaints").select("id,listing_id,email,reason,explanation,status,admin_note,created_at", { count: "exact" }).order("created_at", { ascending: false });
-      else if (kind === "listings") query = admin.from("listings").select("id,firm_id,title,slug,status,province,district,price_try,price_type,created_at,expires_at,firms(name)", { count: "exact" }).order("created_at", { ascending: false });
+      else if (kind === "listings") query = admin.from("listings").select("id,firm_id,title,slug,status,province,district,price_try,price_type,view_count,created_at,expires_at,firms(name)", { count: "exact" }).order("created_at", { ascending: false });
       else if (kind === "packages") query = admin.from("packages").select("id,name,listing_quota,price_try,duration_days,is_active", { count: "exact" }).order("listing_quota");
       else if (kind === "featured") query = admin.from("featured_listings").select("id,listing_id,price_try,duration_days,starts_at,ends_at,payment_status,status,created_at,listings(title)", { count: "exact" }).order("created_at", { ascending: false });
       else return json({ error: "Liste türü geçersiz." }, 400);
