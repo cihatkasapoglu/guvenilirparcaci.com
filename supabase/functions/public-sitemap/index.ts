@@ -105,7 +105,8 @@ Deno.serve(async (request) => {
           for (const row of data || []) {
             if (row.slug) entries.push(urlEntry(sitemapUrl("/" + row.slug), row.created_at));
           }
-          if (!data || data.length < DB_BATCH) break;
+          if (!data || data.length === 0) break;
+          offset += data.length;
         }
       }
       return xmlResponse('<?xml version="1.0" encoding="UTF-8"?>' +
