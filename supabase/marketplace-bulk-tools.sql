@@ -87,7 +87,7 @@ begin
   return query
   select
     count(*)::bigint,
-    count(*) filter (where l.status = 'active')::bigint,
+    count(*) filter (where l.status = 'active' and (l.expires_at is null or l.expires_at > now()))::bigint,
     count(*) filter (where l.status = 'pending')::bigint,
     count(*) filter (where l.status = 'sold')::bigint
   from public.gp_listings l
