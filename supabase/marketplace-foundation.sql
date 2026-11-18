@@ -1,11 +1,11 @@
 -- GüvenilirParçacı marketplace foundation
 -- Draft migration. Review in Supabase SQL Editor on a staging project before production.
+-- PRE-REQUISITE: run supabase/membership-management.sql first (gp_is_admin() is reused).
 -- Existing gp_memberships, gp_membership_payments, gp_admins and public firm pages are preserved.
 
 begin;
 
 create extension if not exists pgcrypto;
-create extension if not exists pg_trgm;
 
 -- Firms are the seller accounts. Existing GP_FIRMS ids can be retained as text IDs
 -- during the later data migration, so existing /firma.html?id=... links need not change.
@@ -33,8 +33,6 @@ create table if not exists public.gp_firms (
 
 create index if not exists gp_firms_status_city_idx
   on public.gp_firms(status, city);
-create index if not exists gp_firms_name_trgm_idx
-  on public.gp_firms using gin (name gin_trgm_ops);
 
 -- A user may work for more than one firm. A firm may have several authorized users.
 create table if not exists public.gp_firm_users (
@@ -97,7 +95,8 @@ create table if not exists public.gp_listings (
   unique (firm_id, slug),
   check (vehicle_year_from is null or vehicle_year_from between 1900 and 2200),
   check (vehicle_year_to is null or vehicle_year_to between 1900 and 2200),
-  check (vehicle_year_from is null or vehicle_year_to is null or vehicle_year_to >= vehicle_year_from)
+  check (vehicle_year_from is null or vehicle_year_to is null or vehicle_year_to >= vehicle_year_from),
+  check (price_type <> 'fixed' or price is not null)
 );
 
 -- Search/filter indexes for the public catalogue and firm dashboard.
@@ -143,6 +142,8 @@ create table if not exists public.gp_listing_images (
 );
 create index if not exists gp_listing_images_listing_idx
   on public.gp_listing_images(listing_id, sort_order);
+create unique index if not exists gp_listing_images_one_cover_idx
+  on public.gp_listing_images(listing_id) where is_cover = true;
 
 create table if not exists public.gp_listing_reports (
   id uuid primary key default gen_random_uuid(),
