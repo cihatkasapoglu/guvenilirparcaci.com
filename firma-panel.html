@@ -118,7 +118,7 @@ function resetForm(){
 }
 async function loadLookups(){
  const [cats,brands]=await Promise.all([
-  db.from("gp_categories").select("id,name,parent_id,sort_order").eq("is_active",true).order("sort_order"),
+  db.from("gp_categories").select("id,name,slug,parent_id,sort_order").eq("is_active",true).order("sort_order"),
   db.from("gp_vehicle_brands").select("id,name").eq("is_active",true).order("sort_order")
  ]);
  if(cats.error||brands.error)throw cats.error||brands.error;
@@ -270,7 +270,7 @@ $("importCsvBtn").addEventListener("click",async()=>{
    const priceType=r.price_type||"contact";
    if(!["fixed","contact","negotiable"].includes(priceType))throw new Error(line+". satır: price_type fixed, contact veya negotiable olmalıdır.");
    if(priceType==="fixed"&&price===null)throw new Error(line+". satır: fixed fiyat için price zorunludur.");
-   const stock=r.stock_quantity===""?1:Number(r.stock_quantity);
+   const stock=r.stock_quantity==null||r.stock_quantity===""?1:Number(r.stock_quantity);
    if(!Number.isInteger(stock)||stock<0)throw new Error(line+". satır: stock_quantity sıfır veya pozitif tam sayı olmalıdır.");
    const yearFrom=r.vehicle_year_from?Number(r.vehicle_year_from):null,yearTo=r.vehicle_year_to?Number(r.vehicle_year_to):null;
    if((yearFrom!==null&&!Number.isInteger(yearFrom))||(yearTo!==null&&!Number.isInteger(yearTo)))throw new Error(line+". satır: model yılı tam sayı olmalıdır.");
