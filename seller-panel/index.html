@@ -59,10 +59,10 @@
 </section>
 <section id="tab-membership" class="card hidden">
 <h2>Üyelik ve ödeme</h2><div id="membershipInfo" class="notice">Üyelik bilgileri yükleniyor…</div>
-<h3>Havale / EFT bildirimi</h3><p class="muted small">Ödeme yaptıktan sonra aşağıdaki bilgileri girin. Yönetici banka kontrolünden sonra üyeliğinizi açar.</p>
+<h3>Havale / EFT bildirimi</h3><p class="muted small">Ödeme yaptıktan sonra gönderen adını ve gönderdiğiniz tutarı girin. Dekont yüklemeniz gerekmez. Bildiriminiz yönetici banka kontrolüne gönderilir; onaydan sonra paketiniz etkinleşir. Bekleyen bildiriminiz varken yeni bildirim gönderemezsiniz.</p>
 <label>Üyelik paketi</label><select id="package"></select>
 <label>Gönderen adı soyadı</label><input id="sender" maxlength="120" placeholder="Havale yapan kişinin adı">
-<label>Ödenen tutar (TL)</label><input id="amount" type="number" min="1" step="0.01">
+<label>Ödenen tutar (TL)</label><input id="amount" type="number" min="1" step="0.01"><div class="help">Seçtiğiniz paketin tutarı otomatik doldurulur. Bankaya gönderdiğiniz gerçek tutarı kontrol edin.</div>
 <button id="paymentBtn" style="margin-top:12px">Ödeme bildirimi gönder</button>
 <h3 style="margin-top:24px">Ödeme bildirimlerim</h3><div id="payments"></div>
 </section>
@@ -119,7 +119,8 @@ const {count,error:re}=await sb.from("listing_refreshes").select("id",{count:"ex
 $("refreshCount").textContent=Math.max(0,10-(count||0))+" / 10";
 $("membershipStatus").textContent=m?.status==="active"&&new Date(m.ends_at)>new Date()?"Aktif":m?.status==="pending"?"Onay bekliyor":"Pasif";
 $("membershipEnd").textContent=m?.ends_at?"Bitiş: "+date(m.ends_at):"Aktif üyelik bulunmuyor";
-$("membershipInfo").textContent=m?"Durum: "+$("membershipStatus").textContent+" · Başlangıç: "+date(m.starts_at)+" · Bitiş: "+date(m.ends_at):"Henüz üyeliğiniz yok.";
+const currentPackage=m?.package_id?packages.find(x=>x.id===m.package_id):null;
+$("membershipInfo").innerHTML=m?"<strong>Durum:</strong> "+esc($("membershipStatus").textContent)+"<br><strong>Paket:</strong> "+esc(currentPackage?.name||"Paket bilgisi")+"<br><strong>İlan kotası:</strong> "+(currentPackage?.listing_quota||"—")+" aktif ilan<br><strong>Başlangıç:</strong> "+date(m.starts_at)+"<br><strong>Bitiş:</strong> "+date(m.ends_at):"Henüz üyeliğiniz yok. İlanlarınızı yayınlamak için aşağıdan bir paket seçip EFT bildirimi gönderin.";
 renderListings();}
 function renderListings(){const rows=listings.filter(x=>{const state=x.status==="published"&&x.expires_at&&new Date(x.expires_at)<new Date()?"expired":x.status;return currentFilter==="all"||state===currentFilter;});if(!rows.length){$("listingList").innerHTML='<p class="muted">Bu bölümde ilan bulunmuyor.</p>';return;}
 $("listingList").innerHTML=rows.map(x=>{const state=x.status==="published"&&x.expires_at&&new Date(x.expires_at)<new Date()?"expired":x.status;const label={published:"Yayında",expired:"Süresi geçti",draft:"Taslak",withdrawn:"Yayından kaldırıldı",removed:"Silindi"}[state]||state;return '<div class="listing"><div><strong>'+esc(x.title)+'</strong><div class="muted small">'+money(x.price_try)+' · '+label+' · Görüntülenme: '+(x.view_count||0)+' · Bitiş: '+date(x.expires_at)+'</div><div class="small muted">İlan no: '+x.id+'</div></div><div class="actions">'+(state!=="removed"?'<button class="secondary" data-edit="'+x.id+'">Düzenle</button>':'')+(state==="draft"||state==="withdrawn"?'<button data-publish="'+x.id+'">Yayınla</button>':'')+(state==="published"?'<button class="secondary" data-refresh="'+x.id+'">Yenile</button><button class="secondary" data-withdraw="'+x.id+'">Kaldır</button>':'')+(state==="expired"?'<button data-refresh="'+x.id+'">Yeniden yayınla</button>':'')+'<button class="danger" data-delete="'+x.id+'">Sil</button></div></div>';}).join("");}
@@ -165,7 +166,8 @@ $("savePublish").onclick=async()=>{try{await saveListing(true);}catch(err){msg(e
 $("listFilters").onclick=e=>{const b=e.target.closest("[data-filter]");if(!b)return;currentFilter=b.dataset.filter;document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===b));renderListings();};
 $("existingPhotos").onclick=managePhotoClick;
 $("listingList").onclick=async e=>{const b=e.target.closest("button");if(!b)return;try{if(b.dataset.edit)await editListing(b.dataset.edit);else for(const [key,act] of [["refresh","refresh"],["publish","publish"],["withdraw","withdraw"],["delete","delete"]])if(b.dataset[key])await action(b.dataset[key],act);}catch(err){msg(errorText(err),true);}};
-$("paymentBtn").onclick=async()=>{try{const amount=Number($("amount").value);if(!$("sender").value.trim()||!amount||amount<=0)throw new Error("Gönderen adı ve tutarı girin.");const {error}=await sb.from("payment_notifications").insert({firm_id:firm.id,package_id:Number($("package").value),sender_name:$("sender").value.trim(),amount_try:amount,status:"pending"});if(error)throw error;msg("Ödeme bildiriminiz yöneticiye iletildi.");$("sender").value="";$("amount").value="";await loadPayments();}catch(e){msg(errorText(e),true);}};
+$("package").onchange=()=>{const p=packages.find(x=>String(x.id)===$("package").value);if(p)$("amount").value=p.price_try;};
+$("paymentBtn").onclick=async()=>{try{const amount=Number($("amount").value);const senderName=$("sender").value.trim();if(!senderName||!amount||amount<=0)throw new Error("Gönderen adı ve tutarı girin.");$("paymentBtn").disabled=true;await invoke("submit-payment-notice",{packageId:Number($("package").value),senderName,amount});msg("Ödeme bildiriminiz yönetici onayına gönderildi. Banka kontrolünden sonra üyeliğiniz açılacaktır.");$("sender").value="";$("amount").value="";await loadPayments();await loadListings();}catch(e){msg(errorText(e),true);}finally{$("paymentBtn").disabled=false;}};
 $("firmForm").onsubmit=async e=>{e.preventDefault();try{const vals={name:$("firmName").value.trim(),contact_name:$("contactName").value.trim(),phone:$("firmPhone").value.trim(),whatsapp:$("firmWhatsapp").value.trim(),email:$("firmEmail").value.trim(),province:$("province").value.trim(),district:$("district").value.trim(),address:$("address").value.trim(),description:$("firmDescription").value.trim()};const {error}=await sb.from("firms").update(vals).eq("id",firm.id);if(error)throw error;msg("Firma bilgileriniz kaydedildi.");await loadFirm();}catch(e){msg(errorText(e),true);}};
 boot().catch(e=>msg(errorText(e),true));
 </script>
