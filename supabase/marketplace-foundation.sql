@@ -99,6 +99,29 @@ create table if not exists public.gp_listings (
   check (price_type <> 'fixed' or price is not null)
 );
 
+-- Keep timestamps server-controlled; clients do not need UPDATE permission on updated_at.
+create or replace function public.gp_touch_updated_at()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public
+as $function$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$function$;
+
+drop trigger if exists gp_firms_touch_updated_at on public.gp_firms;
+create trigger gp_firms_touch_updated_at
+before update on public.gp_firms
+for each row execute function public.gp_touch_updated_at();
+
+drop trigger if exists gp_listings_touch_updated_at on public.gp_listings;
+create trigger gp_listings_touch_updated_at
+before update on public.gp_listings
+for each row execute function public.gp_touch_updated_at();
+
 -- Search/filter indexes for the public catalogue and firm dashboard.
 create index if not exists gp_listings_public_recent_idx
   on public.gp_listings(published_at desc, id)
