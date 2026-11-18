@@ -1,6 +1,6 @@
 -- GüvenilirParçacı marketplace foundation
 -- Draft migration. Review in Supabase SQL Editor on a staging project before production.
--- PRE-REQUISITE: run supabase/membership-management.sql first (gp_is_admin() is reused).
+-- PRE-REQUISITE: the existing public.gp_is_admin() function and gp_memberships table must already exist. Do not rerun membership-management.sql if the current membership system is installed.
 -- Existing gp_memberships, gp_membership_payments, gp_admins and public firm pages are preserved.
 
 begin;
@@ -24,6 +24,9 @@ create table if not exists public.gp_firms (
   address text,
   city text,
   district text,
+  hours text,
+  rating numeric(2,1) check (rating is null or rating between 0 and 5),
+  sponsored boolean not null default false,
   status text not null default 'pending'
     check (status in ('pending','active','suspended','closed')),
   is_verified boolean not null default false,
