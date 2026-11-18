@@ -85,8 +85,8 @@ async function search(){
  try{
   const {data,error}=await db.rpc("gp_search_listings",filters());
   if(error)throw error;
-  const rows=data||[];total=Number(rows[0]?.total_count||0);
-  $("resultCount").textContent=total.toLocaleString("tr-TR")+" ilan bulundu";
+  const rows=data||[];hasMore=Boolean(rows[0]?.has_more);
+  $("resultCount").textContent=rows.length.toLocaleString("tr-TR")+" ilan gösteriliyor"+(hasMore?" · devamı var":"");
   const ids=rows.map(x=>x.id);let images=[];
   if(ids.length){const r=await db.from("gp_listing_images").select("listing_id,storage_path,is_cover,sort_order").in("listing_id",ids).order("sort_order");if(r.error)throw r.error;images=r.data||[];}
   const map={};images.forEach(x=>(map[x.listing_id]??=[]).push(x));
