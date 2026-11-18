@@ -16,7 +16,7 @@ Bu dosyalar `marketplace-foundation` dalında hazırlanmıştır. Henüz Supabas
 5. `supabase/marketplace-storage.sql`
    - İlan fotoğrafları için Storage bucket ve firma bazlı yükleme/silme kuralları.
 6. `supabase/marketplace-admin-tools.sql`
-   - Yönetici tarafından firma kullanıcısı atama ve ilan onaylama fonksiyonları.
+   - Yönetici tarafından firma oluşturma, kullanıcı atama, ilan onaylama ve ilan durum sayılarını getirme fonksiyonları.
 7. `supabase/marketplace-search.sql`
    - Arama, filtreleme ve sayfalama RPC fonksiyonu.
 8. `supabase/marketplace-bulk-tools.sql`
