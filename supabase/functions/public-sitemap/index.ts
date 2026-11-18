@@ -79,20 +79,20 @@ Deno.serve(async (request) => {
 
     if (type === "catalog") {
       const [categories, brands, models] = await Promise.all([
-        db.from("categories").select("slug,updated_at").eq("is_active", true).order("slug"),
+        db.from("categories").select("slug").eq("is_active", true).order("slug"),
         db.from("vehicle_brands").select("slug,updated_at").eq("is_active", true).order("slug"),
-        db.from("vehicle_models").select("id,slug,updated_at").eq("is_active", true).order("id"),
+        db.from("vehicle_models").select("id,slug").eq("is_active", true).order("id"),
       ]);
       if (categories.error || brands.error || models.error) {
         return xmlResponse("Could not load public catalogue", 503);
       }
       const entries = [
         ...(categories.data || []).map((row) =>
-          urlEntry(sitemapUrl("/marketplace/kategori.html?slug=" + encodeURIComponent(row.slug)), row.updated_at)),
+          urlEntry(sitemapUrl("/marketplace/kategori.html?slug=" + encodeURIComponent(row.slug)))),
         ...(brands.data || []).map((row) =>
           urlEntry(sitemapUrl("/marketplace/marka.html?slug=" + encodeURIComponent(row.slug)), row.updated_at)),
         ...(models.data || []).map((row) =>
-          urlEntry(sitemapUrl("/marketplace/model.html?id=" + encodeURIComponent(row.id)), row.updated_at)),
+          urlEntry(sitemapUrl("/marketplace/model.html?id=" + encodeURIComponent(row.id)))),
       ];
       return xmlResponse('<?xml version="1.0" encoding="UTF-8"?>' +
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
