@@ -171,15 +171,18 @@ create table public.listings (
 );
 
 create table public.listing_vehicle_compatibilities (
+  id uuid primary key default gen_random_uuid(),
   listing_id uuid not null references public.listings(id) on delete cascade,
   vehicle_model_id bigint not null references public.vehicle_models(id) on delete restrict,
   year_from smallint,
   year_to smallint,
-  primary key (listing_id, vehicle_model_id, year_from, year_to),
   check (year_from is null or year_from between 1900 and 2100),
   check (year_to is null or year_to between 1900 and 2100),
   check (year_from is null or year_to is null or year_to >= year_from)
 );
+create unique index listing_vehicle_compatibility_unique_idx
+  on public.listing_vehicle_compatibilities
+  (listing_id, vehicle_model_id, coalesce(year_from, 0), coalesce(year_to, 0));
 
 create table public.listing_images (
   id uuid primary key default gen_random_uuid(),
