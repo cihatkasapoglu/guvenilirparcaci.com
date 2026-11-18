@@ -1,2 +1,5 @@
 [functions.public-interactions]
 verify_jwt = false
+
+[functions.public-sitemap]
+verify_jwt = false
