@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Güvenilir Parçacı | Yönetim Paneli</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{font-family:Inter,Arial,sans-serif;color:#20242b;background:#f4f6f9}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:9px;padding:10px 14px;background:#b51f2b;color:#fff;font-weight:650}button.secondary{background:#e9edf2;color:#27303b}button.danger{background:#7d1821}button:disabled{opacity:.5;cursor:wait}.wrap{max-width:1250px;margin:auto;padding:24px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}.brand{font-size:21px;font-weight:800}.brand span{color:#b51f2b}.muted{color:#6c7480}.panel{background:#fff;border:1px solid #e5e8ed;border-radius:14px;padding:20px;box-shadow:0 3px 15px #17203308}.login{max-width:420px;margin:9vh auto}.field{display:grid;gap:6px;margin:12px 0}.field input,.field select,.field textarea{width:100%;border:1px solid #d9dee6;border-radius:8px;padding:11px;background:#fff}.field textarea{min-height:76px}.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:16px 0}.stat strong{font-size:27px;display:block;margin-top:8px}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.nav button{background:#e6eaf0;color:#303946}.nav button.active{background:#242a33;color:white}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.toolbar select,.toolbar input{padding:10px;border:1px solid #d9dee6;border-radius:8px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #edf0f3;vertical-align:top}th{color:#68717d;font-weight:650;background:#fafbfc}.tablewrap{overflow:auto}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions button{padding:7px 9px;font-size:12px}.status{display:inline-block;padding:4px 8px;border-radius:20px;background:#edf0f3;font-size:12px}.notice{padding:12px;border-radius:9px;margin:12px 0;background:#eef3f8}.notice.error{background:#fff0f0;color:#9d1c27}.hidden{display:none!important}.pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:14px}.modal{position:fixed;inset:0;background:#10182888;display:grid;place-items:center;padding:16px}.modal .panel{width:min(460px,100%)}@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.wrap{padding:14px}.top{align-items:flex-start}}@media(max-width:500px){.grid{grid-template-columns:1fr 1fr}.brand{font-size:17px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="brand"><span>GÜVENİLİR</span> PARÇACI <div class="muted" style="font-size:12px;font-weight:500">Yönetim Paneli</div></div><button id="logout" class="secondary hidden">Çıkış yap</button></header>
+<section id="login" class="panel login">
+<h2>Yönetici girişi</h2><p class="muted">Yalnızca yetkilendirilmiş yönetici hesapları erişebilir.</p>
+<div class="field"><label>E-posta</label><input id="email" type="email" autocomplete="username"></div>
+<div class="field"><label>Şifre</label><input id="password" type="password" autocomplete="current-password"></div>
+<button id="loginBtn" style="width:100%">Giriş yap</button><div id="loginMsg" class="notice hidden"></div>
+</section>
+<main id="app" class="hidden">
+<div class="grid" id="stats"></div>
+<nav class="nav" id="nav">
+<button data-kind="payments" class="active">Ödeme bildirimleri</button><button data-kind="firms">Firmalar</button><button data-kind="listings">İlanlar</button><button data-kind="complaints">Şikâyetler</button><button data-kind="packages">Paketler</button><button data-kind="featured">Öne çıkarılanlar</button><button data-kind="admin_logs">Yönetici kayıtları</button>
+</nav>
+<section class="panel">
+<div class="toolbar"><h2 id="sectionTitle" style="margin:0 auto 0 0">Ödeme bildirimleri</h2><button class="secondary" id="refresh">Yenile</button></div>
+<div id="message" class="notice hidden"></div><div class="tablewrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+<div class="pager"><button class="secondary" id="prev">Önceki</button><span id="pageLabel" class="muted">1</span><button class="secondary" id="next">Sonraki</button></div>
+</section>
+</main>
+</div>
+<div id="modal" class="modal hidden"><section class="panel"><h3 id="modalTitle">İşlem</h3><div id="modalBody"></div><div class="toolbar" style="justify-content:flex-end;margin-top:16px"><button class="secondary" id="cancelModal">Vazgeç</button><button id="confirmModal">Kaydet</button></div></section></div>
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const SUPABASE_URL="SUPABASE_PROJECT_URL_BURAYA";
+const SUPABASE_ANON_KEY="SUPABASE_ANON_KEY_BURAYA";
+const configured=!SUPABASE_URL.includes("_BURAYA")&&!SUPABASE_ANON_KEY.includes("_BURAYA");
+const supabase=configured?createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
+const $=id=>document.getElementById(id);
+let currentKind="payments",page=1,total=0,pendingAction=null;
+const labels={payments:"Ödeme bildirimleri",firms:"Firmalar",listings:"İlanlar",complaints:"Şikâyetler",packages:"Üyelik paketleri",featured:"Öne çıkarılan ilanlar",admin_logs:"Yönetici işlem kayıtları"};
+const escapeHtml=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function showMessage(msg,error=false){$("message").textContent=msg;$("message").className="notice"+(error?" error":"");}
+async function api(payload){
+ const {data:{session}}=await supabase.auth.getSession();
+ const {data,error}=await supabase.functions.invoke("admin-management",{body:payload,headers:{Authorization:"Bearer "+session.access_token}});
+ if(error)throw new Error(data?.error||error.message);if(data?.error)throw new Error(data.error);return data;
+}
+function actionButtons(items){return '<div class="actions">'+items.join("")+'</div>'}
+function btn(label,act,id,cls="secondary"){return '<button class="'+cls+'" data-act="'+act+'" data-id="'+escapeHtml(id)+'">'+label+'</button>'}
+async function loadDashboard(){
+ const d=await api({action:"dashboard"});const cards=[["Toplam firma",d.stats.firms],["Toplam ilan",d.stats.listings],["Bekleyen EFT",d.stats.pendingPayments],["Açık şikâyet",d.stats.openComplaints],["Aktif üyelik",d.stats.activeMemberships]];
+ $("stats").innerHTML=cards.map(([l,v])=>'<div class="panel stat"><span class="muted">'+l+'</span><strong>'+v+'</strong></div>').join("");
+}
+function cell(v){return '<td>'+escapeHtml(v??"—")+'</td>'}
+async function loadList(){
+ $("sectionTitle").textContent=labels[currentKind];$("pageLabel").textContent=page;
+ try{
+ const d=await api({action:currentKind==="admin_logs"?"admin_logs":"list",kind:currentKind,page,pageSize:20});total=d.total;
+ let heads=[],rows=[];
+ if(currentKind==="payments"){heads=["Tarih","Firma","Paket","Gönderen","Tutar","Durum","İşlem"];rows=d.data.map(x=>[x.submitted_at,x.firms?.name,x.packages?.name,x.sender_name,(x.amount_try??"")+" TL",x.status,actionButtons([btn("Onayla","approve_payment",x.id),btn("Reddet","reject_payment",x.id,"danger")])]);}
+ if(currentKind==="firms"){heads=["Firma","E-posta","Telefon","Konum","Durum","İşlem"];rows=d.data.map(x=>[x.name,x.email,x.phone,x.province+" / "+x.district,x.status,actionButtons([btn(x.status==="suspended"?"Aktifleştir":"Askıya al","toggle_firm",x.id)])]);}
+ if(currentKind==="listings"){heads=["İlan","Firma","Konum","Fiyat","Durum","Bitiş"];rows=d.data.map(x=>[x.title,x.firms?.name,x.province+" / "+x.district,x.price_type==="ask"?"Fiyat sorunuz":(x.price_try+" TL"),x.status,x.expires_at]);}
+ if(currentKind==="complaints"){heads=["Tarih","İlan ID","E-posta","Sebep","Açıklama","Durum","İşlem"];rows=d.data.map(x=>[x.created_at,x.listing_id,x.email,x.reason,x.explanation,x.status,actionButtons([btn("İncele","complaint",x.id)])]);}
+ if(currentKind==="packages"){heads=["Paket","İlan kotası","Ücret","Gün","Aktif","İşlem"];rows=d.data.map(x=>[x.name,x.listing_quota,x.price_try+" TL",x.duration_days,x.is_active?"Evet":"Hayır",actionButtons([btn("Düzenle","package",x.id)])]);}
+ if(currentKind==="featured"){heads=["İlan","Ücret","Gün","Durum","Ödeme","İşlem"];rows=d.data.map(x=>[x.listings?.title,x.price_try+" TL",x.duration_days,x.status,x.payment_status,actionButtons([btn("Onayla","approve_featured",x.id),btn("Reddet","reject_featured",x.id,"danger")])]);}
+ if(currentKind==="admin_logs"){heads=["Tarih","Yönetici ID","İşlem","Hedef","Detay"];rows=d.data.map(x=>[x.created_at,x.admin_user_id,x.action,(x.target_type||"")+" "+(x.target_id||""),JSON.stringify(x.details)]);}
+ $("thead").innerHTML="<tr>"+heads.map(x=>"<th>"+x+"</th>").join("")+"</tr>";
+ $("tbody").innerHTML=rows.map(r=>"<tr>"+r.map((v,i)=>i===r.length-1&&typeof v==="string"&&v.startsWith('<div class="actions">')?"<td>"+v+"</td>":cell(v)).join("")+"</tr>").join("")||'<tr><td colspan="'+heads.length+'" class="muted">Kayıt bulunamadı.</td></tr>';
+ $("prev").disabled=page<=1;$("next").disabled=page*20>=total;
+ }catch(e){showMessage(e.message,true);}
+}
+async function refresh(){await loadDashboard();await loadList();}
+function modal(title,fields,action){
+ pendingAction=action;$("modalTitle").textContent=title;
+ $("modalBody").innerHTML=fields.map(f=>'<div class="field"><label>'+f.label+'</label>'+ (f.type==="textarea"?'<textarea id="m_'+f.name+'">'+escapeHtml(f.value??"")+'</textarea>':f.type==="select"?'<select id="m_'+f.name+'">'+f.options.map(o=>'<option value="'+o.value+'">'+o.label+'</option>').join("")+'</select>':'<input id="m_'+f.name+'" type="'+(f.type||"text")+'" value="'+escapeHtml(f.value??"')+'" '+(f.required?"required":"")+'>')+'</div>').join("");
+ $("modal").classList.remove("hidden");
+}
+$("confirmModal").onclick=async()=>{if(!pendingAction)return;const data={};$("modalBody").querySelectorAll("input,select,textarea").forEach(x=>data[x.id.slice(2)]=x.value);try{await pendingAction(data);$("modal").classList.add("hidden");showMessage("İşlem tamamlandı.");await refresh();}catch(e){showMessage(e.message,true);}};
+$("cancelModal").onclick=()=>$("modal").classList.add("hidden");
+$("tbody").onclick=async e=>{
+ const b=e.target.closest("button[data-act]");if(!b)return;const id=b.dataset.id,act=b.dataset.act;
+ try{
+ if(act==="approve_payment"||act==="reject_payment")modal(act==="approve_payment"?"EFT onayı":"EFT reddi",[{name:"adminNote",label:"Yönetici notu",type:"textarea"}],async v=>api({action:act,notificationId:id,adminNote:v.adminNote}));
+ if(act==="toggle_firm"){const row=await api({action:"list",kind:"firms",page,pageSize:50});const f=row.data.find(x=>x.id===id);await api({action:"update_firm_status",firmId:id,status:f?.status==="suspended"?"active":"suspended"});showMessage("Firma durumu güncellendi.");await refresh();}
+ if(act==="complaint")modal("Şikâyeti incele",[{name:"status",label:"Durum",type:"select",options:["new","reviewing","resolved","dismissed"].map(x=>({value:x,label:x}))},{name:"adminNote",label:"Yönetici notu",type:"textarea"}],v=>api({action:"moderate_complaint",complaintId:id,...v}));
+ if(act==="package"){const d=await api({action:"list",kind:"packages",page:1,pageSize:50});const p=d.data.find(x=>String(x.id)===id);if(!p)throw new Error("Paket bulunamadı.");modal("Paketi düzenle",[{name:"listingQuota",label:"İlan kotası",type:"number",value:p.listing_quota},{name:"priceTry",label:"Fiyat (TL)",type:"number",value:p.price_try},{name:"durationDays",label:"Süre (gün)",type:"number",value:p.duration_days},{name:"isActive",label:"Aktif mi?",type:"select",options:[{value:"true",label:"Evet"},{value:"false",label:"Hayır"}]}],v=>api({action:"update_package",packageId:Number(id),listingQuota:Number(v.listingQuota),priceTry:Number(v.priceTry),durationDays:Number(v.durationDays),isActive:v.isActive==="true"}));}
+ if(act==="approve_featured"||act==="reject_featured")modal(act==="approve_featured"?"Öne çıkarmayı onayla":"Öne çıkarmayı reddet",[],()=>api({action:act,featuredId:id}));
+ }catch(err){showMessage(err.message,true);}
+};
+$("loginBtn").onclick=async()=>{try{if(!configured)throw new Error("Önce admin-panel/index.html dosyasındaki Supabase URL ve anon key alanlarını doldurun.");const {error}=await supabase.auth.signInWithPassword({email:$("email").value,password:$("password").value});if(error)throw error;await enter();}catch(e){$("loginMsg").textContent=e.message;$("loginMsg").className="notice error";}};
+async function enter(){const {data:{session}}=await supabase.auth.getSession();if(!session)return;$("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");try{await refresh();}catch(e){showMessage(e.message,true);}}
+$("logout").onclick=async()=>{await supabase.auth.signOut();location.reload();};
+$("nav").onclick=e=>{const b=e.target.closest("button[data-kind]");if(!b)return;currentKind=b.dataset.kind;page=1;document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x===b));loadList();};
+$("refresh").onclick=refresh;$("prev").onclick=()=>{if(page>1){page--;loadList();}};$("next").onclick=()=>{if(page*20<total){page++;loadList();}};
+if(configured){supabase.auth.onAuthStateChange((_event,session)=>{if(session)enter();});enter();}else{$("loginMsg").textContent="Kurulum bekleniyor: Supabase URL ve anon key değerleri girilmelidir.";$("loginMsg").className="notice";}
+</script>
+</body></html>
