@@ -64,6 +64,32 @@ create trigger on_auth_user_created_company
 after insert on auth.users
 for each row execute procedure public.create_company_for_new_user();
 
+
+-- Firma veya ilan sahibi kendi hesabını/ilanını yönetici onayı olmadan yayına alamaz.
+create or replace function public.protect_marketplace_approval()
+returns trigger language plpgsql
+as $
+begin
+  if (auth.jwt()->'app_metadata'->>'role') is distinct from 'admin' then
+    if tg_table_name = 'companies' and new.status is distinct from old.status then
+      raise exception 'Firma onay durumu yalnızca yönetici tarafından değiştirilebilir.';
+    end if;
+    if tg_table_name = 'listings' and new.status is distinct from old.status then
+      raise exception 'İlan yayın durumu yalnızca yönetici tarafından değiştirilebilir.';
+    end if;
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists protect_company_approval on public.companies;
+create trigger protect_company_approval before update on public.companies
+for each row execute function public.protect_marketplace_approval();
+
+drop trigger if exists protect_listing_approval on public.listings;
+create trigger protect_listing_approval before update on public.listings
+for each row execute function public.protect_marketplace_approval();
+
 alter table public.companies enable row level security;
 alter table public.listings enable row level security;
 
