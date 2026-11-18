@@ -101,11 +101,16 @@ Deno.serve(async (req) => {
 
     if (action === "moderate_listing") {
       if (typeof body.listingId !== "string" || !["withdrawn", "removed"].includes(body.status)) return json({ error: "İlan denetim bilgileri geçersiz." }, 400);
+      const note = typeof body.adminNote === "string" ? body.adminNote.trim().slice(0, 2000) : "";
+      if (note.length < 5) return json({ error: "İşlem nedeni en az 5 karakter olmalıdır." }, 400);
+      const { data: current, error: readError } = await admin.from("listings").select("id,title,status,firm_id").eq("id", body.listingId).maybeSingle();
+      if (readError || !current) return json({ error: "İlan bulunamadı." }, 404);
+      if (current.status === "removed" || current.status === "withdrawn") return json({ error: "Bu ilan zaten yayında değil." }, 400);
+      if (body.status === "withdrawn" && current.status !== "published" && current.status !== "expired") return json({ error: "Yalnızca yayındaki veya süresi dolmuş ilanlar yayından kaldırılabilir." }, 400);
       const { data: listing, error } = await admin.from("listings")
         .update({ status: body.status, updated_at: new Date().toISOString() })
         .eq("id", body.listingId).select("id,title,status,firm_id").single();
       if (error) return json({ error: "İlanın durumu değiştirilemedi." }, 400);
-      const note = typeof body.adminNote === "string" ? body.adminNote.slice(0, 2000) : "";
       await admin.from("admin_logs").insert({ admin_user_id: user.id, action: "listing_moderated", target_type: "listing", target_id: listing.id, details: { status: listing.status, note } });
       return json({ success: true, listing });
     }
