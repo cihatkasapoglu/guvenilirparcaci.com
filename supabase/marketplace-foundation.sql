@@ -120,6 +120,15 @@ create index if not exists gp_listings_oem_code_idx
 create index if not exists gp_listings_price_idx
   on public.gp_listings(price)
   where status = 'active' and price is not null;
+create index if not exists gp_listings_city_recent_idx
+  on public.gp_listings(city, published_at desc)
+  where status = 'active' and city is not null;
+create index if not exists gp_listings_condition_recent_idx
+  on public.gp_listings(condition, published_at desc)
+  where status = 'active';
+create index if not exists gp_listings_firm_part_number_idx
+  on public.gp_listings(firm_id, part_number)
+  where part_number is not null;
 create index if not exists gp_listings_search_idx
   on public.gp_listings using gin (
     to_tsvector('simple',
