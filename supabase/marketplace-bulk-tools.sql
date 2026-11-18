@@ -68,4 +68,35 @@ $function$;
 revoke all on function public.gp_firm_bulk_update_listing_values(jsonb) from public;
 grant execute on function public.gp_firm_bulk_update_listing_values(jsonb) to authenticated;
 
+create or replace function public.gp_firm_listing_counts(p_firm_id text)
+returns table (
+  total_count bigint,
+  active_count bigint,
+  pending_count bigint,
+  sold_count bigint
+)
+language plpgsql
+stable
+security invoker
+set search_path = public, auth
+as $function$
+begin
+  if not public.gp_can_access_firm(p_firm_id) then
+    raise exception 'Bu firmanın ilanlarını görüntüleme yetkiniz yok.';
+  end if;
+
+  return query
+  select
+    count(*)::bigint,
+    count(*) filter (where l.status = 'active')::bigint,
+    count(*) filter (where l.status = 'pending')::bigint,
+    count(*) filter (where l.status = 'sold')::bigint
+  from public.gp_listings l
+  where l.firm_id = p_firm_id;
+end;
+$function$;
+
+revoke all on function public.gp_firm_listing_counts(text) from public;
+grant execute on function public.gp_firm_listing_counts(text) to authenticated;
+
 commit;
