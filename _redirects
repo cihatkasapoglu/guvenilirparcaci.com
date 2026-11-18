@@ -1,4 +1,5 @@
 # Clean public URLs
+/firma-panel /seller-panel/index.html 200
 /firma-panel/ /seller-panel/index.html 200
 /ilan/:id/:slug /marketplace/ilan.html?id=:id 200
 /:slug /marketplace/firma.html?slug=:slug 200
