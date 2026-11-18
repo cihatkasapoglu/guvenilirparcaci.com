@@ -188,6 +188,21 @@ as $$
   );
 $$;
 
+create or replace function public.gp_can_administer_firm(p_firm_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, auth
+as $
+  select exists (
+    select 1 from public.gp_firm_users fu
+    where fu.firm_id = p_firm_id
+      and fu.user_id = auth.uid()
+      and fu.role in ('owner','admin')
+  );
+$;
+
 create or replace function public.gp_can_manage_firm(p_firm_id text)
 returns boolean
 language sql
@@ -204,8 +219,10 @@ as $$
 $$;
 
 revoke all on function public.gp_can_access_firm(text) from public;
+revoke all on function public.gp_can_administer_firm(text) from public;
 revoke all on function public.gp_can_manage_firm(text) from public;
 grant execute on function public.gp_can_access_firm(text) to authenticated;
+grant execute on function public.gp_can_administer_firm(text) to authenticated;
 grant execute on function public.gp_can_manage_firm(text) to authenticated;
 
 -- Row-level security is the actual access boundary, not just frontend filtering.
@@ -238,6 +255,12 @@ drop policy if exists gp_firms_member_read on public.gp_firms;
 create policy gp_firms_member_read on public.gp_firms
 for select to authenticated
 using (public.gp_can_access_firm(id) or public.gp_is_admin());
+
+drop policy if exists gp_firms_member_update on public.gp_firms;
+create policy gp_firms_member_update on public.gp_firms
+for update to authenticated
+using (public.gp_can_administer_firm(id))
+with check (public.gp_can_administer_firm(id));
 
 drop policy if exists gp_firms_admin_manage on public.gp_firms;
 create policy gp_firms_admin_manage on public.gp_firms
@@ -418,6 +441,35 @@ drop trigger if exists gp_listings_event_trigger on public.gp_listings;
 create trigger gp_listings_event_trigger
 after insert or update on public.gp_listings
 for each row execute function public.gp_record_listing_event();
+
+-- A firm can submit and maintain its own listings, but cannot self-approve a new listing.
+-- Only a site administrator may move a listing from draft/pending to active.
+create or replace function public.gp_guard_listing_publication()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, auth
+as $
+begin
+  if not public.gp_is_admin() then
+    if tg_op = 'INSERT' and new.status not in ('draft','pending') then
+      raise exception 'Yeni ilanlar yönetici onayı olmadan yayınlanamaz.';
+    end if;
+    if tg_op = 'UPDATE' and new.status = 'active' and old.status <> 'active' then
+      raise exception 'İlanı yayına alma yetkisi yalnızca yöneticidedir.';
+    end if;
+    if new.status in ('rejected','expired') then
+      raise exception 'Bu ilan durumu yalnızca yönetici veya sistem tarafından atanabilir.';
+    end if;
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists gp_listings_publication_guard on public.gp_listings;
+create trigger gp_listings_publication_guard
+before insert or update on public.gp_listings
+for each row execute function public.gp_guard_listing_publication();
 
 commit;
 
