@@ -40,7 +40,10 @@ const id=new URLSearchParams(location.search).get("id");
 if(!id){root.innerHTML='<div class="empty">İlan numarası bulunamadı. <a href="/ilanlar.html">İlanlara dönün.</a></div>';return;}
 const db=window.supabase.createClient(cfg.url,cfg.anonKey);
 try{
- const {data:x,error}=await db.from("gp_listings").select("*,gp_firms(name,slug,phone,phone_secondary,whatsapp,whatsapp_secondary,address,city,district,website),gp_categories(name)").eq("id",id).eq("status","active").single();
+ let listingQuery=db.from("gp_listings").select("*,gp_firms(name,slug,phone,phone_secondary,whatsapp,whatsapp_secondary,address,city,district,website),gp_categories(name)").eq("status","active");
+ if(routeSlug)listingQuery=listingQuery.eq("slug",routeSlug);
+ else listingQuery=listingQuery.eq("id",id);
+ const {data:x,error}=await listingQuery.limit(1).maybeSingle();
  if(error||!x)throw error||new Error("İlan bulunamadı.");
  const {data:imgs,error:imgError}=await db.from("gp_listing_images").select("storage_path,alt_text,is_cover,sort_order").eq("listing_id",id).order("sort_order");
  if(imgError)throw imgError;
@@ -51,8 +54,9 @@ try{
  const car=[x.vehicle_brand,x.vehicle_model,x.vehicle_year_from,x.vehicle_year_to].filter(Boolean).join(" ");
  const title=x.title+" | "+(x.vehicle_brand||"Yedek Parça")+" Yedek Parça İlanı | GüvenilirParçacı";
  const desc=(x.description||x.title+" için "+cond.toLocaleLowerCase("tr-TR")+" yedek parça ilanı. "+(firm.name||"İlan sahibi firma")+" ile doğrudan iletişime geçin.").slice(0,300);
- document.title=title;meta("description",desc);meta("og:title",title,true);meta("og:description",desc,true);meta("og:type","product",true);meta("og:url",location.href,true);if(photos[0])meta("og:image",photos[0].url,true);
- const canonical=document.querySelector('link[rel="canonical"]');if(canonical)canonical.href=location.href.split("#")[0];
+ document.title=title;meta("description",desc);meta("og:title",title,true);meta("og:description",desc,true);meta("og:type","product",true);const listingUrl="https://guvenilirparcaci.com/ilan/"+encodeURIComponent(x.slug||x.id);
+ meta("og:url",listingUrl,true);if(photos[0])meta("og:image",photos[0].url,true);
+ const canonical=document.querySelector('link[rel="canonical"]');if(canonical)canonical.href=listingUrl;
  const specs=[["Ürün durumu",cond],["Kategori",x.gp_categories?.name],["Araç markası",x.vehicle_brand],["Araç modeli",x.vehicle_model],["Model yılı",x.vehicle_year_from||x.vehicle_year_to?(x.vehicle_year_from||"")+" – "+(x.vehicle_year_to||""):""],["Motor kodu",x.engine_code],["OEM kodu",x.oem_code],["Parça numarası",x.part_number],["Stok adedi",x.stock_quantity],["Garanti",x.warranty_info],["Konum",[x.city,x.district].filter(Boolean).join(", ")]].filter(p=>p[1]!==null&&p[1]!==undefined&&p[1]!=="");
  const phone=(firm.phone||"").replace(/[^0-9+]/g,""),phone2=(firm.phone_secondary||"").replace(/[^0-9+]/g,"");
  const wa=(firm.whatsapp||"").replace(/\D/g,""),wa2=(firm.whatsapp_secondary||"").replace(/\D/g,"");
