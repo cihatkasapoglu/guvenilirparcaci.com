@@ -19,7 +19,7 @@ Deno.serve(async(req)=>{
    const visitor=String(body.visitor_id||"");
    if(!/^[0-9a-f-]{36}$/i.test(visitor))return json({error:"Ziyaretçi bilgisi geçersiz."},400);
    const fingerprint=sha(visitor+"|"+(req.headers.get("user-agent")||"").slice(0,180));
-   const {error}=await db.from("listing_views").upsert({listing_id:listingId,viewer_fingerprint_hash:fingerprint,viewed_on:new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Istanbul"})).toISOString().slice(0,10)},{onConflict:"listing_id,viewer_fingerprint_hash,viewed_on",ignoreDuplicates:true});
+   const {error}=await db.from("listing_views").upsert({listing_id:listingId,viewer_fingerprint_hash:fingerprint,viewed_on:new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date())},{onConflict:"listing_id,viewer_fingerprint_hash,viewed_on",ignoreDuplicates:true});
    if(error)throw error;
    const {count,error:ce}=await db.from("listing_views").select("id",{count:"exact",head:true}).eq("listing_id",listingId);
    if(ce)throw ce;
@@ -32,7 +32,7 @@ Deno.serve(async(req)=>{
    const allowed=["Yanlış veya yanıltıcı ilan","Uygunsuz içerik","Şüpheli veya sahte ürün","İletişim bilgileri hatalı","Diğer"];
    if(!allowed.includes(reason)||explanation.length<10||explanation.length>2000)return json({error:"Şikâyet bilgilerini kontrol edin."},400);
    const ip=req.headers.get("cf-connecting-ip")||req.headers.get("x-forwarded-for")||"unknown";
-   const limiter=sha(ip+"|"+email+"|"+listingId);
+   
    const since=new Date(Date.now()-60*60*1000).toISOString();
    const {count}=await db.from("complaints").select("id",{count:"exact",head:true}).eq("email",email).eq("listing_id",listingId).gte("created_at",since);
    if((count||0)>=3)return json({error:"Bu ilan için saatlik şikâyet sınırına ulaştınız."},429);
