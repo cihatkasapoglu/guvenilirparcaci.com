@@ -22,6 +22,22 @@ Bu dosyalar `marketplace-foundation` dalında hazırlanmıştır. Henüz Supabas
 8. `supabase/marketplace-bulk-tools.sql`
    - Firmaların kendi ilanlarında fiyat ve stok bilgilerini toplu güncellemesi.
 
+## 2. İlan süresi dolum zamanlaması
+
+Yönetici onayı verilen ilanlar 90 gün süreyle yayınlanır. Tarihi geçen ilanlar herkese açık aramadan hemen çıkar; durum alanının `expired` olarak güncellenmesi için Supabase Dashboard → Database → Extensions bölümünden `pg_cron` etkinleştirilip SQL Editor'de aşağıdaki zamanlama bir kez oluşturulmalıdır:
+
+```sql
+select cron.schedule(
+  'gp-expire-listings',
+  '0 0 * * *',
+  $select public.gp_expire_listings();$
+);
+```
+
+Zamanlama UTC 00:00'da çalışır (Türkiye saatiyle 03:00). Aynı zamanlama ikinci kez oluşturulmamalıdır.
+
+## 3. Kurulum sonrası kontrol sorguları
+
 Dosyaları sırayla açıp tamamını SQL Editor'e yapıştırın ve çalıştırın. Bir adım hata verirse sonraki dosyaya geçmeyin; hatayı çözmeden devam etmek bağımlılık sorunlarına yol açabilir.
 
 ## 2. Kurulum sonrası kontrol sorguları
@@ -41,7 +57,7 @@ select count(*) as listings from public.gp_listings;
 
 Beklenen ilk aktarım: 28 marka, 5 firma, 15 ana kategori, 89 alt kategori ve 19 firma fotoğraf referansı. İlan sayısı başlangıçta sıfırdır.
 
-## 3. Firma hesabı tanımlama
+## 4. Firma hesabı tanımlama
 
 1. Supabase Dashboard → Authentication → URL Configuration bölümünde `https://guvenilirparcaci.com/firma-panel.html` adresini Redirect URLs listesine ekleyin. Şifre yenileme bağlantıları bu sayfaya döner.
 2. Supabase Dashboard → Authentication → Users bölümünden firma kullanıcısına ait hesabı oluşturun.
@@ -52,7 +68,7 @@ Beklenen ilk aktarım: 28 marka, 5 firma, 15 ana kategori, 89 alt kategori ve 19
 
 Kullanıcılar kendilerini başka bir firmaya bağlayamaz. Firma yetkisini yalnızca site yöneticisi verir.
 
-## 4. Test senaryosu
+## 5. Test senaryosu
 
 - Önce test amaçlı bir firma kullanıcısı oluşturun.
 - Firma panelinden bir ilan ve bir fotoğraf ekleyin.
@@ -62,7 +78,7 @@ Kullanıcılar kendilerini başka bir firmaya bağlayamaz. Firma yetkisini yaln�
 - İkinci bir firma kullanıcısıyla ilk firmanın ilanlarını değiştirmeyi deneyin; erişim engellenmelidir.
 - İlanı silince Storage fotoğraflarının da kaldırıldığını kontrol edin.
 
-## 5. Henüz tamamlanmamış işler
+## 6. Henüz tamamlanmamış işler
 
 - Mevcut firma profilleri artık veritabanından okunur; `brands.js` yalnızca veritabanı geçişi yapılmamış eski kurulumlar için yedek olarak kalır.
 - Dinamik ilan sitemap'i ve SEO dostu ilan URL'leri.
