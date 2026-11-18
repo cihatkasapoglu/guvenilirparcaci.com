@@ -194,7 +194,7 @@ function formPayload(){
   engine_code:$("engineCode").value.trim()||null,oem_code:$("oemCode").value.trim()||null,part_number:$("partNumber").value.trim()||null,
   price:price?Number(price):null,price_type:$("priceType").value,stock_quantity:Number($("stock").value||0),
   warranty_info:$("warranty").value.trim()||null,city:$("city").value.trim()||null,district:$("district").value.trim()||null,
-  status:"pending",updated_at:new Date().toISOString()
+  status:"pending"
  };
 }
 async function uploadImages(listingId,files){
