@@ -57,7 +57,7 @@ Deno.serve(async (request) => {
     }
 
     if (type === "index") {
-      const [{ count: listingCount, error: listingError }, { count: firmCount, error: firmError }, { count: catalogCount, error: catalogError }] = await Promise.all([
+      const [{ count: listingCount, error: listingError }, { count: firmCount, error: firmError }] = await Promise.all([
         db.from("listings").select("id", { count: "exact", head: true })
           .eq("status", "published").gt("expires_at", new Date().toISOString()),
         db.from("public_firm_directory").select("id", { count: "exact", head: true }),
@@ -90,7 +90,7 @@ Deno.serve(async (request) => {
         ...(categories.data || []).map((row) =>
           urlEntry(sitemapUrl("/marketplace/kategori.html?slug=" + encodeURIComponent(row.slug)))),
         ...(brands.data || []).map((row) =>
-          urlEntry(sitemapUrl("/marketplace/marka.html?slug=" + encodeURIComponent(row.slug)), row.updated_at)),
+          urlEntry(sitemapUrl("/marketplace/marka.html?slug=" + encodeURIComponent(row.slug)))),
         ...(models.data || []).map((row) =>
           urlEntry(sitemapUrl("/marketplace/model.html?id=" + encodeURIComponent(row.id)))),
       ];
