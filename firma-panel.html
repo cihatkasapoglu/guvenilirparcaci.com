@@ -92,7 +92,7 @@
 </section>
 <section class="panel-card" id="csvImportCard">
 <div class="section-title"><div><h2>Toplu CSV ilan aktarımı</h2><p class="muted">Excel (.xlsx, .xls) veya CSV UTF-8 dosyanızı yükleyin. Her dosyada en fazla 500 ilan aktarabilirsiniz.</p></div><button class="btn light" id="downloadCsvTemplate" type="button">CSV şablonunu indir</button></div>
-<div class="field"><label for="csvFile">CSV dosyası</label><input id="csvFile" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"></div>
+<div class="field"><label for="csvFile">Excel veya CSV dosyası</label><input id="csvFile" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"></div>
 <p class="muted">Gerekli sütunlar: title, category_slug, condition. Durum değerleri: new, used, reconditioned. Fiyat türü: fixed, contact, negotiable. Fotoğraflar CSV ile aktarılmaz.</p>
 <div class="actions"><button class="btn red" id="importCsvBtn" type="button">İlanları içe aktar</button><span id="csvMessage" class="muted"></span></div>
 <hr style="border:0;border-top:1px solid #e8ecef;margin:22px 0">
@@ -292,7 +292,7 @@ $("downloadCsvTemplate").addEventListener("click",()=>{
 $("importCsvBtn").addEventListener("click",async()=>{
  const file=$("csvFile").files?.[0];if(!file){message("csvMessage","Önce bir CSV dosyası seçin.","error");return;}
  if(firmRole==="viewer"){message("csvMessage","Bu hesapta ilan ekleme yetkisi yok.","error");return;}
- $("importCsvBtn").disabled=true;message("csvMessage","CSV dosyası okunuyor…");
+ $("importCsvBtn").disabled=true;message("csvMessage","Dosya okunuyor…");
  try{
   const records=await parseImportFile(file);
   if(!records.length)throw new Error("CSV dosyasında aktarılacak satır bulunamadı.");
