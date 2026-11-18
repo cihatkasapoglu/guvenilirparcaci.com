@@ -1,5 +1,5 @@
 -- Admin-only onboarding and moderation operations.
--- Run after marketplace-foundation.sql.
+-- Run after marketplace-foundation.sql and marketplace-directory-data.sql.
 
 begin;
 
