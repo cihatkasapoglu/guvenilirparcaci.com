@@ -48,7 +48,7 @@ begin
 
   insert into public.gp_firm_brands(firm_id,brand_id)
   select trim(p_firm_id), brand_id
-  from unnest(coalesce(p_brand_ids,'{}'::text[])) as brand_id
+  from unnest(coalesce(p_brand_ids,'{}'::text[])) as b(brand_id)
   on conflict do nothing;
 
   return trim(p_firm_id);
