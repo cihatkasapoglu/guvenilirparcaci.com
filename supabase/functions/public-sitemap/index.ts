@@ -80,7 +80,7 @@ Deno.serve(async (request) => {
     if (type === "catalog") {
       const [categories, brands, models] = await Promise.all([
         db.from("categories").select("slug").eq("is_active", true).order("slug"),
-        db.from("vehicle_brands").select("slug,updated_at").eq("is_active", true).order("slug"),
+        db.from("vehicle_brands").select("slug").eq("is_active", true).order("slug"),
         db.from("vehicle_models").select("id,slug").eq("is_active", true).order("id"),
       ]);
       if (categories.error || brands.error || models.error) {
