@@ -158,7 +158,7 @@ begin
       reviewed_at = now(),
       rejection_reason = case when p_decision = 'rejected' then nullif(trim(p_rejection_reason),'') else null end,
       published_at = case
-        when p_decision = 'active' then coalesce(published_at, now())
+        when p_decision = 'active' then now()
         else published_at
       end,
       expires_at = case
