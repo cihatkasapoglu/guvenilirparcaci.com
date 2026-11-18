@@ -109,7 +109,7 @@ $("loginForm").addEventListener("submit",async e=>{e.preventDefault();msg("login
 $("logoutBtn").addEventListener("click",async()=>{await db.auth.signOut();showDashboard(false);});
 $("refreshBtn").addEventListener("click",()=>checkAuth().catch(e=>alert(e.message)));
 function firmSlug(value){
- return String(value||"").toLocaleLowerCase("tr-TR").replace(/ı/g,"i").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,90);
+ return String(value||"").toLocaleLowerCase("tr-TR").replace(/ı/g,"i").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,90);
 }
 $("createFirmForm").addEventListener("submit",async e=>{
  e.preventDefault();msg("createFirmMessage","Firma kaydı oluşturuluyor…");
