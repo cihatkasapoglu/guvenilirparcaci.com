@@ -48,7 +48,7 @@ try{
  else listingQuery=listingQuery.eq("id",id);
  const {data:x,error}=await listingQuery.limit(1).maybeSingle();
  if(error||!x)throw error||new Error("İlan bulunamadı.");
- const {data:imgs,error:imgError}=await db.from("gp_listing_images").select("storage_path,alt_text,is_cover,sort_order").eq("listing_id",id).order("sort_order");
+ const {data:imgs,error:imgError}=await db.from("gp_listing_images").select("storage_path,alt_text,is_cover,sort_order").eq("listing_id",x.id).order("sort_order");
  if(imgError)throw imgError;
  const photos=(imgs||[]).map(i=>({url:db.storage.from("gp-listing-images").getPublicUrl(i.storage_path).data.publicUrl,alt:i.alt_text||x.title}));
  const firm=x.gp_firms||{};
