@@ -81,7 +81,7 @@ Deno.serve(async (request) => {
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
       const entries: string[] = [];
-      for (let offset = from; offset <= to; offset += DB_BATCH) {
+      for (let offset = from; offset <= to;) {
         const end = Math.min(offset + DB_BATCH - 1, to);
         if (type === "listings") {
           const { data, error } = await db.from("listings")
@@ -94,7 +94,8 @@ Deno.serve(async (request) => {
           for (const row of data || []) {
             entries.push(urlEntry(sitemapUrl(listingPath(row.id, row.slug)), row.updated_at || row.published_at));
           }
-          if (!data || data.length < DB_BATCH) break;
+          if (!data || data.length === 0) break;
+          offset += data.length;
         } else {
           const { data, error } = await db.from("public_firm_directory")
             .select("slug,created_at")
