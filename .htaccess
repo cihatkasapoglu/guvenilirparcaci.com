@@ -1,0 +1,19 @@
+# Apache URL routing for Güvenilir Parçacı
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+# Seller panel route
+RewriteRule ^firma-panel/?$ seller-panel/index.html [L]
+
+# Listing URL: /ilan/UUID/ilan-basligi
+RewriteRule ^ilan/([A-Fa-f0-9-]{36})/[^/]+/?$ marketplace/ilan.html?id=$1 [QSA,L]
+
+# Keep real files and directories (home, assets, legal pages, admin panel, etc.)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Firm storefront URL: /firma-adi
+RewriteRule ^([A-Za-z0-9][A-Za-z0-9-]*)/?$ marketplace/firma.html?slug=$1 [QSA,L]
+</IfModule>
