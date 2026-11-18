@@ -142,6 +142,34 @@ create table if not exists public.gp_listing_images (
 );
 create index if not exists gp_listing_images_listing_idx
   on public.gp_listing_images(listing_id, sort_order);
+
+-- Hard cap: ten images per listing. Advisory locking prevents concurrent uploads
+-- from racing past the limit.
+create or replace function public.gp_limit_listing_images()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public
+as $function$
+declare
+  v_count integer;
+begin
+  perform pg_advisory_xact_lock(hashtext(new.listing_id::text));
+  select count(*) into v_count
+  from public.gp_listing_images
+  where listing_id = new.listing_id;
+
+  if v_count >= 10 then
+    raise exception 'Bir ilana en fazla 10 fotoğraf eklenebilir.';
+  end if;
+  return new;
+end;
+$function$;
+
+drop trigger if exists gp_listing_images_limit_trigger on public.gp_listing_images;
+create trigger gp_listing_images_limit_trigger
+before insert on public.gp_listing_images
+for each row execute function public.gp_limit_listing_images();
 create unique index if not exists gp_listing_images_one_cover_idx
   on public.gp_listing_images(listing_id) where is_cover = true;
 
@@ -510,8 +538,8 @@ for each row execute function public.gp_guard_listing_publication();
 commit;
 
 -- Next steps (separate reviewed migrations):
--- 1. Import the existing 27 vehicle brands and current GP_FIRMS records without changing their IDs/slugs.
--- 2. Add a private/public image bucket and storage policies; image bytes must not be stored in PostgreSQL.
+-- 1. Import the existing 28 vehicle brands and current GP_FIRMS records without changing their IDs/slugs.
+-- 2. Add a public image bucket and storage policies; image bytes must not be stored in PostgreSQL.
 -- 3. Connect approved firm accounts to gp_firm_users; never allow public self-assignment to a firm.
 -- 4. Add server-side limits for image count/size, listing quotas and plan entitlements.
 -- 5. Add a transactional listing publication workflow and scheduled expiry process.
