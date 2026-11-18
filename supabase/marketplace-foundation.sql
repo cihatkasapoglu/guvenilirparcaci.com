@@ -492,7 +492,14 @@ using (
 drop policy if exists gp_listing_reports_public_insert on public.gp_listing_reports;
 create policy gp_listing_reports_public_insert on public.gp_listing_reports
 for insert to anon, authenticated
-with check (true);
+with check (
+  exists (
+    select 1 from public.gp_listings l
+    where l.id = gp_listing_reports.listing_id
+      and l.status = 'active'
+      and public.gp_firm_publicly_visible(l.firm_id)
+  )
+);
 
 drop policy if exists gp_listing_reports_admin_read on public.gp_listing_reports;
 create policy gp_listing_reports_admin_read on public.gp_listing_reports
