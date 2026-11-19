@@ -106,20 +106,18 @@ async function invoke(name, body) {
     throw new Error("Oturumunuz sona ermiş. Lütfen tekrar giriş yapın.");
   }
 
-  const { data, error } = await sb.functions.invoke(name, {
-    body,
-    headers: {
-      Authorization: "Bearer " + session.access_token
-    }
+  const response = await fetch(SUPABASE_URL + "/functions/v1/" + encodeURIComponent(name), {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=UTF-8" },
+    body: JSON.stringify({ ...body, _accessToken: session.access_token })
   });
 
-  if (error) {
-    console.error("Edge Function hatası:", error);
-    throw error;
-  }
+  let data;
+  try { data = await response.json(); }
+  catch { throw new Error("Sunucudan geçerli yanıt alınamadı (HTTP " + response.status + ")."); }
 
+  if (!response.ok) throw new Error(data?.error || "İstek başarısız (HTTP " + response.status + ").");
   if (data?.error) throw new Error(data.error);
-
   return data;
 }
 function errorText(e){return e?.message||"İşlem tamamlanamadı.";}
