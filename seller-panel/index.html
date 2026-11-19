@@ -96,7 +96,31 @@ let firm=null, listings=[], packages=[], currentFilter="all", editingImages=[];
 function msg(t,bad=false){$("message").textContent=t;$("message").className=bad?"bad": "good";}
 function money(v){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:2}).format(Number(v||0));}
 function date(v){return v?new Date(v).toLocaleDateString("tr-TR"):"—";}
-async function invoke(name,body){const {data:{session}}=await sb.auth.getSession();const {data,error}=await sb.functions.invoke(name,{body,headers:{Authorization:"Bearer "+session.access_token}});if(error)throw error; if(data?.error)throw new Error(data.error);return data;}
+async function invoke(name, body) {
+  const { data: { session }, error: sessionError } = await sb.auth.getSession();
+
+  if (sessionError) throw sessionError;
+
+  if (!session?.access_token) {
+    throw new Error("Oturumunuz sona ermiş. Lütfen tekrar giriş yapın.");
+  }
+
+  const { data, error } = await sb.functions.invoke(name, {
+    body,
+    headers: {
+      Authorization: "Bearer " + session.access_token
+    }
+  });
+
+  if (error) {
+    console.error("Edge Function hatası:", error);
+    throw error;
+  }
+
+  if (data?.error) throw new Error(data.error);
+
+  return data;
+}
 function errorText(e){return e?.message||"İşlem tamamlanamadı.";}
 function showApp(on){$("login").classList.toggle("hidden",on);$("app").classList.toggle("hidden",!on);$("logout").classList.toggle("hidden",!on);}
 function tab(name){document.querySelectorAll("[id^=tab-]").forEach(x=>x.classList.add("hidden"));$("tab-"+name).classList.remove("hidden");document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));}
