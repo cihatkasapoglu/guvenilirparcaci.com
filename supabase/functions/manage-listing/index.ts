@@ -4,7 +4,7 @@ import { S3Client, DeleteObjectCommand } from "npm:@aws-sdk/client-s3";
 const origin = Deno.env.get("SITE_ORIGIN") ?? "https://guvenilirparcaci.com";
 const cors = {
   "Access-Control-Allow-Origin": origin,
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-api-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
 };
