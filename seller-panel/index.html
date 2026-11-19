@@ -52,7 +52,7 @@
 <div><label>Fiyat türü *</label><select id="priceType"><option value="fixed">Sabit fiyat</option><option value="negotiable">Pazarlık payı var</option><option value="ask">Fiyat sorunuz</option></select></div>
 <div id="priceWrap"><label>Fiyat (TL) *</label><input id="price" type="number" min="0" step="0.01"></div>
 <div class="wide"><label>Açıklama *</label><textarea id="description" rows="5" minlength="20" maxlength="10000" required placeholder="Ürünün durumu, içeriği ve önemli bilgileri…"></textarea></div>
-<div class="wide"><label>Fotoğraflar (JPG, PNG veya WebP; en fazla 5 adet, her biri 8 MB)</label><input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><div class="help" id="photoHelp">İlanı yayınlamak için en az 1 fotoğraf gereklidir. Fotoğraflar R2'ye yüklenir.</div><div id="existingPhotos" class="photo"></div></div>
+<div class="wide"><label>Fotoğraflar (JPG, PNG veya WebP; en fazla 5 adet, her biri 8 MB)</label><input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><div class="help" id="photoHelp">İlanı yayınlamak için en az 1 fotoğraf gereklidir. Fotoğraflar güvenli görsel depolama alanına yüklenir.</div><div id="existingPhotos" class="photo"></div></div>
 </div>
 <div class="row" style="margin-top:16px"><button type="submit">Taslak olarak kaydet</button><button type="button" id="savePublish" class="secondary">Kaydet ve yayınla</button><button type="button" id="cancelEdit" class="secondary">Vazgeç</button></div>
 <p class="help">İlanlar 30 gün yayında kalır. Normal düzenleme süresini uzatmaz; yenileme hakkı ayrı kullanılır. Yayın için aktif üyelik ve en az bir fotoğraf gerekir.</p>
@@ -89,6 +89,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL="https://ugqsazhpfnqiqonhvkcb.supabase.co";
 const SUPABASE_ANON_KEY="sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ";
 const R2_PUBLIC_BASE_URL="R2_PUBLIC_BASE_URL_BURAYA";
+const IMAGE_BUCKET="site-images";
 const ready=!SUPABASE_URL.includes("_BURAYA")&&!SUPABASE_ANON_KEY.includes("_BURAYA");
 const $=id=>document.getElementById(id);
 const sb=ready?createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
@@ -126,9 +127,11 @@ function showApp(on){$("login").classList.toggle("hidden",on);$("app").classList
 function tab(name){document.querySelectorAll("[id^=tab-]").forEach(x=>x.classList.add("hidden"));$("tab-"+name).classList.remove("hidden");document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));}
 async function loadFirm(){const {data,error}=await sb.from("firms").select("*").maybeSingle();if(error)throw error;if(!data)throw new Error("Bu kullanıcıya ait firma kaydı bulunamadı. Önce firma kaydınızı tamamlayın.");firm=data;
 const fields={firmName:"name",contactName:"contact_name",firmPhone:"phone",firmWhatsapp:"whatsapp",firmEmail:"email",province:"province",district:"district",address:"address",firmDescription:"description"};for(const [id,key] of Object.entries(fields))$(id).value=data[key]||"";renderFirmPreviews();}
-function firmAssetUrl(key){if(!key||R2_PUBLIC_BASE_URL.includes("_BURAYA"))return "";return R2_PUBLIC_BASE_URL.replace(/\/$/,"")+"/"+key.split("/").map(encodeURIComponent).join("/");}
+function publicImageUrl(key){if(!key)return "";if(key.startsWith("firms/")||key.startsWith("listings/"))return sb.storage.from(IMAGE_BUCKET).getPublicUrl(key).data.publicUrl;if(R2_PUBLIC_BASE_URL.includes("_BURAYA"))return "";return R2_PUBLIC_BASE_URL.replace(/\/$/,"")+"/"+key.split("/").map(encodeURIComponent).join("/");}
+function firmAssetUrl(key){return publicImageUrl(key);}
+function fileExtension(file){return file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";}
 function renderFirmPreviews(){for(const [id,key] of [["firmLogoPreview",firm?.logo_object_key],["firmCoverPreview",firm?.cover_object_key]]){const el=$(id),url=firmAssetUrl(key);el.src=url||"data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";el.style.display=url?"block":"none";}}
-async function uploadFirmAsset(assetType){const input=$(assetType==="logo"?"firmLogoFile":"firmCoverFile"),file=input.files?.[0];if(!file)throw new Error("Önce bir görsel seçin.");if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024)throw new Error("JPG, PNG veya WebP dosyası seçin. En fazla 5 MB olabilir.");const signed=await invoke("r2-create-firm-upload-url",{assetType,contentType:file.type,size:file.size});const put=await fetch(signed.uploadUrl,{method:"PUT",headers:signed.requiredHeaders,body:file});if(!put.ok){const detail=await put.text();throw new Error("R2 yükleme hatası ("+put.status+"): "+(detail||put.statusText||"Yanıt boş"));}await invoke("r2-finalize-firm-upload",{assetType,objectKey:signed.objectKey});await loadFirm();input.value="";msg(assetType==="logo"?"Firma logosu güncellendi.":"Mağaza kapak fotoğrafı güncellendi.");}
+async function uploadFirmAsset(assetType){const input=$(assetType==="logo"?"firmLogoFile":"firmCoverFile"),file=input.files?.[0];if(!file)throw new Error("Önce bir görsel seçin.");if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024)throw new Error("JPG, PNG veya WebP dosyası seçin. En fazla 5 MB olabilir.");const path="firms/"+firm.id+"/"+assetType+"/"+crypto.randomUUID()+"."+fileExtension(file);const {error:uploadError}=await sb.storage.from(IMAGE_BUCKET).upload(path,file,{contentType:file.type,upsert:false});if(uploadError)throw uploadError;const column=assetType==="logo"?"logo_object_key":"cover_object_key";const {error:updateError}=await sb.from("firms").update({[column]:path}).eq("id",firm.id);if(updateError)throw updateError;await loadFirm();input.value="";msg(assetType==="logo"?"Firma logosu güncellendi.":"Mağaza kapak fotoğrafı güncellendi.");}
 async function loadCatalog(){const [cats,brands,subs,pkgs]=await Promise.all([
 sb.from("categories").select("id,name").eq("is_active",true).order("sort_order"),
 sb.from("vehicle_brands").select("id,name").eq("is_active",true).order("name"),
@@ -165,7 +168,7 @@ $("listingId").value=l.id;$("title").value=l.title;$("category").value=String(l.
 if(c.data?.length){const ids=c.data.map(x=>x.vehicle_model_id);const {data:mods}=await sb.from("vehicle_models").select("id,brand_id").in("id",ids);if(mods?.length){const brandId=mods[0].brand_id;$("brand").value=String(brandId);await loadModels();Array.from($("model").options).forEach(o=>o.selected=ids.includes(Number(o.value)));} $("yearFrom").value=c.data[0].year_from||"";$("yearTo").value=c.data[0].year_to||"";}
 $("photos").value="";editingImages=im.data||[];renderPhotoManager();
 $("editorTitle").textContent="İlanı düzenle";tab("editor");}
-function photoUrl(key){const base=R2_PUBLIC_BASE_URL.replace(/\/$/,"");return base.includes("_BURAYA")?"":base+"/"+key.split("/").map(encodeURIComponent).join("/");}
+function photoUrl(key){return publicImageUrl(key);}
 function renderPhotoManager(){const root=$("existingPhotos");if(!editingImages.length){root.innerHTML='<p class="help">Henüz kayıtlı fotoğraf yok.</p>';return;}root.innerHTML='<div class="help">İlk sıradaki fotoğraf ilan kapak fotoğrafıdır. Oklarla sıralayabilir veya silebilirsiniz.</div><div class="photo-grid">'+editingImages.map((im,i)=>{const url=photoUrl(im.r2_object_key);return '<div class="photo-item">'+(url?'<img src="'+esc(url)+'" alt="İlan fotoğrafı '+(i+1)+'">':'<div class="photo">Görsel adresi yapılandırılmamış</div>')+'<div class="small">'+(i===0?"Kapak fotoğrafı":"Fotoğraf "+(i+1))+'</div><div class="actions">'+(i>0?'<button class="secondary" data-photo-up="'+im.id+'">←</button>':'')+(i<editingImages.length-1?'<button class="secondary" data-photo-down="'+im.id+'">→</button>':'')+'<button class="danger" data-photo-delete="'+im.id+'">Sil</button></div></div>';}).join("")+'</div>';}
 async function savePhotoOrder(){const {data,error}=await sb.auth.getSession();if(error)throw error;const result=await invoke("manage-listing",{action:"reorder_images",listingId:$("listingId").value,imageIds:editingImages.map(x=>x.id)});renderPhotoManager();msg("Fotoğraf sıralaması kaydedildi.");}
 async function managePhotoClick(e){const b=e.target.closest("button");if(!b)return;const id=b.dataset.photoUp||b.dataset.photoDown||b.dataset.photoDelete;if(!id)return;try{if(b.dataset.photoDelete){if(!confirm("Bu fotoğraf kalıcı olarak silinsin mi?"))return;await invoke("manage-listing",{action:"delete_image",listingId:$("listingId").value,imageId:id});editingImages=editingImages.filter(x=>x.id!==id);renderPhotoManager();msg("Fotoğraf silindi.");return;}const i=editingImages.findIndex(x=>x.id===id);const target=b.dataset.photoUp?i-1:i+1;if(i<0||target<0||target>=editingImages.length)return;[editingImages[i],editingImages[target]]=[editingImages[target],editingImages[i]];await savePhotoOrder();}catch(err){msg(errorText(err),true);}}
@@ -174,9 +177,11 @@ async function saveListing(publish){const id=$("listingId").value;const files=Ar
 const selectedModels=Array.from($("model").selectedOptions).map(o=>Number(o.value));if(!selectedModels.length||selectedModels.length>20)throw new Error("1 ile 20 arasında araç modeli seçin.");const compatibilities=selectedModels.map(vehicleModelId=>({vehicleModelId,yearFrom:yf,yearTo:yt}));
 const saved=await invoke("manage-listing",{action:id?"update":"create",listingId:id||undefined,listing,compatibilities});const listingId=saved.listingId;
 for(const file of files){
-const signed=await invoke("r2-create-upload-url",{listingId,fileName:file.name,contentType:file.type,size:file.size});
-const put=await fetch(signed.uploadUrl,{method:"PUT",headers:signed.requiredHeaders,body:file});if(!put.ok)throw new Error("Fotoğraf R2'ye yüklenemedi: "+file.name);
-await invoke("r2-finalize-upload",{listingId,objectKey:signed.objectKey});}
+const path="listings/"+listingId+"/"+crypto.randomUUID()+"."+fileExtension(file);
+const {error:uploadError}=await sb.storage.from(IMAGE_BUCKET).upload(path,file,{contentType:file.type,upsert:false});
+if(uploadError)throw uploadError;
+await invoke("manage-listing",{action:"register_image",listingId,objectKey:path,contentType:file.type,size:file.size});
+}
 if(id){const {data:imgs,error:imgErr}=await sb.from("listing_images").select("id,r2_object_key,display_order,is_cover").eq("listing_id",listingId).order("display_order");if(imgErr)throw imgErr;editingImages=imgs||[];renderPhotoManager();}
 if(publish)await invoke("manage-listing",{action:"publish",listingId});
 msg(publish?"İlan kaydedildi ve yayınlandı.":"İlan taslak olarak kaydedildi.");resetEditor();editingImages=[];await loadListings();tab("listings");}
