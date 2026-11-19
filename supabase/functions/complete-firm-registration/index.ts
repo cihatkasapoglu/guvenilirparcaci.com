@@ -68,7 +68,15 @@ Deno.serve(async (req) => {
     const admin = createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data: existing, error: existingError } = await admin.from("firms")
       .select("id,slug").eq("owner_user_id", user.id).maybeSingle();
-    if (existingError) return json({ error: "Firma kaydı kontrol edilemedi." }, 500);
+    if (existingError) {
+      console.error("complete-firm-registration firms lookup failed", {
+        code: existingError.code,
+        message: existingError.message,
+        details: existingError.details,
+        hint: existingError.hint,
+      });
+      return json({ error: "Firma kaydı kontrol edilemedi.", diagnosticId: "FIRM_LOOKUP_FAILED" }, 500);
+    }
     if (existing) return json({ success: true, firmId: existing.id, slug: existing.slug, alreadyRegistered: true });
 
     const base = slugify(name) || "firma";
