@@ -32,7 +32,9 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
-    const authorization = req.headers.get("Authorization");
+    const requestPayload = await req.json();
+    const bodyToken = typeof requestPayload?._accessToken === "string" ? requestPayload._accessToken : "";
+    const authorization = req.headers.get("Authorization") || (bodyToken ? "Bearer " + bodyToken : null);
     if (!authorization?.startsWith("Bearer ")) return json({ error: "Giriş yapmanız gerekiyor." }, 401);
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
@@ -55,7 +57,8 @@ Deno.serve(async (req) => {
       .select("id,status").eq("owner_user_id", authData.user.id).maybeSingle();
     if (firmError || !firm || firm.status !== "active") return json({ error: "Aktif firma hesabı bulunamadı." }, 403);
 
-    const body = await req.json();
+    const body = requestPayload;
+    delete body._accessToken;
     const action = body.action;
     const listingId = typeof body.listingId === "string" ? body.listingId : null;
     if (!["create", "update", "publish", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action)) {
