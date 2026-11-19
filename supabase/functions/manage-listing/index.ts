@@ -33,8 +33,9 @@ Deno.serve(async (req) => {
 
   try {
     const requestPayload = await req.json();
-    const bodyToken = typeof requestPayload?._accessToken === "string" ? requestPayload._accessToken : "";
-    const authorization = req.headers.get("Authorization") || (bodyToken ? "Bearer " + bodyToken : null);
+    const bodyToken = typeof requestPayload?._accessToken === "string" ? requestPayload._accessToken.trim() : "";
+    const headerAuthorization = req.headers.get("Authorization")?.trim() || "";
+    const authorization = bodyToken ? "Bearer " + bodyToken : headerAuthorization;
     if (!authorization?.startsWith("Bearer ")) return json({ error: "Giriş yapmanız gerekiyor." }, 401);
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
