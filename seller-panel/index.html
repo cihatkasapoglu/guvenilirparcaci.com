@@ -179,6 +179,20 @@ $("package").onchange=()=>{const p=packages.find(x=>String(x.id)===$("package").
 $("paymentBtn").onclick=async()=>{try{const amount=Number($("amount").value);const senderName=$("sender").value.trim();if(!senderName||!amount||amount<=0)throw new Error("Gönderen adı ve tutarı girin.");$("paymentBtn").disabled=true;await invoke("submit-payment-notice",{packageId:Number($("package").value),senderName,amount});msg("Ödeme bildiriminiz yönetici onayına gönderildi. Banka kontrolünden sonra üyeliğiniz açılacaktır.");$("sender").value="";$("amount").value="";await loadPayments();await loadListings();}catch(e){msg(errorText(e),true);}finally{$("paymentBtn").disabled=false;}};
 $("uploadLogo").onclick=async()=>{try{$("uploadLogo").disabled=true;await uploadFirmAsset("logo");}catch(e){msg(errorText(e),true);}finally{$("uploadLogo").disabled=false;}};$("uploadCover").onclick=async()=>{try{$("uploadCover").disabled=true;await uploadFirmAsset("cover");}catch(e){msg(errorText(e),true);}finally{$("uploadCover").disabled=false;}};
 $("firmForm").onsubmit=async e=>{e.preventDefault();try{const vals={name:$("firmName").value.trim(),contact_name:$("contactName").value.trim(),phone:$("firmPhone").value.trim(),whatsapp:$("firmWhatsapp").value.trim(),email:$("firmEmail").value.trim(),province:$("province").value.trim(),district:$("district").value.trim(),address:$("address").value.trim(),description:$("firmDescription").value.trim()};const {error}=await sb.from("firms").update(vals).eq("id",firm.id);if(error)throw error;msg("Firma bilgileriniz kaydedildi.");await loadFirm();}catch(e){msg(errorText(e),true);}};
-boot().catch(e=>msg(errorText(e),true));
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === "PASSWORD_RECOVERY") {
+    setTimeout(async () => {
+      const newPassword = prompt("Yeni şifrenizi girin:");
+      if (!newPassword) return;
+      const { error } = await sb.auth.updateUser({ password: newPassword });
+      if (error) {
+        msg(errorText(error), true);
+        return;
+      }
+      msg("Şifreniz başarıyla değiştirildi.");
+    }, 100);
+  }
+});
+  boot().catch(e=>msg(errorText(e),true));
 </script>
 </body></html>
