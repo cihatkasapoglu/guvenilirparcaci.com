@@ -13,7 +13,7 @@
 </div>
 <script type="module">
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
-const URL="SUPABASE_PROJECT_URL_BURAYA",KEY="SUPABASE_ANON_KEY_BURAYA",R2="R2_PUBLIC_BASE_URL_BURAYA";const sb=createClient(URL,KEY),$=id=>document.getElementById(id);$("year").textContent=new Date().getFullYear();
+const URL="https://ugqsazhpfnqiqonhvkcb.supabase.co/rest/v1/",KEY="sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ",R2="R2_PUBLIC_BASE_URL_BURAYA";const sb=createClient(URL,KEY),$=id=>document.getElementById(id);$("year").textContent=new Date().getFullYear();
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));const money=v=>v==null?"Fiyat sorunuz":new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:0}).format(v);const img=k=>R2.includes("_BURAYA")?"":R2.replace(/\/$/,"")+"/"+k.split("/").map(encodeURIComponent).join("/");
 async function init(){const [cats,brands,latest,featured]=await Promise.all([
 sb.from("categories").select("id,name,slug").eq("is_active",true).order("sort_order").limit(8),
