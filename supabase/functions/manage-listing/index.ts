@@ -21,7 +21,14 @@ function makeSlug(title: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") {
+    const requestedHeaders = req.headers.get("Access-Control-Request-Headers");
+    const preflightCors = {
+      ...cors,
+      "Access-Control-Allow-Headers": requestedHeaders || cors["Access-Control-Allow-Headers"],
+    };
+    return new Response("ok", { status: 200, headers: preflightCors });
+  }
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
