@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action = body.action;
     const listingId = typeof body.listingId === "string" ? body.listingId : null;
-    if (!["create", "update", "publish", "withdraw", "delete", "delete_image", "reorder_images"].includes(action)) {
+    if (!["create", "update", "publish", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action)) {
       return json({ error: "İşlem türü geçersiz." }, 400);
     }
     if (["update", "publish", "withdraw", "delete", "delete_image", "reorder_images"].includes(action) && !listingId) {
@@ -101,6 +101,34 @@ Deno.serve(async (req) => {
       .select("id,status").eq("id", listingId).eq("firm_id", firm.id).maybeSingle();
     if (listingError || !listing) return json({ error: "İlan bulunamadı veya size ait değil." }, 404);
 
+    if (action === "register_image") {
+      const objectKey = typeof body.objectKey === "string" ? body.objectKey : "";
+      const contentType = typeof body.contentType === "string" ? body.contentType : "";
+      const size = Number(body.size);
+      if (!objectKey.startsWith(`listings/${listingId}/`) || objectKey.includes("..") ||
+          !["image/jpeg", "image/png", "image/webp"].includes(contentType) ||
+          !Number.isFinite(size) || size < 1 || size > 8 * 1024 * 1024) {
+        return json({ error: "Yüklenen fotoğraf bilgileri geçersiz." }, 400);
+      }
+      const { count, error: countError } = await admin.from("listing_images")
+        .select("id", { count: "exact", head: true }).eq("listing_id", listingId);
+      if (countError) return json({ error: "Fotoğraf sayısı kontrol edilemedi." }, 500);
+      if ((count ?? 0) >= 5) {
+        await admin.storage.from("site-images").remove([objectKey]);
+        return json({ error: "Bir ilana en fazla 5 fotoğraf eklenebilir." }, 409);
+      }
+      const displayOrder = (count ?? 0) + 1;
+      const { error: insertError } = await admin.from("listing_images").insert({
+        listing_id: listingId, r2_object_key: objectKey,
+        display_order: displayOrder, is_cover: displayOrder === 1,
+      });
+      if (insertError) {
+        await admin.storage.from("site-images").remove([objectKey]);
+        return json({ error: "Fotoğraf kaydı oluşturulamadı." }, 409);
+      }
+      return json({ success: true, displayOrder });
+    }
+
     if (action === "publish") {
       const { data, error } = await admin.rpc("publish_firm_listing", {
         p_firm_id: firm.id, p_listing_id: listingId,
@@ -136,19 +164,24 @@ Deno.serve(async (req) => {
           return json({ error: "Yayındaki ilanın en az bir fotoğrafı kalmalıdır. Önce yeni fotoğraf ekleyin." }, 409);
         }
       }
-      const accountId = Deno.env.get("R2_ACCOUNT_ID");
-      const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
-      const secretAccessKey = Deno.env.get("R2_SECRET_ACCESS_KEY");
-      const bucket = Deno.env.get("R2_BUCKET_NAME");
-      if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
-        return json({ error: "R2 silme ayarları tamamlanmamış." }, 500);
+      if (image.r2_object_key.startsWith("listings/")) {
+        const { error: storageError } = await admin.storage.from("site-images").remove([image.r2_object_key]);
+        if (storageError) return json({ error: "Supabase fotoğrafı silinemedi." }, 500);
+      } else {
+        const accountId = Deno.env.get("R2_ACCOUNT_ID");
+        const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
+        const secretAccessKey = Deno.env.get("R2_SECRET_ACCESS_KEY");
+        const bucket = Deno.env.get("R2_BUCKET_NAME");
+        if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
+          return json({ error: "Eski R2 fotoğrafı için silme ayarları tamamlanmamış." }, 500);
+        }
+        const s3 = new S3Client({
+          region: "auto",
+          endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+          credentials: { accessKeyId, secretAccessKey },
+        });
+        await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: image.r2_object_key }));
       }
-      const s3 = new S3Client({
-        region: "auto",
-        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-        credentials: { accessKeyId, secretAccessKey },
-      });
-      await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: image.r2_object_key }));
       const { error: removeError } = await admin.from("listing_images")
         .delete().eq("id", imageId).eq("listing_id", listingId);
       if (removeError) return json({ error: "Fotoğraf kaydı silinemedi." }, 500);
@@ -172,24 +205,31 @@ Deno.serve(async (req) => {
       return json({ success: true, status: "withdrawn" });
     }
 
-    const accountId = Deno.env.get("R2_ACCOUNT_ID");
-    const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
-    const secretAccessKey = Deno.env.get("R2_SECRET_ACCESS_KEY");
-    const bucket = Deno.env.get("R2_BUCKET_NAME");
-    if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
-      return json({ error: "R2 silme ayarları tamamlanmamış." }, 500);
-    }
     const { data: images, error: imagesError } = await admin.from("listing_images")
       .select("r2_object_key").eq("listing_id", listingId);
     if (imagesError || !images) return json({ error: "İlan fotoğrafları alınamadı." }, 500);
-
-    const s3 = new S3Client({
-      region: "auto",
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: { accessKeyId, secretAccessKey },
-    });
-    for (const image of images) {
-      await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: image.r2_object_key }));
+    const supabaseKeys = images.map((image: {r2_object_key:string}) => image.r2_object_key)
+      .filter((key: string) => key.startsWith("listings/"));
+    if (supabaseKeys.length) {
+      const { error: storageError } = await admin.storage.from("site-images").remove(supabaseKeys);
+      if (storageError) return json({ error: "Supabase fotoğrafları silinemedi." }, 500);
+    }
+    const legacyKeys = images.map((image: {r2_object_key:string}) => image.r2_object_key)
+      .filter((key: string) => !key.startsWith("listings/"));
+    if (legacyKeys.length) {
+      const accountId = Deno.env.get("R2_ACCOUNT_ID");
+      const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
+      const secretAccessKey = Deno.env.get("R2_SECRET_ACCESS_KEY");
+      const bucket = Deno.env.get("R2_BUCKET_NAME");
+      if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
+        return json({ error: "Eski R2 fotoğrafları için silme ayarları tamamlanmamış." }, 500);
+      }
+      const s3 = new S3Client({
+        region: "auto",
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        credentials: { accessKeyId, secretAccessKey },
+      });
+      for (const key of legacyKeys) await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
     }
     const { error: deleteError } = await admin.from("listings")
       .delete().eq("id", listingId).eq("firm_id", firm.id);
