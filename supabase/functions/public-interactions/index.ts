@@ -1,9 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createHash } from "node:crypto";
 
 const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,"Content-Type":"application/json"}});
-const sha=(v)=>createHash("sha256").update(v).digest("hex");
+const sha=async(v)=>{const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(v));return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");};
 Deno.serve(async(req)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return json({error:"Method not allowed"},405);
@@ -18,7 +17,7 @@ Deno.serve(async(req)=>{
   if(action==="view"){
    const visitor=String(body.visitor_id||"");
    if(!/^[0-9a-f-]{36}$/i.test(visitor))return json({error:"Ziyaretçi bilgisi geçersiz."},400);
-   const fingerprint=sha(visitor+"|"+(req.headers.get("user-agent")||"").slice(0,180));
+   const fingerprint=await sha(visitor+"|"+(req.headers.get("user-agent")||"").slice(0,180));
    const {error}=await db.from("listing_views").upsert({listing_id:listingId,viewer_fingerprint_hash:fingerprint,viewed_on:new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date())},{onConflict:"listing_id,viewer_fingerprint_hash,viewed_on",ignoreDuplicates:true});
    if(error)throw error;
    const {count,error:ce}=await db.from("listing_views").select("id",{count:"exact",head:true}).eq("listing_id",listingId);
