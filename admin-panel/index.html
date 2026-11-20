@@ -32,8 +32,8 @@
 <div id="modal" class="modal hidden"><section class="panel"><h3 id="modalTitle">İşlem</h3><div id="modalBody"></div><div class="toolbar" style="justify-content:flex-end;margin-top:16px"><button class="secondary" id="cancelModal">Vazgeç</button><button id="confirmModal">Kaydet</button></div></section></div>
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-const SUPABASE_URL="SUPABASE_PROJECT_URL_BURAYA";
-const SUPABASE_ANON_KEY="SUPABASE_ANON_KEY_BURAYA";
+const SUPABASE_URL="https://ugqsazhpfnqiqonhvkcb.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ";
 const configured=!SUPABASE_URL.includes("_BURAYA")&&!SUPABASE_ANON_KEY.includes("_BURAYA");
 const supabase=configured?createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
 const $=id=>document.getElementById(id);
