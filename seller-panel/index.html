@@ -174,18 +174,64 @@ function renderPhotoManager(){const root=$("existingPhotos");if(!editingImages.l
 async function savePhotoOrder(){const {data,error}=await sb.auth.getSession();if(error)throw error;const result=await invoke("manage-listing",{action:"reorder_images",listingId:$("listingId").value,imageIds:editingImages.map(x=>x.id)});renderPhotoManager();msg("Fotoğraf sıralaması kaydedildi.");}
 async function managePhotoClick(e){const b=e.target.closest("button");if(!b)return;const id=b.dataset.photoUp||b.dataset.photoDown||b.dataset.photoDelete;if(!id)return;try{if(b.dataset.photoDelete){if(!confirm("Bu fotoğraf kalıcı olarak silinsin mi?"))return;await invoke("manage-listing",{action:"delete_image",listingId:$("listingId").value,imageId:id});editingImages=editingImages.filter(x=>x.id!==id);renderPhotoManager();msg("Fotoğraf silindi.");return;}const i=editingImages.findIndex(x=>x.id===id);const target=b.dataset.photoUp?i-1:i+1;if(i<0||target<0||target>=editingImages.length)return;[editingImages[i],editingImages[target]]=[editingImages[target],editingImages[i]];await savePhotoOrder();}catch(err){msg(errorText(err),true);}}
 function togglePrice(){$("priceWrap").classList.toggle("hidden",$("priceType").value==="ask");$("price").required=$("priceType").value!=="ask";}
-async function saveListing(publish){const id=$("listingId").value;const files=Array.from($("photos").files||[]);if(files.length>5)throw new Error("Bir ilana en fazla 5 fotoğraf ekleyebilirsiniz.");if(editingImages.length+files.length>5)throw new Error("Mevcut fotoğraflarla birlikte en fazla 5 fotoğraf olabilir.");for(const file of files){if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>8*1024*1024)throw new Error(file.name+" dosyası uygun değil (JPG/PNG/WebP, en fazla 8 MB).");}const yf=$("yearFrom").value?Number($("yearFrom").value):null,yt=$("yearTo").value?Number($("yearTo").value):null;if(yf&&yt&&yf>yt)throw new Error("Model yılı başlangıcı bitiş yılından büyük olamaz.");const priceType=$("priceType").value;const listing={categoryId:Number($("category").value),subcategoryId:$("subcategory").value?Number($("subcategory").value):null,partType:$("partType").value,title:$("title").value.trim(),description:$("description").value.trim(),fuelType:$("fuel").value.trim(),engineCode:$("engine").value.trim(),oemNumber:$("oem").value.trim(),priceType,price:priceType==="ask"?null:Number($("price").value)};
-const selectedModels=Array.from($("model").selectedOptions).map(o=>Number(o.value));if(!selectedModels.length||selectedModels.length>20)throw new Error("1 ile 20 arasında araç modeli seçin.");const compatibilities=selectedModels.map(vehicleModelId=>({vehicleModelId,yearFrom:yf,yearTo:yt}));
-const saved=await invoke("manage-listing",{action:id?"update":"create",listingId:id||undefined,listing,compatibilities});const listingId=saved.listingId;
-for(const file of files){
-const path="listings/"+listingId+"/"+crypto.randomUUID()+"."+fileExtension(file);
-const {error:uploadError}=await sb.storage.from(IMAGE_BUCKET).upload(path,file,{contentType:file.type,upsert:false});
-if(uploadError)throw uploadError;
-await invoke("manage-listing",{action:"register_image",listingId,objectKey:path,contentType:file.type,size:file.size});
+async function saveListing(publish){
+  const id=$("listingId").value;
+  const files=Array.from($("photos").files||[]);
+  if(files.length>5)throw new Error("Bir ilana en fazla 5 fotoğraf ekleyebilirsiniz.");
+  if(editingImages.length+files.length>5)throw new Error("Mevcut fotoğraflarla birlikte en fazla 5 fotoğraf olabilir.");
+  for(const file of files){
+    if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>8*1024*1024)
+      throw new Error(file.name+" dosyası uygun değil (JPG/PNG/WebP, en fazla 8 MB).");
+  }
+  const yf=$("yearFrom").value?Number($("yearFrom").value):null;
+  const yt=$("yearTo").value?Number($("yearTo").value):null;
+  if(yf&&yt&&yf>yt)throw new Error("Model yılı başlangıcı bitiş yılından büyük olamaz.");
+  const priceType=$("priceType").value;
+  const listing={
+    categoryId:Number($("category").value),
+    subcategoryId:$("subcategory").value?Number($("subcategory").value):null,
+    partType:$("partType").value,
+    title:$("title").value.trim(),
+    description:$("description").value.trim(),
+    fuelType:$("fuel").value.trim(),
+    engineCode:$("engine").value.trim(),
+    oemNumber:$("oem").value.trim(),
+    priceType,
+    price:priceType==="ask"?null:Number($("price").value)
+  };
+  const selectedModels=Array.from($("model").selectedOptions).map(o=>Number(o.value));
+  if(!selectedModels.length||selectedModels.length>20)throw new Error("1 ile 20 arasında araç modeli seçin.");
+  const compatibilities=selectedModels.map(vehicleModelId=>({vehicleModelId,yearFrom:yf,yearTo:yt}));
+
+  msg("İlan bilgileri kaydediliyor…");
+  const saved=await invoke("manage-listing",{action:id?"update":"create",listingId:id||undefined,listing,compatibilities});
+  const listingId=saved?.listingId;
+  if(!listingId)throw new Error("İlan kaydedildi ancak sunucu ilan numarasını döndürmedi. Fotoğraflar yüklenemedi.");
+
+  for(let i=0;i<files.length;i++){
+    const file=files[i];
+    const path="listings/"+listingId+"/"+crypto.randomUUID()+"."+fileExtension(file);
+    msg("Fotoğraf yükleniyor ("+(i+1)+"/"+files.length+"): "+file.name);
+    const {error:uploadError}=await sb.storage.from(IMAGE_BUCKET).upload(path,file,{contentType:file.type,upsert:false});
+    if(uploadError)throw new Error("FOTOĞRAF STORAGE HATASI | "+file.name+" | "+uploadError.message);
+    msg("Fotoğraf kaydı oluşturuluyor ("+(i+1)+"/"+files.length+")…");
+    try{
+      await invoke("manage-listing",{action:"register_image",listingId,objectKey:path,contentType:file.type,size:file.size});
+    }catch(registerError){
+      throw new Error("FOTOĞRAF YÜKLENDİ ANCAK İLANA BAĞLANAMADI | "+file.name+" | "+errorText(registerError)+" | Dosya yolu: "+path);
+    }
+  }
+
+  const {data:imgs,error:imgErr}=await sb.from("listing_images").select("id,r2_object_key,display_order,is_cover").eq("listing_id",listingId).order("display_order");
+  if(imgErr)throw new Error("Fotoğraflar yüklendi ancak fotoğraf listesi okunamadı: "+imgErr.message);
+  editingImages=imgs||[];
+  if(publish)await invoke("manage-listing",{action:"publish",listingId});
+  msg(publish?"İlan kaydedildi ve yayınlandı.":(files.length?"İlan taslak olarak kaydedildi. "+files.length+" fotoğraf yüklendi.":"İlan taslak olarak kaydedildi. Fotoğraf seçilmedi."));
+  resetEditor();
+  editingImages=[];
+  await loadListings();
+  tab("listings");
 }
-if(id){const {data:imgs,error:imgErr}=await sb.from("listing_images").select("id,r2_object_key,display_order,is_cover").eq("listing_id",listingId).order("display_order");if(imgErr)throw imgErr;editingImages=imgs||[];renderPhotoManager();}
-if(publish)await invoke("manage-listing",{action:"publish",listingId});
-msg(publish?"İlan kaydedildi ve yayınlandı.":"İlan taslak olarak kaydedildi.");resetEditor();editingImages=[];await loadListings();tab("listings");}
 async function refresh(id){const {data,error}=await sb.rpc("refresh_listing",{p_listing_id:id});if(error)throw error;msg(data.refresh_type==="republish"?"İlan yeniden yayınlandı.":"İlan yenilendi.");await loadListings();}
 async function action(id,act){if(act==="refresh")return refresh(id);if(act==="publish"){await invoke("manage-listing",{action:"publish",listingId:id});msg("İlan yayınlandı.");}
 if(act==="withdraw"){await invoke("manage-listing",{action:"withdraw",listingId:id});msg("İlan yayından kaldırıldı.");}
@@ -199,6 +245,7 @@ $("resetBtn").onclick=async()=>{try{const {error}=await sb.auth.resetPasswordFor
 $("logout").onclick=async()=>{await sb.auth.signOut();showApp(false);};
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $("newListing").onclick=()=>{resetEditor();tab("editor");};$("cancelEdit").onclick=()=>{resetEditor();tab("listings");};
+$("photos").onchange=()=>{const files=Array.from($("photos").files||[]);msg(files.length?files.length+" fotoğraf seçildi: "+files.map(f=>f.name).join(", "):"Fotoğraf seçimi temizlendi.");};
 $("category").onchange=updateSubcats;$("brand").onchange=()=>loadModels().catch(e=>msg(errorText(e),true));$("priceType").onchange=togglePrice;
 $("listingForm").onsubmit=async e=>{e.preventDefault();try{await saveListing(false);}catch(err){msg(errorText(err),true);}};
 $("savePublish").onclick=async()=>{try{await saveListing(true);}catch(err){msg(errorText(err),true);}};
