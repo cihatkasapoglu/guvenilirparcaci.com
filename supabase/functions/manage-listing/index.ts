@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
       }
       const { count, error: countError } = await admin.from("listing_images")
         .select("id", { count: "exact", head: true }).eq("listing_id", listingId);
-      if (countError) return json({ error: "Fotoğraf sayısı kontrol edilemedi.", detail: countError.message, code: countError.code }, 500);
+      if (countError) return json({ error: "Fotoğraf sayısı kontrol edilemedi: " + countError.message + " (Kod: " + countError.code + ")" }, 500);
       if ((count ?? 0) >= 5) {
         await admin.storage.from("site-images").remove([objectKey]);
         return json({ error: "Bir ilana en fazla 5 fotoğraf eklenebilir." }, 409);
