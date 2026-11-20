@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const origin = Deno.env.get("SITE_ORIGIN") ?? "https://guvenilirparcaci.com";
 const cors = {
   "Access-Control-Allow-Origin": origin,
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-api-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
 };
@@ -19,7 +19,13 @@ function slugify(value: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === "OPTIONS") {
+    const requestedHeaders = req.headers.get("Access-Control-Request-Headers");
+    return new Response("ok", { status: 200, headers: {
+      ...cors,
+      "Access-Control-Allow-Headers": requestedHeaders || cors["Access-Control-Allow-Headers"],
+    } });
+  }
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
