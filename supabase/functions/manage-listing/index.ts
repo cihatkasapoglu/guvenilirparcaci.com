@@ -121,14 +121,19 @@ Deno.serve(async (req) => {
           !Number.isFinite(size) || size < 1 || size > 8 * 1024 * 1024) {
         return json({ error: "Yüklenen fotoğraf bilgileri geçersiz." }, 400);
       }
-      const { count, error: countError } = await admin.from("listing_images")
-        .select("id", { count: "exact", head: true }).eq("listing_id", listingId);
-      if (countError) return json({ error: "Fotoğraf sayısı kontrol edilemedi: " + countError.message + " (Kod: " + countError.code + ")" }, 500);
-      if ((count ?? 0) >= 5) {
+      const { data: existingImages, error: countError } = await admin.from("listing_images")
+        .select("id").eq("listing_id", listingId);
+      if (countError) return json({
+        error: "Fotoğraf sayısı kontrol edilemedi.",
+        detail: JSON.stringify(countError),
+        code: (countError as { code?: string }).code ?? null
+      }, 500);
+      const count = existingImages?.length ?? 0;
+      if (count >= 5) {
         await admin.storage.from("site-images").remove([objectKey]);
         return json({ error: "Bir ilana en fazla 5 fotoğraf eklenebilir." }, 409);
       }
-      const displayOrder = (count ?? 0) + 1;
+      const displayOrder = count + 1;
       const { error: insertError } = await admin.from("listing_images").insert({
         listing_id: listingId, r2_object_key: objectKey,
         display_order: displayOrder, is_cover: displayOrder === 1,
