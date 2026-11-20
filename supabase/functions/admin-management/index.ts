@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const origin = Deno.env.get("SITE_ORIGIN") ?? "https://guvenilirparcaci.com";
 const cors = {
   "Access-Control-Allow-Origin": origin,
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
 };
