@@ -8,7 +8,7 @@
 <section id="done" class="hidden"><h2>Firma kaydınız tamamlandı</h2><p>Mağazanız oluşturuldu. Üyelik paketi seçmek için firma paneline geçin.</p><a href="/seller-panel/">Firma paneline git</a><p id="store"></p></section></section><p class="muted"><a href="/">Ana sayfa</a> · <a href="/seller-panel/">Firma girişi</a></p></main>
 <script type="module">
 import{createClient}from"https://esm.sh/@supabase/supabase-js@2";
-const U="SUPABASE_PROJECT_URL_BURAYA",K="SUPABASE_ANON_KEY_BURAYA",ready=!U.includes("_BURAYA")&&!K.includes("_BURAYA"),sb=ready?createClient(U,K):null,$=x=>document.getElementById(x);
+const U="https://ugqsazhpfnqiqonhvkcb.supabase.co",K="sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ",ready=true,sb=createClient(U,K),$=x=>document.getElementById(x);
 function msg(t,b=false){$("message").textContent=t;$("message").className=b?"bad":"good"}
 function show(id){["signup","signin","firm","done"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
 async function session(){const{data:{session:s}}=await sb.auth.getSession();if(!s)return false;const{data:{user},error}=await sb.auth.getUser();if(error)throw error;if(!user.email_confirmed_at){msg("E-posta adresinizi doğrulamanız gerekiyor.",true);return false}show("firm");return true}
