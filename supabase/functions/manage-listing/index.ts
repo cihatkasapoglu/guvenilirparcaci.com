@@ -60,12 +60,12 @@ Deno.serve(async (req) => {
 
     const body = requestPayload;
     delete body._accessToken;
-    const action = body.action;
-    const listingId = typeof body.listingId === "string" ? body.listingId : null;
+    const action = typeof body.action === "string" ? body.action.trim().toLowerCase() : "";
+    const listingId = typeof body.listingId === "string" ? body.listingId.trim() : null;
     if (!["create", "update", "publish", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action)) {
       return json({ error: "İşlem türü geçersiz." }, 400);
     }
-    if (["update", "publish", "withdraw", "delete", "delete_image", "reorder_images"].includes(action) && !listingId) {
+    if (["update", "publish", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action) && !listingId) {
       return json({ error: "İlan numarası gereklidir." }, 400);
     }
 
