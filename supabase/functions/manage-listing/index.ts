@@ -112,7 +112,7 @@ async function migrateUnregisteredPublicImagesToDraft(
     Math.max(max, Number(image.display_order) || 0), 0) + 1;
 
   for (const publicKey of publicKeys) {
-    const draftKey = publicKey.replace(/^listings\\//, "drafts/");
+    const draftKey = "drafts/" + publicKey.slice("listings/".length);
     const alreadyRegistered = images.some((image: {r2_object_key:string}) =>
       image.r2_object_key === publicKey || image.r2_object_key === draftKey);
 
