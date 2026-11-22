@@ -115,10 +115,10 @@ Deno.serve(async (req) => {
     delete body._accessToken;
     const action = typeof body.action === "string" ? body.action.trim().toLowerCase() : "";
     const listingId = typeof body.listingId === "string" ? body.listingId.trim() : null;
-    if (!["create", "update", "publish", "promote_images", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action)) {
+    if (!["create", "update", "publish", "promote_images", "secure_existing_drafts", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action)) {
       return json({ error: "İşlem türü geçersiz." }, 400);
     }
-    if (["update", "publish", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action) && !listingId) {
+    if (["update", "publish", "promote_images", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action) && !listingId) {
       return json({ error: "İlan numarası gereklidir." }, 400);
     }
 
@@ -159,6 +159,26 @@ Deno.serve(async (req) => {
       if (readError || !savedListing) return json({ error: "İlan kaydedildi ancak son durumu okunamadı." }, 500);
       return json({ success: true, listingId: savedId, status: savedListing.status,
         expiresAt: savedListing.expires_at, slug: savedListing.slug });
+    }
+
+    if (action === "secure_existing_drafts") {
+      const { data: rows, error: rowsError } = await admin.from("listings")
+        .select("id,status,expires_at").eq("firm_id", firm.id);
+      if (rowsError) return json({ error: "Mevcut ilanlar kontrol edilemedi." }, 500);
+      const targets = (rows || []).filter((row: {id:string;status:string;expires_at:string|null}) =>
+        row.status !== "published" || (row.expires_at && new Date(row.expires_at).getTime() <= Date.now())
+      );
+      let secured = 0;
+      try {
+        for (const row of targets) {
+          await movePublicImagesToDraft(admin, row.id);
+          secured++;
+        }
+      } catch (moveError) {
+        const detail = moveError instanceof Error ? moveError.message : String(moveError);
+        return json({ error: "Bazı eski taslak fotoğrafları özel alana taşınamadı.", secured, detail }, 500);
+      }
+      return json({ success: true, securedListings: secured });
     }
 
     const { data: listing, error: listingError } = await admin.from("listings")
