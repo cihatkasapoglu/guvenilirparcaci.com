@@ -96,6 +96,66 @@ async function listStorageKeys(
   return keys;
 }
 
+// Migrate legacy public draft photos that have no listing_images row.
+// Keep the public source until the private copy and database row both exist.
+async function migrateUnregisteredPublicImagesToDraft(
+  admin: ReturnType<typeof createClient>,
+  listingId: string,
+) {
+  const { data: rows, error: rowsError } = await admin.from("listing_images")
+    .select("id,r2_object_key,display_order,is_cover").eq("listing_id", listingId);
+  if (rowsError) throw new Error("Taslak fotoğraf kayıtları okunamadı: " + rowsError.message);
+
+  const images = rows || [];
+  const publicKeys = await listStorageKeys(admin, "site-images", `listings/${listingId}`);
+  let nextOrder = images.reduce((max: number, image: {display_order:number}) =>
+    Math.max(max, Number(image.display_order) || 0), 0) + 1;
+
+  for (const publicKey of publicKeys) {
+    const draftKey = publicKey.replace(/^listings\\//, "drafts/");
+    const alreadyRegistered = images.some((image: {r2_object_key:string}) =>
+      image.r2_object_key === publicKey || image.r2_object_key === draftKey);
+
+    if (alreadyRegistered) {
+      // A prior attempt may have completed the private copy and row update,
+      // but failed while removing the public source.
+      const privateRow = images.find((image: {r2_object_key:string}) => image.r2_object_key === draftKey);
+      if (privateRow) {
+        const { error: cleanupError } = await admin.storage.from("site-images").remove([publicKey]);
+        if (cleanupError) throw new Error("Eski herkese açık fotoğraf kaldırılamadı: " + cleanupError.message);
+      }
+      continue;
+    }
+
+    if (nextOrder > 5) throw new Error("İlanda 5 fotoğraf sınırı aşılıyor: " + listingId);
+
+    const { data: file, error: downloadError } = await admin.storage.from("site-images").download(publicKey);
+    if (downloadError || !file) throw new Error("Eski taslak fotoğrafı okunamadı: " + publicKey);
+
+    const { error: uploadError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).upload(draftKey, file, {
+      contentType: file.type || "image/jpeg", upsert: true,
+    });
+    if (uploadError) throw new Error("Fotoğraf özel alana kopyalanamadı: " + uploadError.message);
+
+    const { error: insertError } = await admin.from("listing_images").insert({
+      listing_id: listingId,
+      r2_object_key: draftKey,
+      display_order: nextOrder,
+      is_cover: nextOrder === 1 && !images.some((image: {is_cover:boolean}) => image.is_cover),
+    });
+    if (insertError) {
+      const { error: rollbackError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).remove([draftKey]);
+      throw new Error("Fotoğraf kaydı oluşturulamadı: " + insertError.message +
+        (rollbackError ? "; özel kopya temizlenemedi: " + rollbackError.message : ""));
+    }
+
+    images.push({ r2_object_key: draftKey, display_order: nextOrder, is_cover: nextOrder === 1 });
+    const { error: removeError } = await admin.storage.from("site-images").remove([publicKey]);
+    if (removeError) throw new Error("Fotoğraf özel alana kaydedildi ancak herkese açık kopya silinemedi: " + removeError.message);
+    nextOrder++;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     const requestedHeaders = req.headers.get("Access-Control-Request-Headers");
@@ -195,6 +255,7 @@ Deno.serve(async (req) => {
       try {
         for (const row of targets) {
           await movePublicImagesToDraft(admin, row.id);
+          await migrateUnregisteredPublicImagesToDraft(admin, row.id);
           secured++;
         }
       } catch (moveError) {
