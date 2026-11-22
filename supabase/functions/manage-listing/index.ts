@@ -73,6 +73,29 @@ async function movePublicImagesToDraft(admin: ReturnType<typeof createClient>, l
   }
 }
 
+
+async function listStorageKeys(
+  admin: ReturnType<typeof createClient>,
+  bucket: string,
+  prefix: string,
+) {
+  const keys: string[] = [];
+  let offset = 0;
+  while (true) {
+    const { data, error } = await admin.storage.from(bucket).list(prefix, {
+      limit: 100,
+      offset,
+      sortBy: { column: "name", order: "asc" },
+    });
+    if (error) throw new Error(`Storage klasörü okunamadı (${bucket}/${prefix}): ${error.message}`);
+    const files = (data || []).filter((item) => item.name && item.id);
+    keys.push(...files.map((item) => `${prefix}/${item.name}`));
+    if (!data || data.length < 100) break;
+    offset += data.length;
+  }
+  return keys;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     const requestedHeaders = req.headers.get("Access-Control-Request-Headers");
@@ -362,39 +385,68 @@ Deno.serve(async (req) => {
     const { data: images, error: imagesError } = await admin.from("listing_images")
       .select("r2_object_key").eq("listing_id", listingId);
     if (imagesError || !images) return json({ error: "İlan fotoğrafları alınamadı." }, 500);
-    const publicKeys = images.map((image: {r2_object_key:string}) => image.r2_object_key)
-      .filter((key: string) => key.startsWith("listings/"));
+
+    // Include objects left behind without a listing_images row.
+    let publicKeys: string[];
+    let draftKeys: string[];
+    try {
+      const [publicFolderKeys, draftFolderKeys] = await Promise.all([
+        listStorageKeys(admin, "site-images", `listings/${listingId}`),
+        listStorageKeys(admin, DRAFT_IMAGE_BUCKET, `drafts/${listingId}`),
+      ]);
+      publicKeys = [...new Set([
+        ...publicFolderKeys,
+        ...images.map((image: {r2_object_key:string}) => image.r2_object_key)
+          .filter((key: string) => key.startsWith(`listings/${listingId}/`)),
+      ])];
+      draftKeys = [...new Set([
+        ...draftFolderKeys,
+        ...images.map((image: {r2_object_key:string}) => image.r2_object_key)
+          .filter((key: string) => key.startsWith(`drafts/${listingId}/`)),
+      ])];
+    } catch (storageListError) {
+      const detail = storageListError instanceof Error ? storageListError.message : String(storageListError);
+      return json({ error: "İlan fotoğraf klasörleri kontrol edilemedi; ilan silinmedi.", detail }, 500);
+    }
+
     if (publicKeys.length) {
       const { error: storageError } = await admin.storage.from("site-images").remove(publicKeys);
-      if (storageError) return json({ error: "Yayın fotoğrafları silinemedi." }, 500);
+      if (storageError) return json({ error: "Yayın fotoğrafları silinemedi; ilan silinmedi.", detail: storageError.message }, 500);
     }
-    const draftKeys = images.map((image: {r2_object_key:string}) => image.r2_object_key)
-      .filter((key: string) => key.startsWith("drafts/"));
     if (draftKeys.length) {
       const { error: storageError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).remove(draftKeys);
-      if (storageError) return json({ error: "Taslak fotoğrafları silinemedi." }, 500);
+      if (storageError) return json({ error: "Taslak fotoğrafları silinemedi; ilan silinmedi.", detail: storageError.message }, 500);
     }
-    const legacyKeys = images.map((image: {r2_object_key:string}) => image.r2_object_key)
-      .filter((key: string) => !key.startsWith("listings/") && !key.startsWith("drafts/"));
+
+    const legacyKeys = [...new Set(images.map((image: {r2_object_key:string}) => image.r2_object_key)
+      .filter((key: string) => !key.startsWith("listings/") && !key.startsWith("drafts/")))];
     if (legacyKeys.length) {
       const accountId = Deno.env.get("R2_ACCOUNT_ID");
       const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
       const secretAccessKey = Deno.env.get("R2_SECRET_ACCESS_KEY");
       const bucket = Deno.env.get("R2_BUCKET_NAME");
       if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
-        return json({ error: "Eski R2 fotoğrafları için silme ayarları tamamlanmamış." }, 500);
+        return json({ error: "Eski R2 fotoğrafları için silme ayarları tamamlanmamış; ilan silinmedi." }, 500);
       }
       const s3 = new S3Client({
         region: "auto",
         endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
         credentials: { accessKeyId, secretAccessKey },
       });
-      for (const key of legacyKeys) await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+      try {
+        for (const key of legacyKeys) {
+          await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+        }
+      } catch (legacyDeleteError) {
+        const detail = legacyDeleteError instanceof Error ? legacyDeleteError.message : String(legacyDeleteError);
+        return json({ error: "Eski R2 fotoğrafları silinemedi; ilan silinmedi.", detail }, 500);
+      }
     }
+
     const { error: deleteError } = await admin.from("listings")
       .delete().eq("id", listingId).eq("firm_id", firm.id);
-    if (deleteError) return json({ error: "İlan veritabanından silinemedi." }, 500);
-    return json({ success: true, deletedImages: images.length });
+    if (deleteError) return json({ error: "İlan fotoğrafları silindi ancak ilan veritabanından silinemedi.", detail: deleteError.message }, 500);
+    return json({ success: true, deletedImages: publicKeys.length + draftKeys.length + legacyKeys.length });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     console.error("[manage-listing] unhandled error:", {
