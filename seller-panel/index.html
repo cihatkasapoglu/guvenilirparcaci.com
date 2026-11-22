@@ -91,6 +91,7 @@ const SUPABASE_URL="https://ugqsazhpfnqiqonhvkcb.supabase.co";
 const SUPABASE_ANON_KEY="sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ";
 const R2_PUBLIC_BASE_URL="R2_PUBLIC_BASE_URL_BURAYA";
 const IMAGE_BUCKET="site-images";
+const DRAFT_IMAGE_BUCKET="site-images-drafts";
 const ready=!SUPABASE_URL.includes("_BURAYA")&&!SUPABASE_ANON_KEY.includes("_BURAYA");
 const $=id=>document.getElementById(id);
 const sb=ready?createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
@@ -130,11 +131,11 @@ function showApp(on){$("login").classList.toggle("hidden",on);$("app").classList
 function tab(name){document.querySelectorAll("[id^=tab-]").forEach(x=>x.classList.add("hidden"));$("tab-"+name).classList.remove("hidden");document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));}
 async function loadFirm(){const {data:authData,error:authError}=await sb.auth.getUser();if(authError)throw authError;const user=authData?.user;if(!user?.id)throw new Error("Giriş yapan kullanıcı doğrulanamadı. Lütfen çıkış yapıp tekrar giriş yapın.");const {data,error}=await sb.from("firms").select("*").eq("owner_user_id",user.id).maybeSingle();if(error)throw error;if(!data)throw new Error("Bu kullanıcıya ait firma kaydı bulunamadı. Giriş yapılan e-posta: "+(user.email||"bilinmiyor")+". Önce firma kaydınızı tamamlayın.");firm=data;
 const fields={firmName:"name",contactName:"contact_name",firmPhone:"phone",firmWhatsapp:"whatsapp",firmEmail:"email",province:"province",district:"district",address:"address",firmDescription:"description"};for(const [id,key] of Object.entries(fields))$(id).value=data[key]||"";renderFirmPreviews();}
-function publicImageUrl(key){if(!key)return "";if(key.startsWith("firms/")||key.startsWith("listings/"))return sb.storage.from(IMAGE_BUCKET).getPublicUrl(key).data.publicUrl;if(R2_PUBLIC_BASE_URL.includes("_BURAYA"))return "";return R2_PUBLIC_BASE_URL.replace(/\/$/,"")+"/"+key.split("/").map(encodeURIComponent).join("/");}
+function publicImageUrl(key){if(!key||key.startsWith("drafts/"))return "";if(key.startsWith("firms/")||key.startsWith("listings/"))return sb.storage.from(IMAGE_BUCKET).getPublicUrl(key).data.publicUrl;if(R2_PUBLIC_BASE_URL.includes("_BURAYA"))return "";return R2_PUBLIC_BASE_URL.replace(/\/$/,"")+"/"+key.split("/").map(encodeURIComponent).join("/");}
 function firmAssetUrl(key){return publicImageUrl(key);}
 function fileExtension(file){return file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";}
 function renderFirmPreviews(){for(const [id,key] of [["firmLogoPreview",firm?.logo_object_key],["firmCoverPreview",firm?.cover_object_key]]){const el=$(id),url=firmAssetUrl(key);el.src=url||"data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";el.style.display=url?"block":"none";}}
-async function uploadFirmAsset(assetType){const input=$(assetType==="logo"?"firmLogoFile":"firmCoverFile"),file=input.files?.[0];if(!file)throw new Error("Önce bir görsel seçin.");if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024)throw new Error("JPG, PNG veya WebP dosyası seçin. En fazla 5 MB olabilir.");const {data:sessionData,error:sessionError}=await sb.auth.getSession();if(sessionError)throw new Error("Oturum kontrolü başarısız: "+sessionError.message);const session=sessionData?.session;if(!session?.user?.id)throw new Error("Supabase oturumu bulunamadı. Lütfen çıkış yapıp tekrar giriş yapın.");if(session.user.id!==firm.owner_user_id)throw new Error("Giriş yapan kullanıcı firma sahibiyle eşleşmiyor. Oturum: "+session.user.id+" Firma sahibi: "+firm.owner_user_id);const path="firms/"+firm.id+"/"+assetType+"/"+crypto.randomUUID()+"."+fileExtension(file);const {error:uploadError}=await sb.storage.from(IMAGE_BUCKET).upload(path,file,{contentType:file.type,upsert:false});if(uploadError)throw new Error("STORAGE YÜKLEME HATASI | Kullanıcı: "+session.user.id+" | Firma: "+firm.id+" | Yol: "+path+" | Ayrıntı: "+uploadError.message);const column=assetType==="logo"?"logo_object_key":"cover_object_key";const {error:updateError}=await sb.from("firms").update({[column]:path}).eq("id",firm.id);if(updateError)throw new Error("FİRMA TABLOSU GÜNCELLEME HATASI | Dosya Storage'a yüklendi: "+path+" | Ayrıntı: "+updateError.message);await loadFirm();input.value="";msg(assetType==="logo"?"Firma logosu güncellendi.":"Mağaza kapak fotoğrafı güncellendi.");}
+async function uploadFirmAsset(assetType){const input=$(assetType==="logo"?"firmLogoFile":"firmCoverFile"),file=input.files?.[0];if(!file)throw new Error("Önce bir görsel seçin.");if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024)throw new Error("JPG, PNG veya WebP dosyası seçin. En fazla 5 MB olabilir.");const {data:sessionData,error:sessionError}=await sb.auth.getSession();if(sessionError)throw new Error("Oturum kontrolü başarısız: "+sessionError.message);const session=sessionData?.session;if(!session?.user?.id)throw new Error("Supabase oturumu bulunamadı. Lütfen çıkış yapıp tekrar giriş yapın.");if(session.user.id!==firm.owner_user_id)throw new Error("Giriş yapan kullanıcı firma sahibiyle eşleşmiyor. Oturum: "+session.user.id+" Firma sahibi: "+firm.owner_user_id);const path="firms/"+firm.id+"/"+assetType+"/"+crypto.randomUUID()+"."+fileExtension(file);const {error:uploadError}=await sb.storage.from(DRAFT_IMAGE_BUCKET).upload(path,file,{contentType:file.type,upsert:false});if(uploadError)throw new Error("STORAGE YÜKLEME HATASI | Kullanıcı: "+session.user.id+" | Firma: "+firm.id+" | Yol: "+path+" | Ayrıntı: "+uploadError.message);const column=assetType==="logo"?"logo_object_key":"cover_object_key";const {error:updateError}=await sb.from("firms").update({[column]:path}).eq("id",firm.id);if(updateError)throw new Error("FİRMA TABLOSU GÜNCELLEME HATASI | Dosya Storage'a yüklendi: "+path+" | Ayrıntı: "+updateError.message);await loadFirm();input.value="";msg(assetType==="logo"?"Firma logosu güncellendi.":"Mağaza kapak fotoğrafı güncellendi.");}
 async function loadCatalog(){const [cats,brands,subs,pkgs]=await Promise.all([
 sb.from("categories").select("id,name").eq("is_active",true).order("sort_order"),
 sb.from("vehicle_brands").select("id,name").eq("is_active",true).order("name"),
@@ -169,10 +170,11 @@ function resetEditor(){ $("listingForm").reset();$("listingId").value="";$("edit
 async function editListing(id){const l=listings.find(x=>x.id===id);if(!l)return;const [c,im]=await Promise.all([sb.from("listing_vehicle_compatibilities").select("vehicle_model_id,year_from,year_to").eq("listing_id",id),sb.from("listing_images").select("id,r2_object_key,display_order,is_cover").eq("listing_id",id).order("display_order")]);if(c.error)throw c.error;if(im.error)throw im.error;
 $("listingId").value=l.id;$("title").value=l.title;$("category").value=String(l.category_id);updateSubcats();$("subcategory").value=l.subcategory_id||"";$("partType").value=l.part_type;$("description").value=l.description||"";$("fuel").value=l.fuel_type||"";$("engine").value=l.engine_code||"";$("oem").value=l.oem_number||"";$("priceType").value=l.price_type;$("price").value=l.price_try??"";togglePrice();
 if(c.data?.length){const ids=c.data.map(x=>x.vehicle_model_id);const {data:mods}=await sb.from("vehicle_models").select("id,brand_id").in("id",ids);if(mods?.length){const brandId=mods[0].brand_id;$("brand").value=String(brandId);await loadModels();Array.from($("model").options).forEach(o=>o.selected=ids.includes(Number(o.value)));} $("yearFrom").value=c.data[0].year_from||"";$("yearTo").value=c.data[0].year_to||"";}
-$("photos").value="";editingImages=im.data||[];renderPhotoManager();
+$("photos").value="";editingImages=await hydrateEditingImages(im.data||[]);renderPhotoManager();
 $("editorTitle").textContent="İlanı düzenle";tab("editor");}
+async function hydrateEditingImages(images){return Promise.all((images||[]).map(async im=>{if(im.r2_object_key?.startsWith("drafts/")){const {data,error}=await sb.storage.from(DRAFT_IMAGE_BUCKET).createSignedUrl(im.r2_object_key,3600);return {...im,previewUrl:error?"":data?.signedUrl||""};}return {...im,previewUrl:publicImageUrl(im.r2_object_key)};}));}
 function photoUrl(key){return publicImageUrl(key);}
-function renderPhotoManager(){const root=$("existingPhotos");if(!editingImages.length){root.innerHTML='<p class="help">Henüz kayıtlı fotoğraf yok.</p>';return;}root.innerHTML='<div class="help">İlk sıradaki fotoğraf ilan kapak fotoğrafıdır. Oklarla sıralayabilir veya silebilirsiniz.</div><div class="photo-grid">'+editingImages.map((im,i)=>{const url=photoUrl(im.r2_object_key);return '<div class="photo-item">'+(url?'<img src="'+esc(url)+'" alt="İlan fotoğrafı '+(i+1)+'">':'<div class="photo">Görsel adresi yapılandırılmamış</div>')+'<div class="small">'+(i===0?"Kapak fotoğrafı":"Fotoğraf "+(i+1))+'</div><div class="actions">'+(i>0?'<button type="button" class="secondary" data-photo-up="'+im.id+'">←</button>':'')+(i<editingImages.length-1?'<button type="button" class="secondary" data-photo-down="'+im.id+'">→</button>':'')+'<button type="button" class="danger" data-photo-delete="'+im.id+'">Sil</button></div></div>';}).join("")+'</div>';}
+function renderPhotoManager(){const root=$("existingPhotos");if(!editingImages.length){root.innerHTML='<p class="help">Henüz kayıtlı fotoğraf yok.</p>';return;}root.innerHTML='<div class="help">İlk sıradaki fotoğraf ilan kapak fotoğrafıdır. Oklarla sıralayabilir veya silebilirsiniz.</div><div class="photo-grid">'+editingImages.map((im,i)=>{const url=im.previewUrl||photoUrl(im.r2_object_key);return '<div class="photo-item">'+(url?'<img src="'+esc(url)+'" alt="İlan fotoğrafı '+(i+1)+'">':'<div class="photo">Görsel adresi yapılandırılmamış</div>')+'<div class="small">'+(i===0?"Kapak fotoğrafı":"Fotoğraf "+(i+1))+'</div><div class="actions">'+(i>0?'<button type="button" class="secondary" data-photo-up="'+im.id+'">←</button>':'')+(i<editingImages.length-1?'<button type="button" class="secondary" data-photo-down="'+im.id+'">→</button>':'')+'<button type="button" class="danger" data-photo-delete="'+im.id+'">Sil</button></div></div>';}).join("")+'</div>';}
 async function savePhotoOrder(){const {data,error}=await sb.auth.getSession();if(error)throw error;const result=await invoke("manage-listing",{action:"reorder_images",listingId:$("listingId").value,imageIds:editingImages.map(x=>x.id)});renderPhotoManager();msg("Fotoğraf sıralaması kaydedildi.");}
 function openImageLightbox(url,caption){if(!url)return;$("lightboxImage").src=url;$("lightboxCaption").textContent=caption||"";$("imageLightbox").hidden=false;document.body.style.overflow="hidden";$("closeImageLightbox").focus();}
 function closeImageLightbox(){$("imageLightbox").hidden=true;$("lightboxImage").src="";document.body.style.overflow="";}
@@ -181,7 +183,7 @@ function previewListing(){
   const title=$("title").value.trim()||"İlan başlığı";
   const selected=Array.from($("model").selectedOptions).map(o=>o.textContent);
   const photoFiles=Array.from($("photos").files||[]);
-  const photos=[...editingImages.map(x=>({url:photoUrl(x.r2_object_key),name:"Kayıtlı fotoğraf"})),...photoFiles.map(x=>({url:URL.createObjectURL(x),name:x.name}))].filter(x=>x.url);
+  const photos=[...editingImages.map(x=>({url:x.previewUrl||photoUrl(x.r2_object_key),name:"Kayıtlı fotoğraf"})),...photoFiles.map(x=>({url:URL.createObjectURL(x),name:x.name}))].filter(x=>x.url);
   const priceType=$("priceType").value,price=priceType==="ask"?"Fiyat sorunuz":money($("price").value);
   const phone=(firm?.phone||"").replace(/\\D/g,""),wa=(firm?.whatsapp||firm?.phone||"").replace(/\\D/g,"");
   const escHtml=s=>String(s??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
@@ -232,7 +234,7 @@ async function saveListing(publish){
 
   for(let i=0;i<files.length;i++){
     const file=files[i];
-    const path="listings/"+listingId+"/"+crypto.randomUUID()+"."+fileExtension(file);
+    const path="drafts/"+listingId+"/"+crypto.randomUUID()+"."+fileExtension(file);
     msg("Fotoğraf yükleniyor ("+(i+1)+"/"+files.length+"): "+file.name);
     const {error:uploadError}=await sb.storage.from(IMAGE_BUCKET).upload(path,file,{contentType:file.type,upsert:false});
     if(uploadError)throw new Error("FOTOĞRAF STORAGE HATASI | "+file.name+" | "+uploadError.message);
@@ -246,15 +248,16 @@ async function saveListing(publish){
 
   const {data:imgs,error:imgErr}=await sb.from("listing_images").select("id,r2_object_key,display_order,is_cover").eq("listing_id",listingId).order("display_order");
   if(imgErr)throw new Error("Fotoğraflar yüklendi ancak fotoğraf listesi okunamadı: "+imgErr.message);
-  editingImages=imgs||[];
+  editingImages=await hydrateEditingImages(imgs||[]);
   if(publish&&!isPublishedAndActive)await invoke("manage-listing",{action:"publish",listingId});
+  else if(isPublishedAndActive)await invoke("manage-listing",{action:"promote_images",listingId});
   msg(publish?(isPublishedAndActive?"İlan bilgileriniz güncellendi. İlan yayında kalmaya devam ediyor.":"İlan kaydedildi ve yayınlandı."):(files.length?"İlan taslak olarak kaydedildi. "+files.length+" fotoğraf yüklendi.":"İlan taslak olarak kaydedildi. Fotoğraf seçilmedi."));
   resetEditor();
   editingImages=[];
   await loadListings();
   tab("listings");
 }
-async function refresh(id){const {data,error}=await sb.rpc("refresh_listing",{p_listing_id:id});if(error)throw error;msg(data.refresh_type==="republish"?"İlan yeniden yayınlandı.":"İlan yenilendi.");await loadListings();}
+async function refresh(id){const {data,error}=await sb.rpc("refresh_listing",{p_listing_id:id});if(error)throw error;if(data.refresh_type==="republish")await invoke("manage-listing",{action:"promote_images",listingId:id});msg(data.refresh_type==="republish"?"İlan yeniden yayınlandı.":"İlan yenilendi.");await loadListings();}
 async function action(id,act){if(act==="refresh")return refresh(id);if(act==="publish"){await invoke("manage-listing",{action:"publish",listingId:id});msg("İlan yayınlandı.");}
 if(act==="withdraw"){await invoke("manage-listing",{action:"withdraw",listingId:id});msg("İlan yayından kaldırıldı.");}
 if(act==="delete"){if(!confirm("Bu ilan ve fotoğrafları kalıcı olarak silinsin mi?"))return;await invoke("manage-listing",{action:"delete",listingId:id});msg("İlan silindi.");}
@@ -287,9 +290,9 @@ $("photos").onchange=async()=>{
   try{
     for(let i=0;i<files.length;i++){
       const file=files[i];
-      const objectKey="listings/"+listingId+"/"+crypto.randomUUID()+"."+fileExtension(file);
+      const objectKey="drafts/"+listingId+"/"+crypto.randomUUID()+"."+fileExtension(file);
       msg("Fotoğraf otomatik yükleniyor ("+(i+1)+"/"+files.length+"): "+file.name);
-      const {error:uploadError}=await sb.storage.from(IMAGE_BUCKET).upload(objectKey,file,{contentType:file.type,upsert:false});
+      const {error:uploadError}=await sb.storage.from(DRAFT_IMAGE_BUCKET).upload(objectKey,file,{contentType:file.type,upsert:false});
       if(uploadError)throw new Error("STORAGE YÜKLEME HATASI | "+file.name+" | "+uploadError.message);
       try{
         await invoke("manage-listing",{action:"register_image",listingId,objectKey,contentType:file.type,size:file.size});
