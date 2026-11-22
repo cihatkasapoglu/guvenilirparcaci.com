@@ -116,31 +116,61 @@ Deno.serve(async (req) => {
       const objectKey = typeof body.objectKey === "string" ? body.objectKey : "";
       const contentType = typeof body.contentType === "string" ? body.contentType : "";
       const size = Number(body.size);
-      if (!objectKey.startsWith(`listings/${listingId}/`) || objectKey.includes("..") ||
+      const safeObjectKey = objectKey.startsWith(`listings/${listingId}/`) && !objectKey.includes("..");
+      if (!safeObjectKey ||
           !["image/jpeg", "image/png", "image/webp"].includes(contentType) ||
           !Number.isFinite(size) || size < 1 || size > 8 * 1024 * 1024) {
+        // The browser may already have uploaded this file. Remove it only when
+        // the key is safely confined to this listing's own Storage folder.
+        if (safeObjectKey) {
+          const { error: cleanupError } = await admin.storage.from("site-images").remove([objectKey]);
+          if (cleanupError) console.error("[manage-listing] invalid image cleanup failed:", {
+            listingId, objectKey, cleanupError,
+          });
+        }
         return json({ error: "Yüklenen fotoğraf bilgileri geçersiz." }, 400);
       }
+
       const { data: existingImages, error: countError } = await admin.from("listing_images")
         .select("id").eq("listing_id", listingId);
-      if (countError) return json({
-        error: "Fotoğraf sayısı kontrol edilemedi.",
-        detail: JSON.stringify(countError),
-        code: (countError as { code?: string }).code ?? null
-      }, 500);
+      if (countError) {
+        const { error: cleanupError } = await admin.storage.from("site-images").remove([objectKey]);
+        console.error("[manage-listing] image count check failed:", {
+          listingId, objectKey, countError, cleanupError,
+        });
+        return json({
+          error: "Fotoğraf sayısı kontrol edilemedi.",
+          cleanupError: cleanupError?.message ?? null,
+          code: (countError as { code?: string }).code ?? null,
+        }, 500);
+      }
+
       const count = existingImages?.length ?? 0;
       if (count >= 5) {
-        await admin.storage.from("site-images").remove([objectKey]);
-        return json({ error: "Bir ilana en fazla 5 fotoğraf eklenebilir." }, 409);
+        const { error: cleanupError } = await admin.storage.from("site-images").remove([objectKey]);
+        if (cleanupError) console.error("[manage-listing] max image limit cleanup failed:", {
+          listingId, objectKey, cleanupError,
+        });
+        return json({
+          error: "Bir ilana en fazla 5 fotoğraf eklenebilir.",
+          cleanupError: cleanupError?.message ?? null,
+        }, 409);
       }
+
       const displayOrder = count + 1;
       const { error: insertError } = await admin.from("listing_images").insert({
         listing_id: listingId, r2_object_key: objectKey,
         display_order: displayOrder, is_cover: displayOrder === 1,
       });
       if (insertError) {
-        await admin.storage.from("site-images").remove([objectKey]);
-        return json({ error: "Fotoğraf kaydı oluşturulamadı." }, 409);
+        const { error: cleanupError } = await admin.storage.from("site-images").remove([objectKey]);
+        console.error("[manage-listing] image row insert failed:", {
+          listingId, objectKey, insertError, cleanupError,
+        });
+        return json({
+          error: "Fotoğraf kaydı oluşturulamadı.",
+          cleanupError: cleanupError?.message ?? null,
+        }, 409);
       }
       return json({ success: true, displayOrder });
     }
