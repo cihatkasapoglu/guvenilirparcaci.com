@@ -194,6 +194,10 @@ function previewListing(){
 function togglePrice(){$("priceWrap").classList.toggle("hidden",$("priceType").value==="ask");$("price").required=$("priceType").value!=="ask";}
 async function saveListing(publish){
   const id=$("listingId").value;
+  const existingListing=id?listings.find(x=>x.id===id):null;
+  const isPublishedAndActive=!!(existingListing?.status==="published"&&existingListing.expires_at&&new Date(existingListing.expires_at)>new Date());
+  const isExpired=!!(existingListing?.status==="published"&&existingListing.expires_at&&new Date(existingListing.expires_at)<=new Date());
+  if(publish&&isExpired)throw new Error("Bu ilanın süresi geçmiş. Önce İlanlarım listesindeki Yenile alanından yenileyin.");
   const files=Array.from($("photos").files||[]);
   if(files.length>5)throw new Error("Bir ilana en fazla 5 fotoğraf ekleyebilirsiniz.");
   if(editingImages.length+files.length>5)throw new Error("Mevcut fotoğraflarla birlikte en fazla 5 fotoğraf olabilir.");
@@ -243,8 +247,8 @@ async function saveListing(publish){
   const {data:imgs,error:imgErr}=await sb.from("listing_images").select("id,r2_object_key,display_order,is_cover").eq("listing_id",listingId).order("display_order");
   if(imgErr)throw new Error("Fotoğraflar yüklendi ancak fotoğraf listesi okunamadı: "+imgErr.message);
   editingImages=imgs||[];
-  if(publish)await invoke("manage-listing",{action:"publish",listingId});
-  msg(publish?"İlan kaydedildi ve yayınlandı.":(files.length?"İlan taslak olarak kaydedildi. "+files.length+" fotoğraf yüklendi.":"İlan taslak olarak kaydedildi. Fotoğraf seçilmedi."));
+  if(publish&&!isPublishedAndActive)await invoke("manage-listing",{action:"publish",listingId});
+  msg(publish?(isPublishedAndActive?"İlan bilgileriniz güncellendi. İlan yayında kalmaya devam ediyor.":"İlan kaydedildi ve yayınlandı."):(files.length?"İlan taslak olarak kaydedildi. "+files.length+" fotoğraf yüklendi.":"İlan taslak olarak kaydedildi. Fotoğraf seçilmedi."));
   resetEditor();
   editingImages=[];
   await loadListings();
