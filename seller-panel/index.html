@@ -302,13 +302,13 @@ $("photos").onchange=async()=>{
     }
     const {data:images,error:imageError}=await sb.from("listing_images").select("id,r2_object_key,display_order,is_cover").eq("listing_id",listingId).order("display_order");
     if(imageError)throw new Error("Fotoğraflar yüklendi ancak liste yenilenemedi: "+imageError.message);
-    editingImages=images||[];
+    editingImages=await hydrateEditingImages(images||[]);
     renderPhotoManager();
     $("photos").value="";
     msg(files.length+" fotoğraf otomatik yüklendi ve ilana eklendi.");
   }catch(error){
     const {data:images}=await sb.from("listing_images").select("id,r2_object_key,display_order,is_cover").eq("listing_id",listingId).order("display_order");
-    if(images){editingImages=images;renderPhotoManager();}
+    if(images){editingImages=await hydrateEditingImages(images);renderPhotoManager();}
     $("photos").value="";
     msg(errorText(error),true);
   }finally{
