@@ -264,9 +264,15 @@ Deno.serve(async (req) => {
     if (deleteError) return json({ error: "İlan veritabanından silinemedi." }, 500);
     return json({ success: true, deletedImages: images.length });
   } catch (error) {
-    console.error("[manage-listing] unhandled error:", error instanceof Error
-      ? { name: error.name, message: error.message, stack: error.stack }
-      : String(error));
-    return json({ error: "İlan işlemi tamamlanamadı. Lütfen tekrar deneyin." }, 500);
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error("[manage-listing] unhandled error:", {
+      name: error instanceof Error ? error.name : "UnknownError",
+      message: detail,
+      stack: error instanceof Error ? error.stack : null,
+    });
+    return json({
+      error: "İlan işlemi tamamlanamadı. Lütfen tekrar deneyin.",
+      detail: detail.slice(0, 500),
+    }, 500);
   }
 });
