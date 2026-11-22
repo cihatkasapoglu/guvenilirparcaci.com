@@ -20,6 +20,59 @@ function makeSlug(title: string) {
   return `${base || "yedek-parca"}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
+
+const DRAFT_IMAGE_BUCKET = "site-images-drafts";
+
+async function moveDraftImagesToPublic(admin: ReturnType<typeof createClient>, listingId: string) {
+  const { data: images, error } = await admin.from("listing_images")
+    .select("id,r2_object_key").eq("listing_id", listingId);
+  if (error) throw new Error("Fotoğraf kayıtları okunamadı: " + error.message);
+  for (const image of images || []) {
+    const key = image.r2_object_key as string;
+    if (!key.startsWith(`drafts/${listingId}/`)) continue;
+    const publicKey = key.replace(/^drafts\//, "listings/");
+    const { data: file, error: downloadError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).download(key);
+    if (downloadError || !file) throw new Error("Taslak fotoğrafı okunamadı: " + key);
+    const { error: uploadError } = await admin.storage.from("site-images").upload(publicKey, file, {
+      contentType: file.type || "image/jpeg", upsert: true,
+    });
+    if (uploadError) throw new Error("Fotoğraf yayın alanına aktarılamadı: " + uploadError.message);
+    const { error: updateError } = await admin.from("listing_images").update({ r2_object_key: publicKey })
+      .eq("id", image.id).eq("listing_id", listingId);
+    if (updateError) {
+      await admin.storage.from("site-images").remove([publicKey]);
+      throw new Error("Fotoğraf kaydı güncellenemedi: " + updateError.message);
+    }
+    const { error: removeError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).remove([key]);
+    if (removeError) console.error("[manage-listing] private draft cleanup failed:", key, removeError);
+  }
+}
+
+async function movePublicImagesToDraft(admin: ReturnType<typeof createClient>, listingId: string) {
+  const { data: images, error } = await admin.from("listing_images")
+    .select("id,r2_object_key").eq("listing_id", listingId);
+  if (error) throw new Error("Fotoğraf kayıtları okunamadı: " + error.message);
+  for (const image of images || []) {
+    const key = image.r2_object_key as string;
+    if (!key.startsWith(`listings/${listingId}/`)) continue;
+    const draftKey = key.replace(/^listings\//, "drafts/");
+    const { data: file, error: downloadError } = await admin.storage.from("site-images").download(key);
+    if (downloadError || !file) throw new Error("Yayındaki fotoğraf özel alana alınamadı: " + key);
+    const { error: uploadError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).upload(draftKey, file, {
+      contentType: file.type || "image/jpeg", upsert: true,
+    });
+    if (uploadError) throw new Error("Fotoğraf özel alana kopyalanamadı: " + uploadError.message);
+    const { error: updateError } = await admin.from("listing_images").update({ r2_object_key: draftKey })
+      .eq("id", image.id).eq("listing_id", listingId);
+    if (updateError) {
+      await admin.storage.from(DRAFT_IMAGE_BUCKET).remove([draftKey]);
+      throw new Error("Fotoğraf kaydı güncellenemedi: " + updateError.message);
+    }
+    const { error: removeError } = await admin.storage.from("site-images").remove([key]);
+    if (removeError) console.error("[manage-listing] public image cleanup failed:", key, removeError);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     const requestedHeaders = req.headers.get("Access-Control-Request-Headers");
@@ -62,7 +115,7 @@ Deno.serve(async (req) => {
     delete body._accessToken;
     const action = typeof body.action === "string" ? body.action.trim().toLowerCase() : "";
     const listingId = typeof body.listingId === "string" ? body.listingId.trim() : null;
-    if (!["create", "update", "publish", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action)) {
+    if (!["create", "update", "publish", "promote_images", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action)) {
       return json({ error: "İşlem türü geçersiz." }, 400);
     }
     if (["update", "publish", "withdraw", "delete", "delete_image", "reorder_images", "register_image"].includes(action) && !listingId) {
@@ -116,14 +169,14 @@ Deno.serve(async (req) => {
       const objectKey = typeof body.objectKey === "string" ? body.objectKey : "";
       const contentType = typeof body.contentType === "string" ? body.contentType : "";
       const size = Number(body.size);
-      const safeObjectKey = objectKey.startsWith(`listings/${listingId}/`) && !objectKey.includes("..");
+      const safeObjectKey = objectKey.startsWith(`drafts/${listingId}/`) && !objectKey.includes("..");
       if (!safeObjectKey ||
           !["image/jpeg", "image/png", "image/webp"].includes(contentType) ||
           !Number.isFinite(size) || size < 1 || size > 8 * 1024 * 1024) {
         // The browser may already have uploaded this file. Remove it only when
         // the key is safely confined to this listing's own Storage folder.
         if (safeObjectKey) {
-          const { error: cleanupError } = await admin.storage.from("site-images").remove([objectKey]);
+          const { error: cleanupError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).remove([objectKey]);
           if (cleanupError) console.error("[manage-listing] invalid image cleanup failed:", {
             listingId, objectKey, cleanupError,
           });
@@ -134,7 +187,7 @@ Deno.serve(async (req) => {
       const { data: existingImages, error: countError } = await admin.from("listing_images")
         .select("id").eq("listing_id", listingId);
       if (countError) {
-        const { error: cleanupError } = await admin.storage.from("site-images").remove([objectKey]);
+        const { error: cleanupError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).remove([objectKey]);
         console.error("[manage-listing] image count check failed:", {
           listingId, objectKey, countError, cleanupError,
         });
@@ -147,7 +200,7 @@ Deno.serve(async (req) => {
 
       const count = existingImages?.length ?? 0;
       if (count >= 5) {
-        const { error: cleanupError } = await admin.storage.from("site-images").remove([objectKey]);
+        const { error: cleanupError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).remove([objectKey]);
         if (cleanupError) console.error("[manage-listing] max image limit cleanup failed:", {
           listingId, objectKey, cleanupError,
         });
@@ -163,7 +216,7 @@ Deno.serve(async (req) => {
         display_order: displayOrder, is_cover: displayOrder === 1,
       });
       if (insertError) {
-        const { error: cleanupError } = await admin.storage.from("site-images").remove([objectKey]);
+        const { error: cleanupError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).remove([objectKey]);
         console.error("[manage-listing] image row insert failed:", {
           listingId, objectKey, insertError, cleanupError,
         });
@@ -175,11 +228,32 @@ Deno.serve(async (req) => {
       return json({ success: true, displayOrder });
     }
 
+    if (action === "promote_images") {
+      if (listing.status !== "published") return json({ error: "Yalnızca yayındaki ilanın fotoğrafları yayın alanına aktarılabilir." }, 409);
+      try {
+        await moveDraftImagesToPublic(admin, listingId);
+        return json({ success: true });
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        return json({ error: "Fotoğraflar yayın alanına aktarılamadı.", detail }, 500);
+      }
+    }
+
     if (action === "publish") {
       const { data, error } = await admin.rpc("publish_firm_listing", {
         p_firm_id: firm.id, p_listing_id: listingId,
       });
       if (error) return json({ error: error.message || "İlan yayınlanamadı." }, 400);
+      try {
+        await moveDraftImagesToPublic(admin, listingId);
+      } catch (moveError) {
+        const detail = moveError instanceof Error ? moveError.message : String(moveError);
+        await admin.from("listings").update({ status: "withdrawn" }).eq("id", listingId).eq("firm_id", firm.id);
+        try { await movePublicImagesToDraft(admin, listingId); } catch (rollbackError) {
+          console.error("[manage-listing] publish image rollback failed:", rollbackError);
+        }
+        return json({ error: "İlan yayınlanamadı; fotoğrafların güvenliği için ilan taslak dışı bırakıldı.", detail }, 500);
+      }
       return json({ success: true, ...data });
     }
 
@@ -213,6 +287,9 @@ Deno.serve(async (req) => {
       if (image.r2_object_key.startsWith("listings/")) {
         const { error: storageError } = await admin.storage.from("site-images").remove([image.r2_object_key]);
         if (storageError) return json({ error: "Supabase fotoğrafı silinemedi." }, 500);
+      } else if (image.r2_object_key.startsWith("drafts/")) {
+        const { error: storageError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).remove([image.r2_object_key]);
+        if (storageError) return json({ error: "Taslak fotoğrafı silinemedi." }, 500);
       } else {
         const accountId = Deno.env.get("R2_ACCOUNT_ID");
         const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
@@ -249,16 +326,15 @@ Deno.serve(async (req) => {
         .update({ status: "withdrawn" }).eq("id", listingId).eq("firm_id", firm.id);
       if (error) {
         console.error("[manage-listing] withdraw update failed:", {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
+          message: error.message, code: error.code, details: error.details, hint: error.hint,
         });
-        return json({
-          error: "İlan yayından kaldırılamadı.",
-          detail: error.message || null,
-          code: error.code || null,
-        }, 500);
+        return json({ error: "İlan yayından kaldırılamadı.", detail: error.message || null, code: error.code || null }, 500);
+      }
+      try {
+        await movePublicImagesToDraft(admin, listingId);
+      } catch (moveError) {
+        const detail = moveError instanceof Error ? moveError.message : String(moveError);
+        return json({ error: "İlan yayından kaldırıldı ancak bazı fotoğraflar özel alana taşınamadı.", detail }, 500);
       }
       return json({ success: true, status: "withdrawn" });
     }
@@ -266,14 +342,20 @@ Deno.serve(async (req) => {
     const { data: images, error: imagesError } = await admin.from("listing_images")
       .select("r2_object_key").eq("listing_id", listingId);
     if (imagesError || !images) return json({ error: "İlan fotoğrafları alınamadı." }, 500);
-    const supabaseKeys = images.map((image: {r2_object_key:string}) => image.r2_object_key)
+    const publicKeys = images.map((image: {r2_object_key:string}) => image.r2_object_key)
       .filter((key: string) => key.startsWith("listings/"));
-    if (supabaseKeys.length) {
-      const { error: storageError } = await admin.storage.from("site-images").remove(supabaseKeys);
-      if (storageError) return json({ error: "Supabase fotoğrafları silinemedi." }, 500);
+    if (publicKeys.length) {
+      const { error: storageError } = await admin.storage.from("site-images").remove(publicKeys);
+      if (storageError) return json({ error: "Yayın fotoğrafları silinemedi." }, 500);
+    }
+    const draftKeys = images.map((image: {r2_object_key:string}) => image.r2_object_key)
+      .filter((key: string) => key.startsWith("drafts/"));
+    if (draftKeys.length) {
+      const { error: storageError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).remove(draftKeys);
+      if (storageError) return json({ error: "Taslak fotoğrafları silinemedi." }, 500);
     }
     const legacyKeys = images.map((image: {r2_object_key:string}) => image.r2_object_key)
-      .filter((key: string) => !key.startsWith("listings/"));
+      .filter((key: string) => !key.startsWith("listings/") && !key.startsWith("drafts/"));
     if (legacyKeys.length) {
       const accountId = Deno.env.get("R2_ACCOUNT_ID");
       const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
