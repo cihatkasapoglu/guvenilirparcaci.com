@@ -217,7 +217,19 @@ Deno.serve(async (req) => {
       if (listing.status !== "published") return json({ error: "Yalnızca yayındaki ilan kaldırılabilir." }, 409);
       const { error } = await admin.from("listings")
         .update({ status: "withdrawn" }).eq("id", listingId).eq("firm_id", firm.id);
-      if (error) return json({ error: "İlan yayından kaldırılamadı." }, 500);
+      if (error) {
+        console.error("[manage-listing] withdraw update failed:", {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+        });
+        return json({
+          error: "İlan yayından kaldırılamadı.",
+          detail: error.message || null,
+          code: error.code || null,
+        }, 500);
+      }
       return json({ success: true, status: "withdrawn" });
     }
 
