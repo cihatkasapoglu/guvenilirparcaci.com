@@ -263,7 +263,10 @@ Deno.serve(async (req) => {
       .delete().eq("id", listingId).eq("firm_id", firm.id);
     if (deleteError) return json({ error: "İlan veritabanından silinemedi." }, 500);
     return json({ success: true, deletedImages: images.length });
-  } catch (_error) {
+  } catch (error) {
+    console.error("[manage-listing] unhandled error:", error instanceof Error
+      ? { name: error.name, message: error.message, stack: error.stack }
+      : String(error));
     return json({ error: "İlan işlemi tamamlanamadı. Lütfen tekrar deneyin." }, 500);
   }
 });
