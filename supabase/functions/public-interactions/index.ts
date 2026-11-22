@@ -53,19 +53,14 @@ Deno.serve(async (req) => {
       return json({ error: "Geçersiz ilan." }, 400);
     }
 
-    const { data: listing, error: le } = await db
-      .from("listings")
-      .select("id,status,expires_at")
-      .eq("id", listingId)
-      .maybeSingle();
+    const { data: isVisible, error: visibilityError } = await db.rpc(
+      "is_listing_publicly_visible",
+      { p_listing_id: listingId },
+    );
 
-    if (
-      le ||
-      !listing ||
-      listing.status !== "published" ||
-      !listing.expires_at ||
-      new Date(listing.expires_at) <= new Date()
-    ) {
+    if (visibilityError) throw visibilityError;
+
+    if (isVisible !== true) {
       return json({ error: "İlan yayında değil." }, 404);
     }
 
@@ -147,6 +142,38 @@ Deno.serve(async (req) => {
     if (action === "complaint") {
       if (String(body.website || "").trim()) {
         return json({ ok: true });
+      }
+
+      // Şikâyetler için görüntülenmelerden ayrı IP başına dakikada en fazla 3 istek.
+      const forwardedIp = req.headers
+        .get("x-forwarded-for")
+        ?.split(",")[0]
+        .trim();
+
+      const ip = req.headers.get("cf-connecting-ip") || forwardedIp;
+
+      if (!ip) {
+        return json({ error: "Şikâyet isteği doğrulanamadı." }, 503);
+      }
+
+      // Ayrı anahtar alanı, görüntülenme sayacının şikâyet limitini etkilemesini önler.
+      const complaintIpHash = await sha(ip + "|" + key + "|complaint");
+
+      const { data: complaintAllowed, error: complaintRateError } = await db.rpc(
+        "consume_interaction_rate_limit",
+        {
+          p_ip_hash: complaintIpHash,
+          p_limit: 3,
+        },
+      );
+
+      if (complaintRateError) throw complaintRateError;
+
+      if (complaintAllowed !== true) {
+        return json(
+          { error: "Dakikalık şikâyet gönderme sınırına ulaştınız. Lütfen bir dakika sonra tekrar deneyin." },
+          429,
+        );
       }
 
       const email = String(body.email || "").trim().toLowerCase();
