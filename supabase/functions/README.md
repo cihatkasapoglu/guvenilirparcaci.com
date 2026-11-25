@@ -9,46 +9,17 @@ Set these values in Supabase Project Settings -> Edge Functions -> Secrets:
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (server-side only; never expose to the browser)
-- `R2_ACCOUNT_ID`
-- `R2_ACCESS_KEY_ID`
-- `R2_SECRET_ACCESS_KEY`
-- `R2_BUCKET_NAME`
 - `SITE_ORIGIN` (for production: `https://guvenilirparcaci.com`)
 
 Use an R2 API token scoped only to the target bucket, with object read/write permissions required by the upload functions. Do not commit credentials to GitHub.
 
-## R2 bucket CORS
+## Fotoğraf depolama
 
-Configure the R2 bucket CORS policy to allow browser uploads from the production site. Example policy:
-
-```json
-[
-  {
-    "AllowedOrigins": ["https://guvenilirparcaci.com"],
-    "AllowedMethods": ["PUT", "GET", "HEAD"],
-    "AllowedHeaders": [
-      "content-type",
-      "x-amz-meta-firm-id",
-      "x-amz-meta-listing-id",
-      "x-amz-meta-asset-type"
-    ],
-    "ExposeHeaders": ["etag"],
-    "MaxAgeSeconds": 3600
-  }
-]
-```
-
-If the site later uses `www.guvenilirparcaci.com`, add that exact origin too. Do not use a wildcard origin in production.
+İlan ve firma görselleri Supabase Storage üzerinde tutulur. `site-images` herkese açık görseller, `site-images-drafts` ise taslak ilan fotoğrafları içindir.
 
 ## Upload flow
 
-1. The signed-in firm calls `r2-create-upload-url` with `listingId`, `fileName`, `contentType`, and file `size`.
-2. The function verifies the Supabase user, confirmed email, firm ownership/status, supported image type, 8 MB limit, and current photo count.
-3. The browser uploads the file directly to the signed R2 URL using every header returned in `requiredHeaders`.
-4. The browser calls `r2-finalize-upload` with `listingId` and `objectKey`.
-5. The finalizer checks the object in R2, verifies its metadata/type/size, checks the five-photo limit again, then inserts the `listing_images` record.
-
-The five-photo limit is checked again at finalization because multiple upload links could be requested concurrently. A database uniqueness conflict rejects a duplicate display order; retry the finalization after refreshing the listing's image list.
+Firma paneli fotoğrafları doğrudan Supabase Storage içindeki `site-images-drafts` bucket’ına yükler. İlan yayınlanırken `manage-listing` fotoğrafları `site-images` alanına taşır; yayından kaldırılırken tekrar özel taslak alanına alır. Silme ve sıralama işlemleri de Supabase Storage üzerinden yürütülür.
 
 ## Seller listing workflow
 
@@ -58,7 +29,7 @@ The `manage-listing` Edge Function supports these authenticated actions:
 - `update`: updates the seller's listing without extending its expiry.
 - `publish`: publishes a draft/withdrawn listing for 30 days after checking active membership, quota and 1-5 photos.
 - `withdraw`: removes a published listing from public search without deleting it.
-- `delete`: deletes the seller's listing and its R2 photos.
+- `delete`: deletes the seller's listing and its Supabase Storage photos.
 
 For `create` and `update`, send `listing` fields using camelCase keys (`categoryId`, `subcategoryId`, `partType`, `title`, `description`, `fuelType`, `engineCode`, `oemNumber`, `priceType`, `price`) and a `compatibilities` array with `vehicleModelId`, `yearFrom`, and `yearTo`. Each listing must have 1-20 vehicle compatibility entries. Price type is `fixed`, `negotiable`, or `ask`; for `ask`, price is omitted/null. Part type is `new` or `used`.
 
@@ -69,11 +40,6 @@ The SQL migration `202611190005_listing_workflows.sql` creates service-role-only
 From the repository root, after installing the Supabase CLI and linking the intended project:
 
 ```bash
-supabase functions deploy r2-create-upload-url
-supabase functions deploy r2-finalize-upload
-supabase functions deploy r2-manage-listing-images
-supabase functions deploy r2-create-firm-upload-url
-supabase functions deploy r2-finalize-firm-upload
 supabase functions deploy manage-listing
 ```
 
@@ -84,7 +50,7 @@ Do not run these commands until the project, bucket, CORS policy, and secrets ha
 - Add image resizing/thumbnail generation before public display.
 - Add scheduled orphan-object cleanup and verify deletion behavior.
 - Add rate limits and abuse monitoring for upload URL creation.
-- Do not expose the R2 S3 endpoint or secret credentials in browser code.
+- Do not expose the storage endpoint or secret credentials in browser code.
 
 ## Firm registration and EFT membership
 
@@ -113,7 +79,7 @@ Provision the two administrator Auth users and insert their UUIDs into `public.a
 
 ## Seller panel
 
-The responsive seller interface is in `seller-panel/index.html`. It includes sign-in/password reset, seller listing management, multi-model compatibility selection, R2 photo upload, publish/withdraw/delete, daily refresh usage, membership/payment notice history, and firm profile editing.
+The responsive seller interface is in `seller-panel/index.html`. It includes sign-in/password reset, seller listing management, multi-model compatibility selection, Supabase Storage photo upload, publish/withdraw/delete, daily refresh usage, membership/payment notice history, and firm profile editing.
 
 Before hosting, replace `SUPABASE_PROJECT_URL_BURAYA` and `SUPABASE_ANON_KEY_BURAYA` in the file. Do not place the service-role key in browser code. Host this page over HTTPS at a private/noindex route such as `/firma-panel/`.
 
@@ -121,23 +87,19 @@ Deploy the seller functions after the required migrations:
 
 ```bash
 supabase functions deploy manage-listing
-supabase functions deploy r2-create-upload-url
-supabase functions deploy r2-finalize-upload
-supabase functions deploy r2-create-firm-upload-url
-supabase functions deploy r2-finalize-firm-upload
 ```
 
-The seller panel currently expects the public catalogue tables and owner-read RLS policies from migrations 001-002, listing workflow RPCs from migration 005, and the payment workflow from migrations 006-007. Configure the R2 public image delivery base URL separately before displaying uploaded images on the storefront. Live authentication, database, and upload tests remain pending until Supabase and R2 are provisioned.
+The seller panel currently expects the public catalogue tables and owner-read RLS policies from migrations 001-002, listing workflow RPCs from migration 005, and the payment workflow from migrations 006-007. Görseller Supabase Storage üzerinden sunulur. Live authentication, database, and upload tests remain pending until Supabase and R2 are provisioned.
 
 
 ### Seller photo management update
 
-Apply `202611190009_listing_image_management.sql` after migrations 001-008. It adds the service-role-only RPC used to safely reorder a seller's own listing photos and set the first photo as the cover. The `manage-listing` Edge Function now supports `delete_image` and `reorder_images`; the seller panel displays thumbnails when `R2_PUBLIC_BASE_URL` is configured and provides move/delete controls. Set that public delivery base URL in the seller panel source before hosting. Never expose R2 credentials in the browser.
+Apply `202611190009_listing_image_management.sql` after migrations 001-008. It adds the service-role-only RPC used to safely reorder a seller's own listing photos and set the first photo as the cover. The `manage-listing` Edge Function now supports `delete_image` and `reorder_images`; the seller panel displays thumbnails when `Supabase Storage public URL` is configured and provides move/delete controls. Set that public delivery base URL in the seller panel source before hosting. Never expose storage credentials in the browser.
 
 
 ## Public marketplace pages
 
-The first public buyer-facing pages are in `marketplace/index.html` (search and filters) and `marketplace/ilan.html` (listing detail and seller contact). They use the Supabase anon/publishable key only and rely on the public listing and firm-directory RLS policies. Before hosting, replace the Supabase URL/key placeholders and `R2_PUBLIC_BASE_URL_BURAYA` with the public R2 custom-domain base URL. Host the files at the intended public routes and configure the listing-detail route/SEO metadata as the site routing is finalized. These pages are source files only; they are not deployed.
+The first public buyer-facing pages are in `marketplace/index.html` (search and filters) and `marketplace/ilan.html` (listing detail and seller contact). They use the Supabase anon/publishable key only and rely on the public listing and firm-directory RLS policies. Before hosting, replace the Supabase URL/key placeholders and `Supabase Storage public URL_BURAYA` with the public R2 custom-domain base URL. Host the files at the intended public routes and configure the listing-detail route/SEO metadata as the site routing is finalized. These pages are source files only; they are not deployed.
 
 
 ## Public firm storefront
@@ -237,7 +199,7 @@ Do not submit the dynamic sitemap before its proxy is enabled. The source code i
 
 ## Türkçe kurulum rehberi ve tam dağıtım listesi
 
-Yeni Supabase projesinin oluşturulması, 001-010 migration sırası, e-posta doğrulama ayarları, Edge Function secrets, Cloudflare R2 hazırlığı, iki yönetici hesabı, ön yüz yer tutucuları ve canlıya geçiş kontrolleri için [Supabase ve Cloudflare R2 Kurulum Rehberi](../KURULUM_REHBERI.md) dosyasını izleyin.
+Yeni Supabase projesinin oluşturulması, 001-010 migration sırası, e-posta doğrulama ayarları, Edge Function secrets, Cloudflare R2 hazırlığı, iki yönetici hesabı, ön yüz yer tutucuları ve canlıya geçiş kontrolleri için [Supabase ve Cloudflare Supabase Kurulum Rehberi](../KURULUM_REHBERI.md) dosyasını izleyin.
 
 Tüm Edge Function'ların toplu dağıtım komutları:
 
