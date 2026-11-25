@@ -1,4 +1,4 @@
-# Güvenilir Parçacı — Supabase ve Cloudflare R2 kurulum rehberi
+# Güvenilir Parçacı — Supabase kurulum rehberi
 
 Bu rehber kaynak kodun yeni bir Supabase projesine aktarılması içindir. **Henüz proje oluşturulmadı; hiçbir SQL veya Edge Function canlıya uygulanmış değildir.** Bu adımları yalnızca doğru Supabase projesi oluşturulduktan sonra izleyin.
 
@@ -61,22 +61,15 @@ Supabase Dashboard → Project Settings → Edge Functions → Secrets bölümü
 - `SUPABASE_SERVICE_ROLE_KEY` — yalnızca Edge Functions içinde
 - `SITE_ORIGIN` — `https://guvenilirparcaci.com`
 - `R2_ACCOUNT_ID` — Cloudflare hesap kimliği
-- `R2_ACCESS_KEY_ID` — yalnızca hedef R2 bucket için yetkili erişim anahtarı
+- `R2_ACCESS_KEY_ID` — yalnızca hedef Storage bucket için yetkili erişim anahtarı
 - `R2_SECRET_ACCESS_KEY` — aynı token'ın gizli anahtarı
 - `R2_BUCKET_NAME` — oluşturulan bucket adı
 
-R2 henüz oluşturulmadıysa R2 değişkenlerini tahmin ederek girmeyin. Gerçek değerler Cloudflare'dan alınmalıdır. Service-role ve R2 secret değerleri istemci koduna yazılmaz.
+R2 henüz oluşturulmadıysa R2 değişkenlerini tahmin ederek girmeyin. Gerçek değerler Cloudflare'dan alınmalıdır. Service-role ve Storage secret değerleri istemci koduna yazılmaz.
 
-## 5. Cloudflare R2 hazırlığı
+## 5. Supabase Storage hazırlığı
 
-1. Cloudflare hesabında R2'yi etkinleştirin.
-2. Özel bir bucket oluşturun; örnek ad: `guvenilirparcaci-media`.
-3. Yalnızca bu bucket için gerekli okuma/yazma izinlerine sahip API token oluşturun.
-4. Görseller için özel alan adı bağlayın; örnek: `media.guvenilirparcaci.com`.
-5. R2 bucket CORS ayarına yalnızca gerçek site origin'ini ekleyin. README içindeki örnek CORS politikasını kullanın; gerekiyorsa `www` origin'ini ayrıca ekleyin.
-6. Gerçek görsel dağıtım adresini ön yüzlerdeki `R2_PUBLIC_BASE_URL_BURAYA` yer tutucusuna bağlayın.
-
-R2 secret anahtarını asla ön yüze koymayın. İstemci yüklemesi, Edge Function'ın ürettiği kısa süreli imzalı URL üzerinden yapılır.
+Supabase Storage içinde `site-images` ve `site-images-drafts` bucket’larını oluşturun. `site-images` herkese açık ilan ve firma görselleri içindir. `site-images-drafts` yayınlanmamış ilan fotoğrafları için özel bucket olarak tutulur. Firma paneli fotoğrafları Supabase Storage’a yükler; yayınlama ve yayından kaldırma işlemlerini `manage-listing` Edge Function yürütür.
 
 ## 6. Edge Function dağıtımı
 
@@ -86,11 +79,6 @@ Migration'lar ve gerekli secret değerleri hazır olduktan sonra depo kök klas�
 supabase functions deploy complete-firm-registration
 supabase functions deploy submit-payment-notice
 supabase functions deploy manage-listing
-supabase functions deploy r2-create-upload-url
-supabase functions deploy r2-finalize-upload
-supabase functions deploy r2-manage-listing-images
-supabase functions deploy r2-create-firm-upload-url
-supabase functions deploy r2-finalize-firm-upload
 supabase functions deploy admin-management
 supabase functions deploy public-interactions
 supabase functions deploy public-sitemap
@@ -123,7 +111,7 @@ Aşağıdaki dosyalarda yer tutucular, gerçek Supabase Project URL ve publishab
 - `marketplace/model.html`
 - `marketplace/favorilerim.html`
 
-R2 görsel taban adresi gereken sayfalarda `R2_PUBLIC_BASE_URL_BURAYA` da gerçek public media domain'i ile değiştirilmelidir. Service-role veya R2 secret anahtarını bu dosyalara eklemeyin.
+Görseller Supabase Storage üzerinden sunulur; ön yüzde ayrıca bir Supabase Storage görsel adresi tanımlanmaz. Service-role veya Storage secret anahtarını bu dosyalara eklemeyin.
 
 ## 9. Zamanlanmış işler
 
@@ -139,7 +127,7 @@ R2 görsel taban adresi gereken sayfalarda `R2_PUBLIC_BASE_URL_BURAYA` da gerçe
 - [ ] İki yönetici dışında yönetim API'sine erişilemiyor.
 - [ ] Satıcı yalnızca kendi firma ve ilanlarını yönetebiliyor.
 - [ ] İlan kotası, 30 günlük süre ve günlük 10 yenileme sınırı doğru çalışıyor.
-- [ ] R2 yükleme, 5 fotoğraf sınırı, sıralama ve silme doğrulandı.
+- [ ] Supabase Storage yükleme, 5 fotoğraf sınırı, sıralama ve silme doğrulandı.
 - [ ] Şikâyet, favori ve görüntülenme akışları doğrulandı.
 - [ ] Süresi dolmuş/üyeliği bitmiş ilanlar herkese açık görünmüyor.
 - [ ] Yedekleme, geri yükleme ve hata izleme planı hazır.
