@@ -214,7 +214,7 @@ async function managePhotoClick(e){const image=e.target.closest(".photo-item img
 function previewListing(){
   const title=$("title").value.trim()||"İlan başlığı";
   const selected=Array.from($("model").selectedOptions).map(o=>o.textContent);
-  const photoFiles=Array.from($("photos").files||[]);
+  const photoFiles=pendingPhotoFiles.slice();
   const photos=[...editingImages.map(x=>({url:x.previewUrl||photoUrl(x.r2_object_key),name:"Kayıtlı fotoğraf"})),...photoFiles.map(x=>({url:URL.createObjectURL(x),name:x.name}))].filter(x=>x.url);
   const priceType=$("priceType").value,price=priceType==="ask"?"Fiyat sorunuz":money($("price").value);
   const phone=(firm?.phone||"").replace(/\\D/g,""),wa=(firm?.whatsapp||firm?.phone||"").replace(/\\D/g,"");
@@ -234,7 +234,6 @@ async function saveListing(publish){
   if(publish&&isExpired)throw new Error("Bu ilanın süresi geçmiş. Önce İlanlarım listesindeki Yenile alanından yenileyin.");
   const files=pendingPhotoFiles.slice();
   if(editingImages.length+files.length>5)throw new Error("Bir ilana en fazla 5 fotoğraf ekleyebilirsiniz.");
-  if(editingImages.length+files.length>5)throw new Error("Mevcut fotoğraflarla birlikte en fazla 5 fotoğraf olabilir.");
   for(const file of files){
     if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>8*1024*1024)
       throw new Error(file.name+" dosyası uygun değil (JPG/PNG/WebP, en fazla 8 MB).");
@@ -311,7 +310,7 @@ $("photos").onchange=async()=>{
   for(const file of incoming){if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>8*1024*1024){$("photos").value="";msg(file.name+" uygun değil. JPG, PNG veya WebP ve en fazla 8 MB olmalı.",true);return;}}
   const files=incoming;
   if(!$("listingId").value){pendingPhotoFiles=[...existingPending,...incoming];$("photos").value="";renderPhotoManager();msg(pendingPhotoFiles.length+" fotoğraf seçildi. En fazla 5 fotoğraf ekleyebilirsiniz.");return;}
-  renderPhotoManager();
+  pendingPhotoFiles=[...existingPending,...incoming];renderPhotoManager();
   const listingId=$("listingId").value;
   if(!listingId)return;
   if(uploadingPhotos){msg("Fotoğraf yüklemesi zaten devam ediyor.");return;}
@@ -333,12 +332,12 @@ $("photos").onchange=async()=>{
     const {data:images,error:imageError}=await sb.from("listing_images").select("id,r2_object_key,display_order,is_cover").eq("listing_id",listingId).order("display_order");
     if(imageError)throw new Error("Fotoğraflar yüklendi ancak liste yenilenemedi: "+imageError.message);
     editingImages=await hydrateEditingImages(images||[]);
-    $("photos").value="";renderPhotoManager();
+    pendingPhotoFiles=[];$("photos").value="";renderPhotoManager();
     msg(files.length+" fotoğraf otomatik yüklendi ve ilana eklendi.");
   }catch(error){
     const {data:images}=await sb.from("listing_images").select("id,r2_object_key,display_order,is_cover").eq("listing_id",listingId).order("display_order");
-    if(images){editingImages=await hydrateEditingImages(images);renderPhotoManager();}
-    $("photos").value="";
+    if(images){editingImages=await hydrateEditingImages(images);}
+    pendingPhotoFiles=[];renderPhotoManager();$("photos").value="";
     msg(errorText(error),true);
   }finally{
     uploadingPhotos=false;
