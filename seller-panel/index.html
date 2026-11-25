@@ -89,7 +89,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL="https://ugqsazhpfnqiqonhvkcb.supabase.co";
 const SUPABASE_ANON_KEY="sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ";
-const R2_PUBLIC_BASE_URL="R2_PUBLIC_BASE_URL_BURAYA";
 const IMAGE_BUCKET="site-images";
 const DRAFT_IMAGE_BUCKET="site-images-drafts";
 const ready=!SUPABASE_URL.includes("_BURAYA")&&!SUPABASE_ANON_KEY.includes("_BURAYA");
@@ -131,7 +130,7 @@ function showApp(on){$("login").classList.toggle("hidden",on);$("app").classList
 function tab(name){document.querySelectorAll("[id^=tab-]").forEach(x=>x.classList.add("hidden"));$("tab-"+name).classList.remove("hidden");document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));}
 async function loadFirm(){const {data:authData,error:authError}=await sb.auth.getUser();if(authError)throw authError;const user=authData?.user;if(!user?.id)throw new Error("Giriş yapan kullanıcı doğrulanamadı. Lütfen çıkış yapıp tekrar giriş yapın.");const {data,error}=await sb.from("firms").select("*").eq("owner_user_id",user.id).maybeSingle();if(error)throw error;if(!data)throw new Error("Bu kullanıcıya ait firma kaydı bulunamadı. Giriş yapılan e-posta: "+(user.email||"bilinmiyor")+". Önce firma kaydınızı tamamlayın.");firm=data;
 const fields={firmName:"name",contactName:"contact_name",firmPhone:"phone",firmWhatsapp:"whatsapp",firmEmail:"email",province:"province",district:"district",address:"address",firmDescription:"description"};for(const [id,key] of Object.entries(fields))$(id).value=data[key]||"";renderFirmPreviews();}
-function publicImageUrl(key){if(!key||key.startsWith("drafts/"))return "";if(key.startsWith("firms/")||key.startsWith("listings/"))return sb.storage.from(IMAGE_BUCKET).getPublicUrl(key).data.publicUrl;if(R2_PUBLIC_BASE_URL.includes("_BURAYA"))return "";return R2_PUBLIC_BASE_URL.replace(/\/$/,"")+"/"+key.split("/").map(encodeURIComponent).join("/");}
+function publicImageUrl(key){if(!key||key.startsWith("drafts/"))return "";if(key.startsWith("firms/")||key.startsWith("listings/"))return sb.storage.from(IMAGE_BUCKET).getPublicUrl(key).data.publicUrl;return "";}
 function firmAssetUrl(key){return publicImageUrl(key);}
 function fileExtension(file){return file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";}
 function renderFirmPreviews(){for(const [id,key] of [["firmLogoPreview",firm?.logo_object_key],["firmCoverPreview",firm?.cover_object_key]]){const el=$(id),url=firmAssetUrl(key);el.src=url||"data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";el.style.display=url?"block":"none";}}
