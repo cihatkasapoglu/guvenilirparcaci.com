@@ -20,11 +20,11 @@
 </div>
 <script type="module">
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
-const URL="https://ugqsazhpfnqiqonhvkcb.supabase.co",KEY="sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ",R2="R2_PUBLIC_BASE_URL_BURAYA";
+const URL="https://ugqsazhpfnqiqonhvkcb.supabase.co",KEY="sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ";
 const sb=createClient(URL,KEY),$=id=>document.getElementById(id);let page=0,perPage=20,total=0;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=v=>v==null?"Fiyat sorunuz":new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:0}).format(v);
-const imgUrl=k=>!k?"":(k.startsWith("firms/")||k.startsWith("listings/"))?sb.storage.from("site-images").getPublicUrl(k).data.publicUrl:R2.includes("_BURAYA")?"":R2.replace(/\/$/,"")+"/"+k.split("/").map(encodeURIComponent).join("/");
+const imgUrl=k=>!k?"":(k.startsWith("firms/")||k.startsWith("listings/"))?sb.storage.from("site-images").getPublicUrl(k).data.publicUrl:"";
 async function catalog(){const [c,b]=await Promise.all([sb.from("categories").select("id,name").eq("is_active",true).order("sort_order"),sb.from("vehicle_brands").select("id,name").eq("is_active",true).order("name")]);if(c.error||b.error)throw c.error||b.error;$("category").innerHTML='<option value="">Tüm kategoriler</option>'+c.data.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join("");$("brand").innerHTML='<option value="">Tüm markalar</option>'+b.data.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join("");}
 async function loadModels(){const id=$("brand").value;$("model").innerHTML='<option value="">Tüm modeller</option>';if(!id)return;const {data,error}=await sb.from("vehicle_models").select("id,name").eq("brand_id",id).eq("is_active",true).order("name");if(error)throw error;$("model").innerHTML='<option value="">Tüm modeller</option>'+data.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join("");}
 async function runSearch(){page=0;await results();}
