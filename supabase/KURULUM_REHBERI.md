@@ -60,12 +60,8 @@ Supabase Dashboard → Project Settings → Edge Functions → Secrets bölümü
 - `SUPABASE_ANON_KEY` — publishable/anon key
 - `SUPABASE_SERVICE_ROLE_KEY` — yalnızca Edge Functions içinde
 - `SITE_ORIGIN` — `https://guvenilirparcaci.com`
-- `R2_ACCOUNT_ID` — Cloudflare hesap kimliği
-- `R2_ACCESS_KEY_ID` — yalnızca hedef Storage bucket için yetkili erişim anahtarı
-- `R2_SECRET_ACCESS_KEY` — aynı token'ın gizli anahtarı
-- `R2_BUCKET_NAME` — oluşturulan bucket adı
 
-R2 henüz oluşturulmadıysa R2 değişkenlerini tahmin ederek girmeyin. Gerçek değerler Cloudflare'dan alınmalıdır. Service-role ve Storage secret değerleri istemci koduna yazılmaz.
+Fotoğraf depolaması Supabase Storage kullanır; Cloudflare R2 için herhangi bir secret tanımlamayın. Service-role anahtarı yalnızca Edge Functions içinde kalmalıdır.
 
 ## 5. Supabase Storage hazırlığı
 
