@@ -11,7 +11,6 @@ Set these values in Supabase Project Settings -> Edge Functions -> Secrets:
 - `SUPABASE_SERVICE_ROLE_KEY` (server-side only; never expose to the browser)
 - `SITE_ORIGIN` (for production: `https://guvenilirparcaci.com`)
 
-Use an R2 API token scoped only to the target bucket, with object read/write permissions required by the upload functions. Do not commit credentials to GitHub.
 
 ## Fotoğraf depolama
 
@@ -89,7 +88,7 @@ Deploy the seller functions after the required migrations:
 supabase functions deploy manage-listing
 ```
 
-The seller panel currently expects the public catalogue tables and owner-read RLS policies from migrations 001-002, listing workflow RPCs from migration 005, and the payment workflow from migrations 006-007. Görseller Supabase Storage üzerinden sunulur. Live authentication, database, and upload tests remain pending until Supabase and R2 are provisioned.
+The seller panel currently expects the public catalogue tables and owner-read RLS policies from migrations 001-002, listing workflow RPCs from migration 005, and the payment workflow from migrations 006-007. Görseller Supabase Storage üzerinden sunulur. Live authentication, database, and upload tests must be verified against the configured Supabase project.
 
 
 ### Seller photo management update
@@ -99,7 +98,7 @@ Apply `202611190009_listing_image_management.sql` after migrations 001-008. It a
 
 ## Public marketplace pages
 
-The first public buyer-facing pages are in `marketplace/index.html` (search and filters) and `marketplace/ilan.html` (listing detail and seller contact). They use the Supabase anon/publishable key only and rely on the public listing and firm-directory RLS policies. Before hosting, replace the Supabase URL/key placeholders and `Supabase Storage public URL_BURAYA` with the public R2 custom-domain base URL. Host the files at the intended public routes and configure the listing-detail route/SEO metadata as the site routing is finalized. These pages are source files only; they are not deployed.
+The first public buyer-facing pages are in `marketplace/index.html` (search and filters) and `marketplace/ilan.html` (listing detail and seller contact). They use the Supabase anon/publishable key only and rely on the public listing and firm-directory RLS policies. Before hosting, replace the Supabase URL/key placeholders. Public images are served from the `site-images` Storage bucket. Host the files at the intended public routes and configure the listing-detail route/SEO metadata as the site routing is finalized. These pages are source files only; they are not deployed.
 
 
 ## Public firm storefront
@@ -112,7 +111,7 @@ Listing detail pages link to the corresponding storefront. The current static ro
 /marketplace/firma.html?slug=firm-slug
 ```
 
-A clean route such as `/firm-slug` requires a hosting rewrite rule. Configure that only after confirming the production hosting platform, and reserve system paths such as `/marketplace`, `/firma-panel`, and `/admin-panel`. This page is source only and requires the Supabase URL, anon key and R2 public base URL to be configured before deployment.
+A clean route such as `/firm-slug` requires a hosting rewrite rule. Configure that only after confirming the production hosting platform, and reserve system paths such as `/marketplace`, `/firma-panel`, and `/admin-panel`. This page is source only and requires the Supabase URL and anon key to be configured before deployment.
 
 
 ## Buyer interactions
@@ -199,7 +198,7 @@ Do not submit the dynamic sitemap before its proxy is enabled. The source code i
 
 ## Türkçe kurulum rehberi ve tam dağıtım listesi
 
-Yeni Supabase projesinin oluşturulması, 001-010 migration sırası, e-posta doğrulama ayarları, Edge Function secrets, Cloudflare R2 hazırlığı, iki yönetici hesabı, ön yüz yer tutucuları ve canlıya geçiş kontrolleri için [Supabase ve Cloudflare Supabase Kurulum Rehberi](../KURULUM_REHBERI.md) dosyasını izleyin.
+Yeni Supabase projesinin oluşturulması, 001-010 migration sırası, e-posta doğrulama ayarları, Edge Function secrets, Supabase Storage hazırlığı, iki yönetici hesabı, ön yüz yer tutucuları ve canlıya geçiş kontrolleri için [Supabase Kurulum Rehberi](../KURULUM_REHBERI.md) dosyasını izleyin.
 
 Tüm Edge Function'ların toplu dağıtım komutları:
 
@@ -207,11 +206,6 @@ Tüm Edge Function'ların toplu dağıtım komutları:
 supabase functions deploy complete-firm-registration
 supabase functions deploy submit-payment-notice
 supabase functions deploy manage-listing
-supabase functions deploy r2-create-upload-url
-supabase functions deploy r2-finalize-upload
-supabase functions deploy r2-manage-listing-images
-supabase functions deploy r2-create-firm-upload-url
-supabase functions deploy r2-finalize-firm-upload
 supabase functions deploy admin-management
 supabase functions deploy public-interactions
 supabase functions deploy public-sitemap
