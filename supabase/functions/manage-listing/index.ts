@@ -1,5 +1,4 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { S3Client, DeleteObjectCommand } from "npm:@aws-sdk/client-s3";
 
 const origin = "*";
 const cors = {
@@ -395,19 +394,7 @@ Deno.serve(async (req) => {
         const { error: storageError } = await admin.storage.from(DRAFT_IMAGE_BUCKET).remove([image.r2_object_key]);
         if (storageError) return json({ error: "Taslak fotoğrafı silinemedi." }, 500);
       } else {
-        const accountId = Deno.env.get("R2_ACCOUNT_ID");
-        const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
-        const secretAccessKey = Deno.env.get("R2_SECRET_ACCESS_KEY");
-        const bucket = Deno.env.get("R2_BUCKET_NAME");
-        if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
-          return json({ error: "Eski R2 fotoğrafı için silme ayarları tamamlanmamış." }, 500);
-        }
-        const s3 = new S3Client({
-          region: "auto",
-          endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-          credentials: { accessKeyId, secretAccessKey },
-        });
-        await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: image.r2_object_key }));
+        return json({ error: "Fotoğrafın depolama anahtarı tanınmıyor; kayıt silinmedi." }, 409);
       }
       const { error: removeError } = await admin.from("listing_images")
         .delete().eq("id", imageId).eq("listing_id", listingId);
@@ -479,35 +466,10 @@ Deno.serve(async (req) => {
       if (storageError) return json({ error: "Taslak fotoğrafları silinemedi; ilan silinmedi.", detail: storageError.message }, 500);
     }
 
-    const legacyKeys = [...new Set(images.map((image: {r2_object_key:string}) => image.r2_object_key)
-      .filter((key: string) => !key.startsWith("listings/") && !key.startsWith("drafts/")))];
-    if (legacyKeys.length) {
-      const accountId = Deno.env.get("R2_ACCOUNT_ID");
-      const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
-      const secretAccessKey = Deno.env.get("R2_SECRET_ACCESS_KEY");
-      const bucket = Deno.env.get("R2_BUCKET_NAME");
-      if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
-        return json({ error: "Eski R2 fotoğrafları için silme ayarları tamamlanmamış; ilan silinmedi." }, 500);
-      }
-      const s3 = new S3Client({
-        region: "auto",
-        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-        credentials: { accessKeyId, secretAccessKey },
-      });
-      try {
-        for (const key of legacyKeys) {
-          await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
-        }
-      } catch (legacyDeleteError) {
-        const detail = legacyDeleteError instanceof Error ? legacyDeleteError.message : String(legacyDeleteError);
-        return json({ error: "Eski R2 fotoğrafları silinemedi; ilan silinmedi.", detail }, 500);
-      }
-    }
-
     const { error: deleteError } = await admin.from("listings")
       .delete().eq("id", listingId).eq("firm_id", firm.id);
     if (deleteError) return json({ error: "İlan fotoğrafları silindi ancak ilan veritabanından silinemedi.", detail: deleteError.message }, 500);
-    return json({ success: true, deletedImages: publicKeys.length + draftKeys.length + legacyKeys.length });
+    return json({ success: true, deletedImages: publicKeys.length + draftKeys.length });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     console.error("[manage-listing] unhandled error:", {
