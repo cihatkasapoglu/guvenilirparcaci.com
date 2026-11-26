@@ -112,7 +112,7 @@ const URL="https://ugqsazhpfnqiqonhvkcb.supabase.co",KEY="sb_publishable_pfYeKe4
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));const money=v=>v==null?"Fiyat sorunuz":new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:0}).format(v);const img=k=>!k?"":(k.startsWith("firms/")||k.startsWith("listings/"))?sb.storage.from("site-images").getPublicUrl(k).data.publicUrl:"";
 async function init(){const [cats,brands,latest,featured,firmCities]=await Promise.all([
 sb.from("categories").select("id,name,slug").eq("is_active",true).order("sort_order"),
-sb.from("vehicle_brands").select("id,name,slug").eq("is_active",true).order("name").limit(18),
+sb.from("vehicle_brands").select("id,name,slug").eq("is_active",true).order("name"),
 sb.from("listings").select("id,title,price_try,part_type,province,firm_id").eq("status","published").gt("expires_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(8),
 sb.from("featured_listings").select("listing_id,starts_at,ends_at").eq("status","active").eq("payment_status","approved").lte("starts_at",new Date().toISOString()).gt("ends_at",new Date().toISOString()).limit(8),
 sb.from("public_firm_directory").select("province").not("province","is",null).limit(200)
