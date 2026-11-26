@@ -35,7 +35,26 @@ if($("part").value)query=query.eq("part_type",$("part").value);
 if($("province").value.trim())query=query.ilike("province","%"+$("province").value.trim().replace(/[,%()]/g," ")+"%");if($("district").value.trim())query=query.ilike("district","%"+$("district").value.trim().replace(/[,%()]/g," ")+"%");if($("fuel").value)query=query.ilike("fuel_type","%"+$("fuel").value+"%");
 if($("min").value)query=query.gte("price_try",Number($("min").value));
 if($("max").value)query=query.lte("price_try",Number($("max").value));
-const modelIds=$("model").value.split(",").filter(Boolean).map(Number);if(modelIds.length){const {data:co,error}=await sb.from("listing_vehicle_compatibilities").select("listing_id").in("vehicle_model_id",modelIds);if(error)throw error;const ids=[...new Set((co||[]).map(x=>x.listing_id))];if(!ids.length){$("results").innerHTML='<div class="empty">Bu model için ilan bulunamadı.</div>';$("count").textContent="0 ilan";$("status").textContent="";$("pages").innerHTML="";return;}query=query.in("id",ids);}
+const selectedModelIds=$("model").value.split(",").filter(Boolean).map(Number);
+const selectedBrandId=$("brand").value;
+let compatibilityModelIds=selectedModelIds;
+if(selectedBrandId&&!compatibilityModelIds.length){
+ const brandGroup=(window.marketplaceBrandGroups||[]).find(x=>x.id===selectedBrandId);
+ const brandIds=brandGroup?.ids||[selectedBrandId];
+ const {data:brandModels,error:brandModelsError}=await sb.from("vehicle_models").select("id").in("brand_id",brandIds).eq("is_active",true);
+ if(brandModelsError)throw brandModelsError;
+ compatibilityModelIds=(brandModels||[]).map(x=>Number(x.id));
+}
+if(compatibilityModelIds.length){
+ const {data:co,error:compatibilityError}=await sb.from("listing_vehicle_compatibilities").select("listing_id").in("vehicle_model_id",compatibilityModelIds);
+ if(compatibilityError)throw compatibilityError;
+ const matchingListingIds=[...new Set((co||[]).map(x=>x.listing_id))];
+ if(!matchingListingIds.length){
+  $("results").innerHTML='<div class="empty">Seçtiğiniz marka veya model için ilan bulunamadı.</div>';
+  $("count").textContent="0 ilan";$("status").textContent="";$("pages").innerHTML="";return;
+ }
+ query=query.in("id",matchingListingIds);
+}
 const sort=$("sort").value;if(sort==="low")query=query.order("price_try",{ascending:true,nullsFirst:false});else if(sort==="high")query=query.order("price_try",{ascending:false,nullsFirst:false});else query=query.order("published_at",{ascending:false}).order("created_at",{ascending:false});
 query=query.range(page*perPage,(page+1)*perPage-1);
 const {data,error,count}=await query;if(error)throw error;total=count||0;
@@ -53,6 +72,6 @@ const modelIds=[...new Set((compat.data||[]).map(x=>x.vehicle_model_id))];let mo
 for(const x of compat.data||[]){const a=compatMap.get(x.listing_id)||[];a.push(modelMap.get(x.vehicle_model_id));compatMap.set(x.listing_id,a);}
 $("results").innerHTML=data.map(x=>{const f=firmMap.get(x.firm_id),key=imageMap.get(x.id),url=key&&imgUrl(key),models=(compatMap.get(x.id)||[]).filter(Boolean).slice(0,2).join(", ");return '<a class="item" href="ilan.html?id='+encodeURIComponent(x.id)+'">'+(url?'<img loading="lazy" decoding="async" width="320" height="180" src="'+esc(url)+'" alt="'+esc(x.title)+'">':'<div class="noimg">Fotoğraf yok</div>')+(x.is_featured?'<span class="featured">ÖNE ÇIKAN</span>':"")+'<div class="info"><div class="title">'+esc(x.title)+'</div><div class="price">'+money(x.price_try)+'</div><span class="pill">'+(x.part_type==="new"?"Sıfır parça":"Çıkma parça")+'</span><div class="small">'+esc(models)+'<br>'+esc(x.province)+(x.district?" / "+esc(x.district):"")+'<br>'+esc(f?.name||"Firma")+'</div></div></a>';}).join("");
 $("count").textContent=total.toLocaleString("tr-TR")+" ilan";$("status").textContent="";const pages=Math.ceil(total/perPage);const start=Math.max(0,Math.min(page-3,pages-8));const end=Math.min(pages,start+8);$("pages").innerHTML=(page>0?'<button data-page="'+(page-1)+'">← Önceki</button>':"")+Array.from({length:end-start},(_,i)=>'<button class="'+(start+i===page?"active":"")+'" data-page="'+(start+i)+'">'+(start+i+1)+'</button>').join("")+(page<pages-1?'<button data-page="'+(page+1)+'">Sonraki →</button>':"");}
-$("search").onclick=()=>runSearch().catch(e=>$("status").textContent=e.message);$("reset").onclick=()=>{["q","province","district","min","max"].forEach(id=>$(id).value="");["category","part","brand","model","fuel","sort"].forEach(id=>$(id).selectedIndex=0);runSearch().catch(e=>$("status").textContent=e.message);};$("brand").onchange=()=>loadModels().catch(e=>$("status").textContent=e.message);$("pages").onclick=e=>{const b=e.target.closest("[data-page]");if(!b)return;page=Number(b.dataset.page);results().catch(err=>$("status").textContent=err.message);};$("q").addEventListener("keydown",e=>{if(e.key==="Enter")runSearch().catch(err=>$("status").textContent=err.message);});
+$("search").onclick=()=>runSearch().catch(e=>$("status").textContent=e.message);$("reset").onclick=()=>{["q","province","district","min","max"].forEach(id=>$(id).value="");["category","part","brand","model","fuel","sort"].forEach(id=>$(id).selectedIndex=0);runSearch().catch(e=>$("status").textContent=e.message);};$("brand").onchange=()=>loadModels().then(runSearch).catch(e=>$("status").textContent=e.message);$("model").onchange=()=>runSearch().catch(e=>$("status").textContent=e.message);["category","part","fuel","sort"].forEach(id=>$(id).addEventListener("change",()=>runSearch().catch(e=>$("status").textContent=e.message)));$("pages").onclick=e=>{const b=e.target.closest("[data-page]");if(!b)return;page=Number(b.dataset.page);results().catch(err=>$("status").textContent=err.message);};$("q").addEventListener("keydown",e=>{if(e.key==="Enter")runSearch().catch(err=>$("status").textContent=err.message);});
 const initialQ=new URLSearchParams(location.search).get("q");if(initialQ)$("q").value=initialQ;catalog().then(results).catch(e=>$("status").textContent=e.message);
 </script><footer class="site-footer"><div>© <span id="siteFooterYear"></span> Güvenilir Parçacı</div><nav aria-label="Kurumsal bağlantılar"><a href="/hakkimizda.html">Hakkımızda</a><a href="/iletisim.html">İletişim</a><a href="/uyelik-sozlesmesi.html">Üyelik Sözleşmesi</a><a href="/kvkk.html">KVKK</a><a href="/gizlilik.html">Gizlilik</a><a href="/cerez-politikasi.html">Çerez Politikası</a><a href="/ilan-kurallari.html">İlan Kuralları</a></nav></footer><script>document.getElementById("siteFooterYear").textContent=new Date().getFullYear();</script></body></html>
