@@ -8,7 +8,7 @@
 <script type="module">
 import{createClient}from"https://esm.sh/@supabase/supabase-js@2";
 const URL="https://ugqsazhpfnqiqonhvkcb.supabase.co",KEY="sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ",sb=createClient(URL,KEY),$=id=>document.getElementById(id);
-const params=new URLSearchParams(location.search);let next=params.get("next")||"/uye-panel/";if(!next.startsWith("/")||next.startsWith("//"))next="/uye-panel/";
+const params=new URLSearchParams(location.search);let next="/uye-panel/";try{const candidate=new URL(params.get("next")||"/uye-panel/",location.origin);if(candidate.origin===location.origin)next=candidate.pathname+candidate.search+candidate.hash}catch{}
 function message(text,bad=false){$("status").textContent=text;$("status").className="status"+(bad?" bad":"")}
 function tab(which){const login=which==="login";$("loginForm").classList.toggle("hidden",!login);$("signupForm").classList.toggle("hidden",login);$("loginTab").classList.toggle("active",login);$("signupTab").classList.toggle("active",!login);message("")}
 $("loginTab").onclick=()=>tab("login");$("signupTab").onclick=()=>tab("signup");
