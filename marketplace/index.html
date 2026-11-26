@@ -28,50 +28,69 @@ const imgUrl=k=>!k?"":(k.startsWith("firms/")||k.startsWith("listings/"))?sb.sto
 async function catalog(){const brandSelect=$("brand"),categorySelect=$("category");brandSelect.disabled=false;categorySelect.disabled=false;brandSelect.innerHTML='<option value="">Markalar yükleniyor…</option>';categorySelect.innerHTML='<option value="">Kategoriler yükleniyor…</option>';const [c,b]=await Promise.all([sb.from("categories").select("id,name").eq("is_active",true).order("sort_order"),sb.from("vehicle_brands").select("id,name").eq("is_active",true).order("name")]);if(b.error)throw new Error("Markalar yüklenemedi: "+b.error.message);if(c.error)throw new Error("Kategoriler yüklenemedi: "+c.error.message);categorySelect.innerHTML='<option value="">Tüm kategoriler</option>'+(c.data||[]).map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join("");const brandMap=new Map();for(const brand of b.data||[]){const clean=String(brand.name||"").trim().replace(/\s*\((?:binek(?: araç)?|ticari(?: araç)?|kamyon|kamyonet|otobüs|minibüs|ağır ticari|hafif ticari|ağır vasıta|tır|çekici)\)\s*$/i,"").replace(/\s+(?:binek(?: araç)?|ticari(?: araç)?|kamyon|kamyonet|otobüs|minibüs|ağır ticari|hafif ticari|ağır vasıta|tır|çekici)$/i,"").trim();if(!clean)continue;const key=clean.toLocaleLowerCase("tr");if(!brandMap.has(key))brandMap.set(key,{id:String(brand.id),name:clean,ids:[String(brand.id)]});else brandMap.get(key).ids.push(String(brand.id));}window.marketplaceBrandGroups=[...brandMap.values()].sort((a,b)=>a.name.localeCompare(b.name,"tr"));brandSelect.replaceChildren(new Option("Tüm markalar",""),...window.marketplaceBrandGroups.map(x=>new Option(x.name,x.id)));brandSelect.disabled=false;}
 async function loadModels(){const id=$("brand").value;$("model").innerHTML='<option value="">Tüm modeller</option>';if(!id)return;const group=(window.marketplaceBrandGroups||[]).find(x=>x.id===id),brandIds=group?.ids||[id];const {data,error}=await sb.from("vehicle_models").select("id,name").in("brand_id",brandIds).eq("is_active",true).order("name");if(error)throw error;const grouped=new Map();for(const model of data||[]){const key=String(model.name||"").trim().toLocaleLowerCase("tr");if(!grouped.has(key))grouped.set(key,{id:Number(model.id),ids:[Number(model.id)],name:model.name});else grouped.get(key).ids.push(Number(model.id));}$("model").innerHTML='<option value="">Tüm modeller</option>'+[...grouped.values()].sort((a,b)=>a.name.localeCompare(b.name,"tr")).map(x=>'<option value="'+x.ids.join(",")+'">'+esc(x.name)+'</option>').join("");}
 async function runSearch(){page=0;await results();}
-async function results(){ $("status").textContent="İlanlar aranıyor…";let query=sb.from("listings").select("id,title,slug,description,price_try,price_type,part_type,province,district,engine_code,expires_at,published_at,category_id,firm_id",{count:"exact"}).eq("status","published").gt("expires_at",new Date().toISOString());
-const q=$("q").value.trim().replace(/[,%_*()]/g," ").replace(/\s+/g," ");const searchTerms=[...new Set(q.split(" ").map(x=>x.trim()).filter(Boolean))];for(const term of searchTerms){const pattern="%"+term+"%";query=query.or("title.ilike."+pattern+",description.ilike."+pattern+",engine_code.ilike."+pattern); }
-if($("category").value)query=query.eq("category_id",Number($("category").value));
-if($("part").value)query=query.eq("part_type",$("part").value);
-if($("province").value.trim())query=query.ilike("province","%"+$("province").value.trim().replace(/[,%()]/g," ")+"%");if($("district").value.trim())query=query.ilike("district","%"+$("district").value.trim().replace(/[,%()]/g," ")+"%");if($("fuel").value)query=query.ilike("fuel_type","%"+$("fuel").value+"%");
-if($("min").value)query=query.gte("price_try",Number($("min").value));
-if($("max").value)query=query.lte("price_try",Number($("max").value));
-const selectedModelIds=$("model").value.split(",").filter(Boolean).map(Number);
-const selectedBrandId=$("brand").value;
-let compatibilityModelIds=selectedModelIds;
-if(selectedBrandId&&!compatibilityModelIds.length){
- const brandGroup=(window.marketplaceBrandGroups||[]).find(x=>x.id===selectedBrandId);
- const brandIds=brandGroup?.ids||[selectedBrandId];
- const {data:brandModels,error:brandModelsError}=await sb.from("vehicle_models").select("id").in("brand_id",brandIds).eq("is_active",true);
- if(brandModelsError)throw brandModelsError;
- compatibilityModelIds=(brandModels||[]).map(x=>Number(x.id));
-}
-if(compatibilityModelIds.length){
- const {data:co,error:compatibilityError}=await sb.from("listing_vehicle_compatibilities").select("listing_id").in("vehicle_model_id",compatibilityModelIds);
- if(compatibilityError)throw compatibilityError;
- const matchingListingIds=[...new Set((co||[]).map(x=>x.listing_id))];
- if(!matchingListingIds.length){
-  $("results").innerHTML='<div class="empty">Seçtiğiniz marka veya model için ilan bulunamadı.</div>';
+async function results(){
+ $("status").textContent="Akıllı arama yapılıyor…";
+ const brandGroup=(window.marketplaceBrandGroups||[]).find(x=>x.id===$("brand").value);
+ const brandIds=brandGroup?.ids?.map(Number)||[];
+ const modelIds=$("model").value.split(",").filter(Boolean).map(Number);
+ const {data:ranked,error:searchError}=await sb.rpc("search_marketplace_listings",{
+  p_query:$("q").value.trim(),
+  p_category_id:$("category").value?Number($("category").value):null,
+  p_part_type:$("part").value||null,
+  p_brand_ids:brandIds.length?brandIds:null,
+  p_model_ids:modelIds.length?modelIds:null,
+  p_province:$("province").value.trim()||null,
+  p_district:$("district").value.trim()||null,
+  p_fuel_type:$("fuel").value||null,
+  p_min_price:$("min").value?Number($("min").value):null,
+  p_max_price:$("max").value?Number($("max").value):null,
+  p_sort:$("sort").value||"new",
+  p_limit:perPage,
+  p_offset:page*perPage
+ });
+ if(searchError)throw searchError;
+ const ids=(ranked||[]).map(x=>x.listing_id);
+ total=Number(ranked?.[0]?.total_count||0);
+ if(!ids.length){
+  $("results").innerHTML='<div class="empty">Aramanıza uygun ilan bulunamadı. Daha kısa veya farklı kelimeler deneyebilirsiniz.</div>';
   $("count").textContent="0 ilan";$("status").textContent="";$("pages").innerHTML="";return;
  }
- query=query.in("id",matchingListingIds);
+ const {data:rows,error}=await sb.from("listings").select("id,title,slug,description,price_try,price_type,part_type,province,district,engine_code,oem_number,expires_at,published_at,category_id,firm_id").in("id",ids);
+ if(error)throw error;
+ const rowMap=new Map((rows||[]).map(x=>[x.id,x]));
+ const data=ids.map(id=>rowMap.get(id)).filter(Boolean);
+ const now=new Date().toISOString();
+ const {data:featuredRows,error:featuredError}=await sb.from("featured_listings").select("listing_id").eq("status","active").eq("payment_status","approved").lte("starts_at",now).gt("ends_at",now).in("listing_id",ids);
+ if(featuredError)throw featuredError;
+ const featuredIds=new Set((featuredRows||[]).map(x=>x.listing_id));
+ data.sort((a,b)=>Number(featuredIds.has(b.id))-Number(featuredIds.has(a.id)));
+ data.forEach(x=>x.is_featured=featuredIds.has(x.id));
+ const firmIds=[...new Set(data.map(x=>x.firm_id))];
+ const [images,firms,compat]=await Promise.all([
+  sb.from("listing_images").select("listing_id,r2_object_key,display_order").in("listing_id",ids).order("display_order"),
+  sb.from("public_firm_directory").select("id,name,province,district").in("id",firmIds),
+  sb.from("listing_vehicle_compatibilities").select("listing_id,vehicle_model_id,year_from,year_to").in("listing_id",ids)
+ ]);
+ if(images.error||firms.error||compat.error)throw images.error||firms.error||compat.error;
+ const firmMap=new Map((firms.data||[]).map(x=>[x.id,x])),imageMap=new Map(),compatMap=new Map();
+ for(const x of images.data||[])if(!x.r2_object_key.startsWith("drafts/")&&!imageMap.has(x.listing_id))imageMap.set(x.listing_id,x.r2_object_key);
+ const modelIdsForCards=[...new Set((compat.data||[]).map(x=>x.vehicle_model_id))];let modelMap=new Map();
+ if(modelIdsForCards.length){
+  const {data:m,error:me}=await sb.from("vehicle_models").select("id,name,brand_id").in("id",modelIdsForCards);
+  if(me)throw me;
+  const brands=[...new Set((m||[]).map(x=>x.brand_id))];
+  const {data:b,error:be}=await sb.from("vehicle_brands").select("id,name").in("id",brands);
+  if(be)throw be;
+  const bm=new Map((b||[]).map(x=>[x.id,x.name]));
+  modelMap=new Map((m||[]).map(x=>[x.id,(bm.get(x.brand_id)||"")+" "+x.name]));
+ }
+ for(const x of compat.data||[]){const a=compatMap.get(x.listing_id)||[];a.push(modelMap.get(x.vehicle_model_id));compatMap.set(x.listing_id,a);}
+ $("results").innerHTML=data.map(x=>{const f=firmMap.get(x.firm_id),key=imageMap.get(x.id),url=key&&imgUrl(key),models=(compatMap.get(x.id)||[]).filter(Boolean).slice(0,2).join(", ");return '<a class="item" href="ilan.html?id='+encodeURIComponent(x.id)+'">'+(url?'<img loading="lazy" decoding="async" width="320" height="180" src="'+esc(url)+'" alt="'+esc(x.title)+'">':'<div class="noimg">Fotoğraf yok</div>')+(x.is_featured?'<span class="featured">ÖNE ÇIKAN</span>':"")+'<div class="info"><div class="title">'+esc(x.title)+'</div><div class="price">'+money(x.price_try)+'</div><span class="pill">'+(x.part_type==="new"?"Sıfır parça":"Çıkma parça")+'</span><div class="small">'+esc(models)+'<br>'+esc(x.province)+(x.district?" / "+esc(x.district):"")+'<br>'+esc(f?.name||"Firma")+'</div></div></a>';}).join("");
+ $("count").textContent=total.toLocaleString("tr-TR")+" ilan";
+ $("status").textContent=$("q").value.trim()?"Arama; başlık, araç uyumluluğu, motor kodu, OEM ve açıklama alanları birlikte değerlendirilerek sıralandı.":"";
+ const pages=Math.ceil(total/perPage),startPage=Math.max(0,Math.min(page-3,pages-8)),endPage=Math.min(pages,startPage+8);
+ $("pages").innerHTML=(page>0?'<button data-page="'+(page-1)+'">← Önceki</button>':"")+Array.from({length:endPage-startPage},(_,i)=>'<button class="'+(startPage+i===page?"active":"")+'" data-page="'+(startPage+i)+'">'+(startPage+i+1)+'</button>').join("")+(page<pages-1?'<button data-page="'+(page+1)+'">Sonraki →</button>':"");
 }
-const sort=$("sort").value;if(sort==="low")query=query.order("price_try",{ascending:true,nullsFirst:false});else if(sort==="high")query=query.order("price_try",{ascending:false,nullsFirst:false});else query=query.order("published_at",{ascending:false}).order("created_at",{ascending:false});
-query=query.range(page*perPage,(page+1)*perPage-1);
-const {data,error,count}=await query;if(error)throw error;total=count||0;
-const now=new Date().toISOString();const {data:featuredRows,error:featuredError}=await sb.from("featured_listings").select("listing_id").eq("status","active").eq("payment_status","approved").lte("starts_at",now).gt("ends_at",now).in("listing_id",(data||[]).map(x=>x.id));if(featuredError)throw featuredError;const featuredIds=new Set((featuredRows||[]).map(x=>x.listing_id));data.sort((a,b)=>Number(featuredIds.has(b.id))-Number(featuredIds.has(a.id)));data.forEach(x=>x.is_featured=featuredIds.has(x.id));
-if(!data?.length){$("results").innerHTML='<div class="empty">Aramanıza uygun ilan bulunamadı.</div>';$("count").textContent="0 ilan";$("status").textContent="";$("pages").innerHTML="";return;}
-const ids=data.map(x=>x.id),firmIds=[...new Set(data.map(x=>x.firm_id))];
-const [images,firms,compat]=await Promise.all([
-sb.from("listing_images").select("listing_id,r2_object_key,display_order").in("listing_id",ids).order("display_order"),
-sb.from("public_firm_directory").select("id,name,province,district").in("id",firmIds),
-sb.from("listing_vehicle_compatibilities").select("listing_id,vehicle_model_id,year_from,year_to").in("listing_id",ids)
-]);if(images.error||firms.error||compat.error)throw images.error||firms.error||compat.error;
-const firmMap=new Map((firms.data||[]).map(x=>[x.id,x])),imageMap=new Map(),compatMap=new Map();
-for(const x of images.data||[])if(!x.r2_object_key.startsWith("drafts/")&&!imageMap.has(x.listing_id))imageMap.set(x.listing_id,x.r2_object_key);
-const modelIds=[...new Set((compat.data||[]).map(x=>x.vehicle_model_id))];let modelMap=new Map();if(modelIds.length){const {data:m,error:me}=await sb.from("vehicle_models").select("id,name,brand_id").in("id",modelIds);if(me)throw me;const brands=[...new Set(m.map(x=>x.brand_id))];const {data:b}=await sb.from("vehicle_brands").select("id,name").in("id",brands);const bm=new Map((b||[]).map(x=>[x.id,x.name]));modelMap=new Map(m.map(x=>[x.id,bm.get(x.brand_id)+" "+x.name]));}
-for(const x of compat.data||[]){const a=compatMap.get(x.listing_id)||[];a.push(modelMap.get(x.vehicle_model_id));compatMap.set(x.listing_id,a);}
-$("results").innerHTML=data.map(x=>{const f=firmMap.get(x.firm_id),key=imageMap.get(x.id),url=key&&imgUrl(key),models=(compatMap.get(x.id)||[]).filter(Boolean).slice(0,2).join(", ");return '<a class="item" href="ilan.html?id='+encodeURIComponent(x.id)+'">'+(url?'<img loading="lazy" decoding="async" width="320" height="180" src="'+esc(url)+'" alt="'+esc(x.title)+'">':'<div class="noimg">Fotoğraf yok</div>')+(x.is_featured?'<span class="featured">ÖNE ÇIKAN</span>':"")+'<div class="info"><div class="title">'+esc(x.title)+'</div><div class="price">'+money(x.price_try)+'</div><span class="pill">'+(x.part_type==="new"?"Sıfır parça":"Çıkma parça")+'</span><div class="small">'+esc(models)+'<br>'+esc(x.province)+(x.district?" / "+esc(x.district):"")+'<br>'+esc(f?.name||"Firma")+'</div></div></a>';}).join("");
-$("count").textContent=total.toLocaleString("tr-TR")+" ilan";$("status").textContent="";const pages=Math.ceil(total/perPage);const start=Math.max(0,Math.min(page-3,pages-8));const end=Math.min(pages,start+8);$("pages").innerHTML=(page>0?'<button data-page="'+(page-1)+'">← Önceki</button>':"")+Array.from({length:end-start},(_,i)=>'<button class="'+(start+i===page?"active":"")+'" data-page="'+(start+i)+'">'+(start+i+1)+'</button>').join("")+(page<pages-1?'<button data-page="'+(page+1)+'">Sonraki →</button>':"");}
 $("search").onclick=()=>runSearch().catch(e=>$("status").textContent=e.message);$("reset").onclick=()=>{["q","province","district","min","max"].forEach(id=>$(id).value="");["category","part","brand","model","fuel","sort"].forEach(id=>$(id).selectedIndex=0);runSearch().catch(e=>$("status").textContent=e.message);};$("brand").onchange=()=>loadModels().then(runSearch).catch(e=>$("status").textContent=e.message);$("model").onchange=()=>runSearch().catch(e=>$("status").textContent=e.message);["category","part","fuel","sort"].forEach(id=>$(id).addEventListener("change",()=>runSearch().catch(e=>$("status").textContent=e.message)));$("pages").onclick=e=>{const b=e.target.closest("[data-page]");if(!b)return;page=Number(b.dataset.page);results().catch(err=>$("status").textContent=err.message);};$("q").addEventListener("keydown",e=>{if(e.key==="Enter")runSearch().catch(err=>$("status").textContent=err.message);});
 const initialQ=new URLSearchParams(location.search).get("q");if(initialQ)$("q").value=initialQ;catalog().then(results).catch(e=>$("status").textContent=e.message);
 </script><footer class="site-footer"><div>© <span id="siteFooterYear"></span> Güvenilir Parçacı</div><nav aria-label="Kurumsal bağlantılar"><a href="/hakkimizda.html">Hakkımızda</a><a href="/iletisim.html">İletişim</a><a href="/uyelik-sozlesmesi.html">Üyelik Sözleşmesi</a><a href="/kvkk.html">KVKK</a><a href="/gizlilik.html">Gizlilik</a><a href="/cerez-politikasi.html">Çerez Politikası</a><a href="/ilan-kurallari.html">İlan Kuralları</a></nav></footer><script>document.getElementById("siteFooterYear").textContent=new Date().getFullYear();</script></body></html>
