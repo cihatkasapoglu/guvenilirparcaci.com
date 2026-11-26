@@ -92,5 +92,17 @@ async function results(){
  $("pages").innerHTML=(page>0?'<button data-page="'+(page-1)+'">← Önceki</button>':"")+Array.from({length:endPage-startPage},(_,i)=>'<button class="'+(startPage+i===page?"active":"")+'" data-page="'+(startPage+i)+'">'+(startPage+i+1)+'</button>').join("")+(page<pages-1?'<button data-page="'+(page+1)+'">Sonraki →</button>':"");
 }
 $("search").onclick=()=>runSearch().catch(e=>$("status").textContent=e.message);$("reset").onclick=()=>{["q","province","district","min","max"].forEach(id=>$(id).value="");["category","part","brand","model","fuel","sort"].forEach(id=>$(id).selectedIndex=0);runSearch().catch(e=>$("status").textContent=e.message);};$("brand").onchange=()=>loadModels().then(runSearch).catch(e=>$("status").textContent=e.message);$("model").onchange=()=>runSearch().catch(e=>$("status").textContent=e.message);["category","part","fuel","sort"].forEach(id=>$(id).addEventListener("change",()=>runSearch().catch(e=>$("status").textContent=e.message)));$("pages").onclick=e=>{const b=e.target.closest("[data-page]");if(!b)return;page=Number(b.dataset.page);results().catch(err=>$("status").textContent=err.message);};$("q").addEventListener("keydown",e=>{if(e.key==="Enter")runSearch().catch(err=>$("status").textContent=err.message);});
-const initialQ=new URLSearchParams(location.search).get("q");if(initialQ)$("q").value=initialQ;catalog().then(results).catch(e=>$("status").textContent=e.message);
+const params=new URLSearchParams(location.search);
+const initialQ=params.get("q");if(initialQ)$("q").value=initialQ;
+catalog().then(async()=>{
+ if(params.get("category_id"))$("category").value=params.get("category_id");
+ if(params.get("part"))$("part").value=params.get("part");
+ if(params.get("province"))$("province").value=params.get("province");
+ if(params.get("brand_id")){
+  $("brand").value=params.get("brand_id");await loadModels();
+  const wanted=(params.get("model_ids")||"").split(",").filter(Boolean).sort().join(",");
+  if(wanted){const option=[...$("model").options].find(o=>o.value.split(",").filter(Boolean).sort().join(",")===wanted);if(option)$("model").value=option.value;}
+ }
+ await results();
+}).catch(e=>$("status").textContent=e.message);
 </script><footer class="site-footer"><div>© <span id="siteFooterYear"></span> Güvenilir Parçacı</div><nav aria-label="Kurumsal bağlantılar"><a href="/hakkimizda.html">Hakkımızda</a><a href="/iletisim.html">İletişim</a><a href="/uyelik-sozlesmesi.html">Üyelik Sözleşmesi</a><a href="/kvkk.html">KVKK</a><a href="/gizlilik.html">Gizlilik</a><a href="/cerez-politikasi.html">Çerez Politikası</a><a href="/ilan-kurallari.html">İlan Kuralları</a></nav></footer><script>document.getElementById("siteFooterYear").textContent=new Date().getFullYear();</script></body></html>

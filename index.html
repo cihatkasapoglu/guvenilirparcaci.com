@@ -61,18 +61,46 @@ a{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
 .banner h2{margin:0 0 8px;font-size:23px}
 .banner p{color:#d0d5dd;margin:0;line-height:1.55;font-size:13px;max-width:620px}
 .banner .btn{flex:0 0 auto}
+ .quick-search{margin:0 0 32px;padding:22px;background:#fff;border:1px solid #e4e7ec;border-radius:16px;box-shadow:0 4px 18px rgba(16,24,40,.035)}
+.quick-search-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+.quick-search h2{font-size:20px;margin:0}.quick-search p{font-size:12px;color:#667085;margin:5px 0 0}
+.quick-fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.quick-fields label{display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#344054}
+.quick-fields input,.quick-fields select{width:100%;min-width:0;padding:11px;border:1px solid #d0d5dd;border-radius:9px;background:#fff;color:#182230;font:inherit}
+.quick-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:14px}
+.suggested{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 32px;align-items:center}
+.suggested strong{font-size:12px;color:#667085;margin-right:4px}
+.suggested a,.city-links a{display:inline-flex;padding:8px 11px;background:#fff;border:1px solid #e4e7ec;border-radius:22px;color:#344054;text-decoration:none;font-size:12px;font-weight:650}
+.suggested a:hover,.city-links a:hover{border-color:#b42318;color:#b42318}
+.city-links{display:flex;gap:9px;flex-wrap:wrap}
+.shelf-section{margin:34px 0}
+.shelf-section .cards{margin-top:14px}
 footer{margin-top:44px;padding:25px 0 12px;border-top:1px solid #e4e7ec;color:#667085;font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 footer a{color:#667085;margin-right:12px;text-decoration:none}
 footer a:hover{color:#b42318}
-@media(max-width:900px){.cats{grid-template-columns:repeat(3,1fr)}.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.brands{grid-template-columns:repeat(4,1fr)}.hero{padding:38px}.nav{gap:5px}.nav a:not(.btn){display:none}}
-@media(max-width:620px){.wrap{padding:13px}.top{gap:8px;padding-bottom:10px}.brand{font-size:17px;gap:8px}.brand img{width:42px;height:42px}.nav .btn{padding:10px 11px;font-size:12px}.hero{padding:28px 19px;min-height:360px;margin-top:8px;border-radius:17px}.hero h1{font-size:34px;letter-spacing:-.8px}.hero p{font-size:14px}.search{flex-direction:column;padding:7px}.search input{padding:13px}.search .btn{width:100%}.hero:after{right:-180px}.trust-row{grid-template-columns:1fr;gap:8px;margin-top:-12px}.trust{padding:12px}.section{margin:28px 0}.cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.cat{min-height:100px;padding:14px;font-size:13px}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.item img,.noimg{height:125px}.info{padding:10px}.info strong{font-size:12px;min-height:35px}.price{font-size:16px}.brands{grid-template-columns:repeat(3,1fr);gap:8px}.brands a{font-size:12px;min-height:47px}.how{grid-template-columns:1fr;gap:9px}.how-card{padding:15px}.banner{align-items:flex-start;flex-direction:column;padding:22px}.banner h2{font-size:20px}.sectionhead h2{font-size:20px}.sectionhead a{font-size:12px}footer{font-size:11px;line-height:1.9}}
+@media(max-width:900px){.quick-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.cats{grid-template-columns:repeat(3,1fr)}.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.brands{grid-template-columns:repeat(4,1fr)}.hero{padding:38px}.nav{gap:5px}.nav a:not(.btn){display:none}}
+@media(max-width:620px){.quick-search{padding:15px}.quick-fields{grid-template-columns:1fr 1fr;gap:9px}.quick-search-head{align-items:flex-start;flex-direction:column}.wrap{padding:13px}.top{gap:8px;padding-bottom:10px}.brand{font-size:17px;gap:8px}.brand img{width:42px;height:42px}.nav .btn{padding:10px 11px;font-size:12px}.hero{padding:28px 19px;min-height:360px;margin-top:8px;border-radius:17px}.hero h1{font-size:34px;letter-spacing:-.8px}.hero p{font-size:14px}.search{flex-direction:column;padding:7px}.search input{padding:13px}.search .btn{width:100%}.hero:after{right:-180px}.trust-row{grid-template-columns:1fr;gap:8px;margin-top:-12px}.trust{padding:12px}.section{margin:28px 0}.cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.cat{min-height:100px;padding:14px;font-size:13px}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.item img,.noimg{height:125px}.info{padding:10px}.info strong{font-size:12px;min-height:35px}.price{font-size:16px}.brands{grid-template-columns:repeat(3,1fr);gap:8px}.brands a{font-size:12px;min-height:47px}.how{grid-template-columns:1fr;gap:9px}.how-card{padding:15px}.banner{align-items:flex-start;flex-direction:column;padding:22px}.banner h2{font-size:20px}.sectionhead h2{font-size:20px}.sectionhead a{font-size:12px}footer{font-size:11px;line-height:1.9}}
 </style><script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Güvenilir Parçacı","url":"https://guvenilirparcaci.com/","inLanguage":"tr-TR","potentialAction":{"@type":"SearchAction","target":"https://guvenilirparcaci.com/marketplace/?q={search_term_string}","query-input":"required name=search_term_string"}}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Güvenilir Parçacı","url":"https://guvenilirparcaci.com/","logo":"https://guvenilirparcaci.com/guvenilir-parcaci.jpg"}</script></head><body><div class="wrap">
 <header class="top"><a class="brand" href="/"><img src="/guvenilir-parcaci.jpg" alt="Güvenilir Parçacı"><span>Güvenilir Parçacı</span></a><nav class="nav"><a href="/marketplace/">İlanlar</a><a href="/marketplace/kategoriler.html">Kategoriler</a><a href="/marketplace/markalar.html">Markalar</a><a class="btn secondary" href="/uye-giris.html">Üye Girişi</a><a class="btn" href="/seller-panel/">Firma Girişi</a></nav></header>
 <section class="hero"><div class="hero-content"><div class="eyebrow">TÜRKİYE'NİN YEDEK PARÇA İLAN PLATFORMU</div><h1>Aradığın yedek parçayı, doğru satıcıyla buluştur.</h1><p>Sıfır ve çıkma oto yedek parça ilanlarını tek yerde keşfet. Parça adına, araç markasına, modele veya motor koduna göre ara; satıcı firmalarla doğrudan iletişime geç.</p><form class="search" id="searchForm"><input id="q" placeholder="Örn. Hyundai Accent Era D4FA motor" aria-label="Parça, marka, model veya motor kodu ara"><button class="btn">İlan ara <span aria-hidden="true">→</span></button></form><div class="hero-tags"><span>Sıfır parça</span><span>Çıkma parça</span><span>Türkiye geneli ilanlar</span></div></div></section>
+<section class="quick-search" aria-label="Detaylı yedek parça arama">
+  <div class="quick-search-head"><div><h2>Detaylı parça arama</h2><p>Marka, model, kategori ve konum bilgilerini seçerek aramanı daralt.</p></div><a href="/marketplace/" style="color:#b42318;text-decoration:none;font-size:12px;font-weight:750">Tüm filtreler →</a></div>
+  <form id="advancedSearch" class="quick-fields">
+    <div><label for="homeBrand">Araç markası</label><select id="homeBrand"><option value="">Tüm markalar</option></select></div>
+    <div><label for="homeModel">Araç modeli</label><select id="homeModel" disabled><option value="">Önce marka seçin</option></select></div>
+    <div><label for="homeCategory">Parça kategorisi</label><select id="homeCategory"><option value="">Tüm kategoriler</option></select></div>
+    <div><label for="homePart">Parça türü</label><select id="homePart"><option value="">Sıfır ve çıkma</option><option value="new">Sıfır parça</option><option value="used">Çıkma parça</option></select></div>
+    <div><label for="homeProvince">Şehir</label><input id="homeProvince" placeholder="Örn. Ankara"></div>
+    <div style="grid-column:span 3;align-self:end"><button class="btn" style="width:100%">Seçimlerimle ilanları bul →</button></div>
+  </form>
+</section>
+<section class="suggested" aria-label="Önerilen aramalar"><strong>Popüler aramalar:</strong><a href="/marketplace/?q=çıkma%20motor">Çıkma motor</a><a href="/marketplace/?q=şanzıman">Şanzıman</a><a href="/marketplace/?q=far">Far</a><a href="/marketplace/?q=Hyundai%20Accent">Hyundai Accent</a><a href="/marketplace/?q=Volkswagen%20motor">Volkswagen motor</a><a href="/marketplace/?q=turbo">Turbo</a></section>
 <section class="trust-row" aria-label="Platform özellikleri"><div class="trust"><div class="trust-icon">⌕</div><div><strong>Kolay parça arama</strong><small>Parça adı, marka, model veya motor koduyla ara</small></div></div><div class="trust"><div class="trust-icon">▣</div><div><strong>Farklı satıcıları keşfet</strong><small>Türkiye genelindeki firma ilanlarını karşılaştır</small></div></div><div class="trust"><div class="trust-icon">↗</div><div><strong>Satıcıyla doğrudan iletişim</strong><small>İlan üzerinden telefon veya WhatsApp bağlantısı</small></div></div></section>
 <section class="section"><div class="sectionhead"><div><h2>Parça kategorilerini keşfet</h2><p>Aradığın parçaya doğru kategoriden ulaş.</p></div><a href="/marketplace/kategoriler.html">Tüm kategoriler →</a></div><div class="cats" id="categories"><div class="small">Kategoriler yükleniyor…</div></div></section>
 <section class="section"><div class="sectionhead"><div><h2>Öne çıkan ilanlar</h2><p>Öne çıkarılan güncel yedek parça ilanları.</p></div><a href="/marketplace/">Tüm ilanları gör →</a></div><div class="cards" id="featured"><div class="small">İlanlar yükleniyor…</div></div></section>
 <section class="section"><div class="sectionhead"><div><h2>En yeni ilanlar</h2><p>Platforma en son eklenen yedek parçalar.</p></div><a href="/marketplace/">Bütün ilanlar →</a></div><div class="cards" id="latest"><div class="small">İlanlar yükleniyor…</div></div></section>
+<section class="section" id="specialShelves"></section>
+<section class="section"><div class="sectionhead"><div><h2>Şehrine göre yedek parça firmaları</h2><p>İlanı bulunan şehirleri keşfet, konumuna göre arama yap.</p></div><a href="/marketplace/">Tüm şehirler →</a></div><div class="city-links" id="cityLinks"><span class="small">Şehirler yükleniyor…</span></div></section>
 <section class="section"><div class="sectionhead"><div><h2>Aracının markasını seç</h2><p>Markaya göre yedek parça ilanlarını incele.</p></div><a href="/marketplace/markalar.html">Tüm markalar →</a></div><div class="brands" id="brands"><span class="small">Markalar yükleniyor…</span></div></section>
 <section class="section"><div class="sectionhead"><div><h2>GüvenilirParçacı nasıl çalışır?</h2><p>Aradığın parçaya ulaşmak için üç kolay adım.</p></div></div><div class="how"><div class="how-card"><div class="how-number">1</div><strong>Parçanı ara</strong><p>Parça adını, araç markasını, modelini veya motor kodunu yaz.</p></div><div class="how-card"><div class="how-number">2</div><strong>İlanları incele</strong><p>Fotoğrafları, açıklamaları, fiyatları ve satıcı bilgilerini karşılaştır.</p></div><div class="how-card"><div class="how-number">3</div><strong>Satıcıya ulaş</strong><p>İlan sayfasından firma ile telefon veya WhatsApp üzerinden iletişim kur.</p></div></div></section>
 <section class="section"><div class="banner"><div><h2>Yedek parça satıcısı mısınız?</h2><p>Firmanızı GüvenilirParçacı'ya ekleyin, ürünlerinizi ilan olarak yayınlayın ve Türkiye genelindeki parça arayan müşterilere ulaşın.</p></div><a class="btn" href="/seller-panel/">Firma paneline git →</a></div></section>
@@ -82,17 +110,47 @@ footer a:hover{color:#b42318}
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
 const URL="https://ugqsazhpfnqiqonhvkcb.supabase.co",KEY="sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ";const sb=createClient(URL,KEY),$=id=>document.getElementById(id);$("year").textContent=new Date().getFullYear();
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));const money=v=>v==null?"Fiyat sorunuz":new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:0}).format(v);const img=k=>!k?"":(k.startsWith("firms/")||k.startsWith("listings/"))?sb.storage.from("site-images").getPublicUrl(k).data.publicUrl:"";
-async function init(){const [cats,brands,latest,featured]=await Promise.all([
-sb.from("categories").select("id,name,slug").eq("is_active",true).order("sort_order").limit(8),
-sb.from("vehicle_brands").select("id,name,slug").eq("is_active",true).order("name").limit(18),
+async function init(){const [cats,brands,latest,featured,firmCities]=await Promise.all([
+sb.from("categories").select("id,name,slug").eq("is_active",true).order("sort_order"),
+sb.from("vehicle_brands").select("id,name,slug").eq("is_active",true).order("name"),
 sb.from("listings").select("id,title,price_try,part_type,province,firm_id").eq("status","published").gt("expires_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(8),
-sb.from("featured_listings").select("listing_id,starts_at,ends_at").eq("status","active").eq("payment_status","approved").lte("starts_at",new Date().toISOString()).gt("ends_at",new Date().toISOString()).limit(8)
+sb.from("featured_listings").select("listing_id,starts_at,ends_at").eq("status","active").eq("payment_status","approved").lte("starts_at",new Date().toISOString()).gt("ends_at",new Date().toISOString()).limit(8),
+sb.from("public_firm_directory").select("province").not("province","is",null).limit(200)
 ]);
-if(cats.error||brands.error||latest.error||featured.error)throw cats.error||brands.error||latest.error||featured.error;
+if(cats.error||brands.error||latest.error||featured.error||firmCities.error)throw cats.error||brands.error||latest.error||featured.error||firmCities.error;
 $("categories").innerHTML=cats.data.map(x=>'<a class="cat" href="/marketplace/kategori.html?slug='+encodeURIComponent(x.slug)+'">'+esc(x.name)+'<small>Kategorideki ilanları görüntüle →</small></a>').join("");
-$("brands").innerHTML=brands.data.map(x=>'<a href="/marketplace/marka.html?slug='+encodeURIComponent(x.slug)+'">'+esc(x.name)+'</a>').join("");
+$("brands").innerHTML=brands.data.slice(0,18).map(x=>'<a href="/marketplace/marka.html?slug='+encodeURIComponent(x.slug)+'">'+esc(x.name)+'</a>').join("");
+const normalizedBrands=new Map();
+for(const x of brands.data||[]){
+ const name=String(x.name||"").trim().replace(/\s*\((?:binek(?: araç)?|ticari(?: araç)?|kamyon|kamyonet|otobüs|minibüs|ağır ticari|hafif ticari|ağır vasıta|tır|çekici)\)\s*$/i,"").replace(/\s+(?:binek(?: araç)?|ticari(?: araç)?|kamyon|kamyonet|otobüs|minibüs|ağır ticari|hafif ticari|ağır vasıta|tır|çekici)$/i,"").trim();
+ if(!name)continue;const key=name.toLocaleLowerCase("tr");
+ if(!normalizedBrands.has(key))normalizedBrands.set(key,{id:String(x.id),name,ids:[String(x.id)]});else normalizedBrands.get(key).ids.push(String(x.id));
+}
+const homeBrandGroups=[...normalizedBrands.values()].sort((a,b)=>a.name.localeCompare(b.name,"tr"));
+$("homeBrand").innerHTML='<option value="">Tüm markalar</option>'+homeBrandGroups.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
+$("homeCategory").innerHTML='<option value="">Tüm kategoriler</option>'+cats.data.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
+$("homeBrand").addEventListener("change",async()=>{
+ const group=homeBrandGroups.find(x=>x.id===$("homeBrand").value);
+ $("homeModel").disabled=!group;$("homeModel").innerHTML='<option value="">'+(group?"Model seçin":"Önce marka seçin")+'</option>';
+ if(!group)return;
+ const {data,error}=await sb.from("vehicle_models").select("id,name").in("brand_id",group.ids).eq("is_active",true).order("name");if(error)throw error;
+ const models=new Map();for(const x of data||[]){const key=String(x.name||"").trim().toLocaleLowerCase("tr");if(!models.has(key))models.set(key,{name:x.name,ids:[x.id]});else models.get(key).ids.push(x.id);}
+ $("homeModel").innerHTML='<option value="">Tüm modeller</option>'+[...models.values()].sort((a,b)=>a.name.localeCompare(b.name,"tr")).map(x=>'<option value="'+x.ids.join(",")+'">'+esc(x.name)+'</option>').join("");
+});
+$("advancedSearch").addEventListener("submit",e=>{e.preventDefault();const p=new URLSearchParams();if($("q").value.trim())p.set("q",$("q").value.trim());if($("homeBrand").value)p.set("brand_id",$("homeBrand").value);if($("homeModel").value)p.set("model_ids",$("homeModel").value);if($("homeCategory").value)p.set("category_id",$("homeCategory").value);if($("homePart").value)p.set("part",$("homePart").value);if($("homeProvince").value.trim())p.set("province",$("homeProvince").value.trim());location.href="/marketplace/?"+p.toString();});
+const cities=[...new Set((firmCities.data||[]).map(x=>String(x.province||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"tr")).slice(0,16);
+$("cityLinks").innerHTML=cities.length?cities.map(x=>'<a href="/marketplace/?province='+encodeURIComponent(x)+'">'+esc(x)+'</a>').join(""):'<span class="small">Henüz şehir bilgisi bulunmuyor.</span>';
 async function cards(rows,target){if(!rows.length){$(target).innerHTML='<div class="small">Henüz ilan bulunmuyor.</div>';return;}const ids=rows.map(x=>x.id),firmIds=[...new Set(rows.map(x=>x.firm_id))];const [im,firm]=await Promise.all([sb.from("listing_images").select("listing_id,r2_object_key,display_order").in("listing_id",ids).order("display_order"),sb.from("public_firm_directory").select("id,name").in("id",firmIds)]);if(im.error||firm.error)throw im.error||firm.error;const pics=new Map();for(const x of im.data||[])if(!x.r2_object_key.startsWith("drafts/")&&!pics.has(x.listing_id))pics.set(x.listing_id,x.r2_object_key);const fm=new Map((firm.data||[]).map(x=>[x.id,x.name]));$(target).innerHTML=rows.map(x=>{const key=pics.get(x.id),src=key&&img(key);return '<a class="item" href="/marketplace/ilan.html?id='+x.id+'">'+(src?'<img loading="lazy" decoding="async" width="320" height="180" src="'+esc(src)+'" alt="'+esc(x.title)+'">':'<div class="noimg">Fotoğraf yok</div>')+'<div class="info"><strong>'+esc(x.title)+'</strong><div class="price">'+money(x.price_try)+'</div><div class="small">'+(x.part_type==="new"?"Sıfır parça":"Çıkma parça")+' · '+esc(x.province)+'<br>'+esc(fm.get(x.firm_id)||"")+'</div></div></a>';}).join("");}
 const fids=[...new Set(featured.data.map(x=>x.listing_id))];let fr=[];if(fids.length){const {data,error}=await sb.from("listings").select("id,title,price_try,part_type,province,firm_id").in("id",fids).eq("status","published").gt("expires_at",new Date().toISOString());if(error)throw error;const order=new Map(fids.map((id,i)=>[id,i]));fr=(data||[]).sort((a,b)=>order.get(a.id)-order.get(b.id));}
-await Promise.all([cards(fr,"featured"),cards(latest.data,"latest")]);}
+await Promise.all([cards(fr,"featured"),cards(latest.data,"latest")]);
+const special=cats.data.filter(x=>/motor|şanzıman|vites|kaporta/i.test(x.name)).slice(0,3);
+$("specialShelves").innerHTML=special.map((x,i)=>'<div class="shelf-section"><div class="sectionhead"><div><h2>'+esc(x.name)+' ilanları</h2><p>'+esc(x.name)+' kategorisindeki güncel yedek parçalar.</p></div><a href="/marketplace/kategori.html?slug='+encodeURIComponent(x.slug)+'">Tüm ilanlar →</a></div><div class="cards" id="shelf-'+i+'"><div class="small">İlanlar yükleniyor…</div></div></div>').join("");
+await Promise.all(special.map(async(x,i)=>{
+ const {data,error}=await sb.rpc("search_marketplace_listings",{p_query:null,p_category_id:Number(x.id),p_part_type:null,p_brand_ids:null,p_model_ids:null,p_province:null,p_district:null,p_fuel_type:null,p_min_price:null,p_max_price:null,p_sort:"new",p_limit:4,p_offset:0});if(error)throw error;
+ const ids=(data||[]).map(y=>y.listing_id);if(!ids.length){$("shelf-"+i).innerHTML='<div class="small">Bu kategoride henüz ilan yok.</div>';return;}
+ const {data:rows,error:rowError}=await sb.from("listings").select("id,title,price_try,part_type,province,firm_id").in("id",ids);if(rowError)throw rowError;
+ const map=new Map((rows||[]).map(y=>[y.id,y]));await cards(ids.map(id=>map.get(id)).filter(Boolean),"shelf-"+i);
+}));
+}
 $("searchForm").addEventListener("submit",e=>{e.preventDefault();location.href="/marketplace/?q="+encodeURIComponent($("q").value.trim());});init().catch(e=>{console.error(e);$("categories").textContent="Kategoriler şu anda yüklenemiyor."; $("featured").textContent="İlanlar şu anda yüklenemiyor.";});
 </script></body></html>
