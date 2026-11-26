@@ -119,7 +119,6 @@ sb.from("public_firm_directory").select("province").not("province","is",null).li
 ]);
 if(cats.error||brands.error||latest.error||featured.error||firmCities.error)throw cats.error||brands.error||latest.error||featured.error||firmCities.error;
 $("categories").innerHTML=cats.data.map(x=>'<a class="cat" href="/marketplace/kategori.html?slug='+encodeURIComponent(x.slug)+'">'+esc(x.name)+'<small>Kategorideki ilanları görüntüle →</small></a>').join("");
-$("brands").innerHTML=brands.data.slice(0,18).map(x=>'<a href="/marketplace/marka.html?slug='+encodeURIComponent(x.slug)+'">'+esc(x.name)+'</a>').join("");
 const normalizedBrands=new Map();
 for(const x of brands.data||[]){
  const name=String(x.name||"").trim().replace(/\s*\((?:binek(?: araç)?|ticari(?: araç)?|kamyon|kamyonet|otobüs|minibüs|ağır ticari|hafif ticari|ağır vasıta|tır|çekici)\)\s*$/i,"").replace(/\s+(?:binek(?: araç)?|ticari(?: araç)?|kamyon|kamyonet|otobüs|minibüs|ağır ticari|hafif ticari|ağır vasıta|tır|çekici)$/i,"").trim();
@@ -127,6 +126,7 @@ for(const x of brands.data||[]){
  if(!normalizedBrands.has(key))normalizedBrands.set(key,{id:String(x.id),name,ids:[String(x.id)]});else normalizedBrands.get(key).ids.push(String(x.id));
 }
 const homeBrandGroups=[...normalizedBrands.values()].sort((a,b)=>a.name.localeCompare(b.name,"tr"));
+$("brands").innerHTML=homeBrandGroups.slice(0,18).map(x=>'<a href="/marketplace/?brand_id='+encodeURIComponent(x.id)+'">'+esc(x.name)+'</a>').join("");
 $("homeBrand").innerHTML='<option value="">Tüm markalar</option>'+homeBrandGroups.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
 $("homeCategory").innerHTML='<option value="">Tüm kategoriler</option>'+cats.data.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
 $("homeBrand").addEventListener("change",async()=>{
