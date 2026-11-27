@@ -33,7 +33,7 @@ async function results(){
  const brandGroup=(window.marketplaceBrandGroups||[]).find(x=>x.id===$("brand").value);
  const brandIds=brandGroup?.ids?.map(Number)||[];
  const modelIds=$("model").value.split(",").filter(Boolean).map(Number);
- const {data:ranked,error:searchError}=await sb.rpc("search_marketplace_listings",{
+ const {data:ranked,error:searchError}=await sb.rpc("search_marketplace_listings_vehicle",{
   p_query:$("q").value.trim(),
   p_category_id:$("category").value?Number($("category").value):null,
   p_part_type:$("part").value||null,
@@ -46,7 +46,8 @@ async function results(){
   p_max_price:$("max").value?Number($("max").value):null,
   p_sort:$("sort").value||"new",
   p_limit:perPage,
-  p_offset:page*perPage
+  p_offset:page*perPage,
+  p_year:params.get("year")?Number(params.get("year")):null
  });
  if(searchError)throw searchError;
  const ids=(ranked||[]).map(x=>x.listing_id);
