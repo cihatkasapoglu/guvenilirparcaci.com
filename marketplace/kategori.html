@@ -1,1 +1,116 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Yedek Parça Kategorisi | Güvenilir Parçacı</title><meta name="description" content="Kategoriye göre sıfır ve çıkma yedek parça ilanlarını keşfedin."><meta name="robots" content="index,follow"><link rel="canonical" href="https://guvenilirparcaci.com/marketplace/kategori.html"><style>*{box-sizing:border-box}body{margin:0;background:#f5f6f8;color:#182230;font-family:Arial,sans-serif}.wrap{max-width:1100px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between}.top a{color:#182230;text-decoration:none;font-weight:800}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-top:20px}.item{background:white;border:1px solid #e4e7ec;border-radius:12px;overflow:hidden;text-decoration:none;color:inherit}.item img,.noimg{width:100%;height:145px;object-fit:cover;background:#eaecf0}.noimg{display:grid;place-items:center;color:#667085}.info{padding:12px}.info b{display:block;min-height:38px}.price{font-weight:800;font-size:18px;margin:8px 0}.small{font-size:12px;color:#667085;line-height:1.5}#status{color:#667085}@media(max-width:750px){.grid{grid-template-columns:repeat(2,1fr)}.wrap{padding:14px}}</style><style>.site-footer{max-width:1150px;margin:38px auto 0;padding:22px;border-top:1px solid #e4e7ec;color:#667085;font:13px Arial,system-ui,sans-serif;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}.site-footer nav{display:flex;gap:12px 16px;flex-wrap:wrap}.site-footer a{color:#667085;text-decoration:none}.site-footer a:hover{text-decoration:underline;color:#b42318}@media(max-width:600px){.site-footer{padding:18px 14px;display:block}.site-footer nav{margin-top:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}</style></head><body><div class="wrap"><header class="top"><a href="/">Güvenilir Parçacı</a><a href="/marketplace/kategoriler.html">← Kategoriler</a></header><h1 id="heading">Kategori ilanları</h1><p id="intro" class="small">Sıfır ve çıkma yedek parça ilanları</p><div id="status">İlanlar yükleniyor…</div><div class="grid" id="grid"></div></div><script type="module">import{createClient}from"https://esm.sh/@supabase/supabase-js@2";const sb=createClient("https://ugqsazhpfnqiqonhvkcb.supabase.co","sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ"),R2="R2_PUBLIC_BASE_URL_BURAYA",slug=new URLSearchParams(location.search).get("slug");const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));const money=v=>v==null?"Fiyat sorunuz":new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:0}).format(v);const img=k=>!k?"":(k.startsWith("firms/")||k.startsWith("listings/"))?sb.storage.from("site-images").getPublicUrl(k).data.publicUrl:R2.includes("_BURAYA")?"":R2.replace(/\/$/,"")+"/"+k.split("/").map(encodeURIComponent).join("/");async function go(){if(!slug)throw Error("Kategori bulunamadı.");const{data:cat,error:ce}=await sb.from("categories").select("id,name").eq("slug",slug).eq("is_active",true).maybeSingle();if(ce||!cat)throw Error("Kategori bulunamadı.");document.title=cat.name+" Yedek Parça İlanları | Güvenilir Parçacı";document.getElementById("heading").textContent=cat.name+" ilanları";document.querySelector("link[rel=canonical]").href="https://guvenilirparcaci.com/marketplace/kategori.html?slug="+encodeURIComponent(slug);document.querySelector("meta[name=description]").content=cat.name+" kategorisinde sıfır ve çıkma oto yedek parça ilanları. Türkiye genelindeki firmaları ve güncel ilanları inceleyin.";document.getElementById("intro").textContent=cat.name+" kategorisindeki güncel sıfır ve çıkma yedek parça ilanları.";const{data,error}=await sb.from("listings").select("id,title,price_try,part_type,province,firm_id").eq("category_id",cat.id).eq("status","published").gt("expires_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(100);if(error)throw error;if(!data.length){document.getElementById("grid").textContent="Bu kategoride henüz ilan bulunmuyor.";document.getElementById("status").textContent="0 ilan";return;}const ids=data.map(x=>x.id),firms=[...new Set(data.map(x=>x.firm_id))];const[ims,fs]=await Promise.all([sb.from("listing_images").select("listing_id,r2_object_key,display_order").in("listing_id",ids).order("display_order"),sb.from("public_firm_directory").select("id,name").in("id",firms)]);if(ims.error||fs.error)throw ims.error||fs.error;const pics=new Map();for(const x of ims.data||[])if(!pics.has(x.listing_id))pics.set(x.listing_id,x.r2_object_key);const fm=new Map((fs.data||[]).map(x=>[x.id,x.name]));document.getElementById("grid").innerHTML=data.map(x=>{const key=pics.get(x.id),src=key&&img(key);return'<a class="item" href="/marketplace/ilan.html?id='+x.id+'">'+(src?'<img loading="lazy" decoding="async" width="320" height="180" src="'+esc(src)+'" alt="'+esc(x.title)+'">':'<div class="noimg">Fotoğraf yok</div>')+'<div class="info"><b>'+esc(x.title)+'</b><div class="price">'+money(x.price_try)+'</div><div class="small">'+(x.part_type==="new"?"Sıfır parça":"Çıkma parça")+' · '+esc(x.province)+'<br>'+esc(fm.get(x.firm_id)||"")+'</div></div></a>';}).join("");document.getElementById("status").textContent=data.length+" ilan gösteriliyor (en fazla 100).";}go().catch(e=>document.getElementById("status").textContent=e.message);</script><footer class="site-footer"><div>© <span id="siteFooterYear"></span> Güvenilir Parçacı</div><nav aria-label="Kurumsal bağlantılar"><a href="/hakkimizda.html">Hakkımızda</a><a href="/iletisim.html">İletişim</a><a href="/uyelik-sozlesmesi.html">Üyelik Sözleşmesi</a><a href="/kvkk.html">KVKK</a><a href="/gizlilik.html">Gizlilik</a><a href="/cerez-politikasi.html">Çerez Politikası</a><a href="/ilan-kurallari.html">İlan Kuralları</a></nav></footer><script>document.getElementById("siteFooterYear").textContent=new Date().getFullYear();</script></body></html>
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f4f6f9"><meta name="robots" content="index,follow">
+<title>Yedek Parça Kategorisi | Güvenilir Parçacı</title>
+<meta name="description" content="Kategoriye göre sıfır ve çıkma oto yedek parça ilanlarını keşfedin.">
+<link rel="canonical" href="https://guvenilirparcaci.com/marketplace/kategori.html">
+<link rel="preconnect" href="https://ugqsazhpfnqiqonhvkcb.supabase.co">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f9;color:#172033;font-family:Arial,system-ui,sans-serif}.wrap{max-width:1240px;margin:auto;padding:22px}.head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px}.logo{font-size:23px;font-weight:850;letter-spacing:-.5px;color:#172033;text-decoration:none}.nav{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.nav a{color:#344054;text-decoration:none;font-size:14px;font-weight:700}.nav a:hover{color:#b42318}.crumb{font-size:13px;color:#667085;margin:0 0 14px}.crumb a{color:#667085;text-decoration:none}.intro{background:linear-gradient(115deg,#fff 0%,#fff 72%,#fff5f4 100%);border:1px solid #e4e8ef;border-radius:16px;padding:25px 28px;margin-bottom:18px}.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#b42318;font-weight:800}.intro h1{font-size:30px;letter-spacing:-.7px;margin:8px 0}.intro p{color:#667085;margin:0;line-height:1.6;max-width:720px}.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:18px;align-items:start}.panel{background:#fff;border:1px solid #e4e8ef;border-radius:14px}.side{padding:18px;position:sticky;top:16px}.side h2{font-size:16px;margin:0 0 13px}.side-list{display:grid;gap:5px}.side-item{display:flex;justify-content:space-between;gap:10px;width:100%;border:0;background:transparent;padding:10px 9px;border-radius:8px;text-align:left;color:#344054;font:600 13px Arial;cursor:pointer}.side-item:hover,.side-item.active{background:#fff1f0;color:#b42318}.side-item .arrow{color:#98a2b3}.side-note{font-size:12px;line-height:1.6;color:#98a2b3;margin:14px 2px 0}.content{min-width:0}.filters{padding:16px;display:grid;grid-template-columns:minmax(180px,1.5fr) minmax(140px,.8fr) minmax(150px,.8fr) auto;gap:10px;align-items:end}.field label{display:block;font-size:12px;font-weight:750;color:#475467;margin:0 0 6px}.field input,.field select{width:100%;height:42px;border:1px solid #d0d5dd;border-radius:8px;padding:0 11px;background:#fff;color:#172033;font:14px Arial}.field input:focus,.field select:focus{outline:2px solid #fecdca;border-color:#b42318}.actions{display:flex;gap:8px}.btn{height:42px;padding:0 16px;border:0;border-radius:8px;background:#b42318;color:#fff;font-weight:750;cursor:pointer;white-space:nowrap}.btn.secondary{background:#eef1f5;color:#344054}.subchips{display:flex;gap:8px;flex-wrap:wrap;padding:13px 16px;border-top:1px solid #eef0f3}.chip{border:1px solid #e4e7ec;background:#fff;border-radius:30px;padding:7px 11px;color:#475467;font-size:12px;font-weight:700;cursor:pointer}.chip.active,.chip:hover{border-color:#fda29b;background:#fff1f0;color:#b42318}.results-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:20px 2px 12px}.results-head strong{font-size:16px}.muted{font-size:13px;color:#667085}#status{font-size:13px;color:#667085;margin:0 2px 12px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.item{display:block;min-width:0;background:#fff;border:1px solid #e4e8ef;border-radius:13px;overflow:hidden;text-decoration:none;color:inherit;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}.item:hover{transform:translateY(-2px);border-color:#fda29b;box-shadow:0 8px 24px rgba(16,24,40,.07)}.photo{height:178px;background:#eef1f5;position:relative;display:grid;place-items:center;overflow:hidden}.photo img{width:100%;height:100%;object-fit:cover}.noimg{font-size:12px;color:#98a2b3}.tag{position:absolute;top:10px;left:10px;border-radius:20px;background:#fff;padding:5px 9px;font-size:11px;font-weight:800;color:#344054;box-shadow:0 2px 8px #10182812}.tag.new{color:#067647}.info{padding:13px}.title{font-size:14px;line-height:1.45;font-weight:750;min-height:40px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.price{font-size:19px;font-weight:850;letter-spacing:-.3px;margin:10px 0 8px;color:#172033}.meta{display:flex;justify-content:space-between;gap:8px;color:#667085;font-size:11px;line-height:1.5}.seller{margin-top:9px;padding-top:9px;border-top:1px solid #f0f1f3;color:#667085;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.empty{grid-column:1/-1;background:#fff;border:1px solid #e4e8ef;border-radius:14px;padding:42px 20px;text-align:center;color:#667085}.empty strong{display:block;color:#344054;font-size:17px;margin-bottom:7px}.pages{display:flex;justify-content:center;align-items:center;gap:7px;margin:22px 0}.pages button{min-width:38px;height:38px;border:1px solid #e4e7ec;border-radius:8px;background:#fff;color:#344054;font-weight:700;cursor:pointer}.pages button.active{background:#172033;color:#fff;border-color:#172033}.pages button:disabled{opacity:.4;cursor:not-allowed}.site-footer{max-width:1200px;margin:38px auto 0;padding:22px;border-top:1px solid #e4e7ec;color:#667085;font:13px Arial,system-ui,sans-serif;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}.site-footer nav{display:flex;gap:12px 16px;flex-wrap:wrap}.site-footer a{color:#667085;text-decoration:none}.site-footer a:hover{text-decoration:underline;color:#b42318}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.actions{grid-column:1/-1}.side{position:static}}
+@media(max-width:650px){.wrap{padding:13px}.head{align-items:flex-start}.logo{font-size:19px}.nav{gap:10px}.nav a{font-size:12px}.intro{padding:20px 17px}.intro h1{font-size:24px}.layout{grid-template-columns:1fr;gap:12px}.side{padding:14px}.side h2{margin-bottom:9px}.side-list{display:flex;overflow:auto;padding-bottom:3px}.side-item{width:auto;white-space:nowrap;flex:0 0 auto;background:#f7f8fa}.side-note{display:none}.filters{padding:12px;gap:9px}.field input,.field select{font-size:13px}.actions .btn{flex:1;padding:0 10px}.subchips{padding:10px 12px;flex-wrap:nowrap;overflow:auto}.chip{white-space:nowrap}.grid{gap:9px}.photo{height:125px}.info{padding:10px}.title{font-size:12px;min-height:35px}.price{font-size:16px;margin:8px 0 6px}.meta{font-size:10px;display:block}.seller{font-size:10px}.results-head{margin-top:15px}.site-footer{padding:18px 14px;display:block}.site-footer nav{margin-top:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="head">
+<a class="logo" href="/">Güvenilir Parçacı</a>
+<nav class="nav" aria-label="Ana menü"><a href="/marketplace/">İlanlar</a><a href="/marketplace/markalar.html">Markalar</a><a href="/marketplace/kategoriler.html">Kategoriler</a><a href="/uye-giris.html">Üye girişi</a></nav>
+</header>
+<div class="crumb"><a href="/">Ana sayfa</a>　›　<a href="/marketplace/kategoriler.html">Kategoriler</a>　›　<span id="crumbName">Kategori</span></div>
+<section class="intro"><div class="eyebrow">Yedek parça pazaryeri</div><h1 id="heading">Kategori ilanları</h1><p id="introText">Aradığınız sıfır ve çıkma yedek parça ilanlarını karşılaştırın, satıcılarla doğrudan iletişime geçin.</p></section>
+<div class="layout">
+<aside class="panel side"><h2>Parça grupları</h2><div class="side-list" id="subcategories"><button class="side-item active" data-sub="">Tüm parçalar <span class="arrow">›</span></button></div><p class="side-note">İlgilendiğiniz parça grubunu seçerek ilanları daraltabilirsiniz.</p></aside>
+<main class="content">
+<section class="panel">
+<div class="filters">
+<div class="field"><label for="q">İlanlarda ara</label><input id="q" type="search" placeholder="Örn. dizel motor, turbo"></div>
+<div class="field"><label for="part">İlan türü</label><select id="part"><option value="">Sıfır ve çıkma</option><option value="new">Sıfır parça</option><option value="used">Çıkma parça</option></select></div>
+<div class="field"><label for="sort">Sıralama</label><select id="sort"><option value="new">En yeni ilanlar</option><option value="low">Fiyat: artan</option><option value="high">Fiyat: azalan</option></select></div>
+<div class="actions"><button class="btn" id="search">Filtrele</button><button class="btn secondary" id="reset" type="button">Temizle</button></div>
+</div>
+<div class="subchips" id="subchips"></div>
+</section>
+<div class="results-head"><strong id="count">Kategori ilanları</strong><span class="muted">Satıcılarla doğrudan iletişim kurun.</span></div>
+<div id="status">İlanlar yükleniyor…</div>
+<section class="grid" id="grid"></section>
+<nav class="pages" id="pages" aria-label="İlan sayfaları"></nav>
+</main>
+</div>
+</div>
+<footer class="site-footer"><div>© <span id="siteFooterYear"></span> Güvenilir Parçacı</div><nav aria-label="Kurumsal bağlantılar"><a href="/hakkimizda.html">Hakkımızda</a><a href="/iletisim.html">İletişim</a><a href="/uyelik-sozlesmesi.html">Üyelik Sözleşmesi</a><a href="/kvkk.html">KVKK</a><a href="/gizlilik.html">Gizlilik</a><a href="/cerez-politikasi.html">Çerez Politikası</a><a href="/ilan-kurallari.html">İlan Kuralları</a></nav></footer>
+<script>document.getElementById("siteFooterYear").textContent=new Date().getFullYear();</script>
+<script type="module">
+import{createClient}from"https://esm.sh/@supabase/supabase-js@2";
+const sb=createClient("https://ugqsazhpfnqiqonhvkcb.supabase.co","sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ"),$=id=>document.getElementById(id),slug=new URLSearchParams(location.search).get("slug");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=v=>v==null?"Fiyat sorunuz":new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:0}).format(v);
+const imageUrl=k=>k?sb.storage.from("site-images").getPublicUrl(k).data.publicUrl:"";
+const pageSize=18;let categoryId=null,page=0,total=0,selectedSub="",subcategories=[];
+function setActiveSub(){document.querySelectorAll("[data-sub]").forEach(el=>el.classList.toggle("active",el.dataset.sub===selectedSub));}
+function renderSubcategories(){
+ const all='<button class="side-item '+(!selectedSub?"active":"")+'" data-sub="">Tüm parçalar <span class="arrow">›</span></button>';
+ const buttons=subcategories.map(s=>'<button class="side-item '+(selectedSub===String(s.id)?"active":"")+'" data-sub="'+s.id+'">'+esc(s.name)+' <span class="arrow">›</span></button>').join("");
+ $("subcategories").innerHTML=all+buttons;
+ $("subchips").innerHTML=subcategories.length?'<button class="chip '+(!selectedSub?"active":"")+'" data-sub="">Tüm parçalar</button>'+subcategories.map(s=>'<button class="chip '+(selectedSub===String(s.id)?"active":"")+'" data-sub="'+s.id+'">'+esc(s.name)+'</button>').join(""):"";
+ document.querySelectorAll("[data-sub]").forEach(el=>el.addEventListener("click",()=>{selectedSub=el.dataset.sub;page=0;renderSubcategories();loadListings();}));
+}
+function renderPages(){
+ const pages=Math.ceil(total/pageSize);if(pages<=1){$("pages").innerHTML="";return;}
+ let html='<button data-page="'+(page-1)+'" '+(page===0?"disabled":"")+' aria-label="Önceki sayfa">‹</button>';
+ const start=Math.max(0,Math.min(page-2,pages-5)),end=Math.min(pages,start+5);
+ for(let i=start;i<end;i++)html+='<button data-page="'+i+'" class="'+(i===page?"active":"")+'">'+(i+1)+'</button>';
+ html+='<button data-page="'+(page+1)+'" '+(page>=pages-1?"disabled":"")+' aria-label="Sonraki sayfa">›</button>';
+ $("pages").innerHTML=html;
+ document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>{page=Number(b.dataset.page);loadListings();window.scrollTo({top:0,behavior:"smooth"});}));
+}
+async function loadListings(){
+ $("status").textContent="İlanlar yükleniyor…";$("grid").innerHTML="";$("pages").innerHTML="";
+ const now=new Date().toISOString(),term=$("q").value.trim();
+ let q=sb.from("listings").select("id,title,price_try,part_type,province,district,firm_id,expires_at,published_at,subcategory_id",{count:"exact"}).eq("category_id",categoryId).eq("status","published").or("expires_at.is.null,expires_at.gt."+now);
+ if(selectedSub)q=q.eq("subcategory_id",Number(selectedSub));
+ if($("part").value)q=q.eq("part_type",$("part").value);
+ if(term)q=q.ilike("title","%"+term.replace(/[%_]/g," ")+"%");
+ if($("sort").value==="low")q=q.order("price_try",{ascending:true,nullsFirst:false});
+ else if($("sort").value==="high")q=q.order("price_try",{ascending:false,nullsFirst:false});
+ else q=q.order("published_at",{ascending:false,nullsFirst:false});
+ const {data,error,count}=await q.range(page*pageSize,(page+1)*pageSize-1);
+ if(error)throw error;total=count||0;
+ $("count").textContent=total.toLocaleString("tr-TR")+" ilan";
+ if(!data?.length){$("grid").innerHTML='<div class="empty"><strong>Bu filtrelerde ilan bulunamadı.</strong>Filtreleri temizleyebilir veya farklı bir arama yapabilirsiniz.</div>';$("status").textContent="";renderPages();return;}
+ const ids=data.map(x=>x.id),firmIds=[...new Set(data.map(x=>x.firm_id))];
+ const [images,firms]=await Promise.all([
+  sb.from("listing_images").select("listing_id,r2_object_key,display_order").in("listing_id",ids).order("display_order"),
+  sb.from("public_firm_directory").select("id,name").in("id",firmIds)
+ ]);
+ if(images.error||firms.error)throw images.error||firms.error;
+ const picMap=new Map(),firmMap=new Map((firms.data||[]).map(x=>[x.id,x.name]));
+ for(const x of images.data||[])if(x.r2_object_key&&!x.r2_object_key.startsWith("drafts/")&&!picMap.has(x.listing_id))picMap.set(x.listing_id,x.r2_object_key);
+ $("grid").innerHTML=data.map(x=>{
+  const key=picMap.get(x.id),src=imageUrl(key),isNew=x.part_type==="new";
+  return '<a class="item" href="/marketplace/ilan.html?id='+encodeURIComponent(x.id)+'"><div class="photo">'+(src?'<img loading="lazy" decoding="async" src="'+esc(src)+'" alt="'+esc(x.title)+'">':'<span class="noimg">Fotoğraf eklenmemiş</span>')+'<span class="tag '+(isNew?"new":"")+'">'+(isNew?"Sıfır parça":"Çıkma parça")+'</span></div><div class="info"><div class="title">'+esc(x.title)+'</div><div class="price">'+money(x.price_try)+'</div><div class="meta"><span>'+esc(x.province||"Türkiye")+(x.district?" · "+esc(x.district):"")+'</span><span>'+new Date(x.published_at||Date.now()).toLocaleDateString("tr-TR")+'</span></div><div class="seller">'+esc(firmMap.get(x.firm_id)||"Satıcı firma")+'</div></div></a>';
+ }).join("");
+ $("status").textContent="";renderPages();
+}
+async function init(){
+ if(!slug)throw Error("Kategori bağlantısı geçersiz.");
+ const {data:cat,error}=await sb.from("categories").select("id,name,slug").eq("slug",slug).eq("is_active",true).maybeSingle();
+ if(error||!cat)throw Error("Kategori bulunamadı veya yayından kaldırılmış.");
+ categoryId=cat.id;document.title=cat.name+" Yedek Parça İlanları | Güvenilir Parçacı";
+ $("heading").textContent=cat.name+" ilanları";$("crumbName").textContent=cat.name;
+ $("introText").textContent=cat.name+" kategorisindeki sıfır ve çıkma yedek parça ilanlarını inceleyin, fiyatları karşılaştırın ve satıcılarla doğrudan iletişime geçin.";
+ document.querySelector('link[rel="canonical"]').href="https://guvenilirparcaci.com/marketplace/kategori.html?slug="+encodeURIComponent(slug);
+ document.querySelector('meta[name="description"]').content=cat.name+" kategorisindeki güncel sıfır ve çıkma oto yedek parça ilanları. Türkiye genelindeki satıcıları keşfedin.";
+ const {data:subs,error:se}=await sb.from("subcategories").select("id,name").eq("category_id",categoryId).eq("is_active",true).order("name");
+ if(se)throw se;subcategories=subs||[];renderSubcategories();await loadListings();
+}
+$("search").addEventListener("click",()=>{page=0;loadListings().catch(e=>$("status").textContent=e.message);});
+$("q").addEventListener("keydown",e=>{if(e.key==="Enter"){$("search").click();}});
+$("part").addEventListener("change",()=>{page=0;loadListings().catch(e=>$("status").textContent=e.message);});
+$("sort").addEventListener("change",()=>{page=0;loadListings().catch(e=>$("status").textContent=e.message);});
+$("reset").addEventListener("click",()=>{$("q").value="";$("part").value="";$("sort").value="new";selectedSub="";page=0;renderSubcategories();loadListings().catch(e=>$("status").textContent=e.message);});
+init().catch(e=>{$("status").textContent=e.message;$("grid").innerHTML='<div class="empty"><strong>Kategori açılamadı.</strong>'+esc(e.message)+'</div>';});
+</script>
+</body></html>
