@@ -101,6 +101,13 @@ footer a:hover{color:#b42318}
 @media(min-width:901px){.hero{aspect-ratio:2.6667;background-position:center bottom}}
 @media(min-width:621px) and (max-width:900px){.hero{aspect-ratio:2.1;background-position:center bottom}}
 @media(max-width:620px){.hero{aspect-ratio:2.6667;background-position:center center;background-size:100% 100%}}
+.mobile-part-search{display:none}
+@media(max-width:620px){
+ .hero-filter{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;left:5%;right:5%;bottom:-64px;min-height:0;padding:7px;border-width:5px;border-radius:18px;overflow:visible}
+ .hero-filter select{display:none!important}
+ .hero-filter .mobile-part-search{display:block!important;width:100%;min-width:0;height:43px;padding:0 12px;border:1px solid #e3e6ec;border-radius:12px;background:#fff;color:#172033;font:13px Arial,Helvetica,sans-serif;outline:none}
+ .hero-filter button{grid-column:auto!important;width:auto;height:43px;margin:0;padding:0 16px;border-radius:12px;font-size:12px}
+}
 
 /* Ana sayfa: kategori kenar çubuğu ve ilan akışı */
 .home-market-layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:22px;align-items:start;margin:12px 0 34px}
@@ -149,6 +156,7 @@ footer a:hover{color:#b42318}
 <header class="top"><a class="brand" href="/" aria-label="Güvenilir Parçacı ana sayfa"><img src="/guvenilir-parcaci.jpg" alt="Güvenilir Parçacı"></a><nav class="nav"><a href="/marketplace/">İlanlar</a><a href="/marketplace/kategoriler.html">Kategoriler</a><a href="/marketplace/markalar.html">Markalar</a><a class="btn secondary" href="/uye-giris.html">Üye Girişi</a><a class="btn" href="/seller-panel/">Firma Girişi</a></nav></header>
 <section class="hero" aria-label="Aracınızı seçin ve yedek parçanızı bulun">
 <form class="hero-filter" id="heroVehicleSearch">
+<input id="mobilePartSearch" class="mobile-part-search" type="search" placeholder="Parça ara..." aria-label="Parça ara">
 <select id="heroBrand" aria-label="Marka"><option value="">Marka</option></select>
 <select id="heroModel" aria-label="Model" disabled><option value="">Model</option></select>
 <select id="heroYear" aria-label="Model Yılı"><option value="">Model Yılı</option></select>
@@ -209,11 +217,17 @@ $("heroBrand").addEventListener("change",async()=>{
 });
 $("heroVehicleSearch").addEventListener("submit",e=>{
  e.preventDefault();const params=new URLSearchParams();
- if($("heroBrand").value)params.set("brand_id",$("heroBrand").value);
- if($("heroModel").value)params.set("model_ids",$("heroModel").value);
- if($("heroYear").value)params.set("year",$("heroYear").value);
- const terms=[$("heroEngine").value,$("heroBody").value].filter(Boolean);
- if(terms.length)params.set("q",terms.join(" "));
+ if(window.matchMedia("(max-width: 620px)").matches){
+  const part=String($("mobilePartSearch").value||"").trim();
+  if(!part){$("mobilePartSearch").focus();return;}
+  params.set("q",part);
+ }else{
+  if($("heroBrand").value)params.set("brand_id",$("heroBrand").value);
+  if($("heroModel").value)params.set("model_ids",$("heroModel").value);
+  if($("heroYear").value)params.set("year",$("heroYear").value);
+  const terms=[$("heroEngine").value,$("heroBody").value].filter(Boolean);
+  if(terms.length)params.set("q",terms.join(" "));
+ }
  location.href="/marketplace/?"+params.toString();
 });
 $("brands").innerHTML=homeBrandGroups.slice(0,18).map(x=>'<a href="/marketplace/?brand_id='+encodeURIComponent(x.id)+'">'+esc(x.name)+'</a>').join("");
