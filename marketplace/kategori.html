@@ -11,7 +11,7 @@
 
 <style id="site-global-font">html,body,body *{font-family:Arial,Helvetica,sans-serif!important}</style>
 
-<style id="category-image-fit">.photo{height:auto;aspect-ratio:4/3}.photo img{object-fit:contain}@media(max-width:720px){.photo{height:auto;aspect-ratio:4/3}}</style>
+<style id="category-image-fit">.photo{height:auto;aspect-ratio:4/3;background:#f5f6f8;isolation:isolate}.photo:before{content:"";position:absolute;inset:0;background-image:var(--photo-bg);background-size:cover;background-position:center;filter:blur(18px);opacity:.32;transform:scale(1.08);z-index:0}.photo img{position:relative;z-index:1;object-fit:contain}.photo .noimg{position:relative;z-index:1}@media(max-width:720px){.photo{height:auto;aspect-ratio:4/3}}</style>
 </head>
 <body>
 <div class="wrap">
@@ -90,7 +90,7 @@ async function loadListings(){
  for(const x of images.data||[])if(x.r2_object_key&&!x.r2_object_key.startsWith("drafts/")&&!picMap.has(x.listing_id))picMap.set(x.listing_id,x.r2_object_key);
  $("grid").innerHTML=data.map(x=>{
   const key=picMap.get(x.id),src=imageUrl(key),isNew=x.part_type==="new";
-  return '<a class="item" href="/marketplace/ilan.html?id='+encodeURIComponent(x.id)+'"><div class="photo">'+(src?'<img loading="lazy" decoding="async" src="'+esc(src)+'" alt="'+esc(x.title)+'">':'<span class="noimg">Fotoğraf eklenmemiş</span>')+'<span class="tag '+(isNew?"new":"")+'">'+(isNew?"Sıfır parça":"Çıkma parça")+'</span></div><div class="info"><div class="title">'+esc(x.title)+'</div><div class="price">'+money(x.price_try)+'</div><div class="meta"><span>'+esc(x.province||"Türkiye")+(x.district?" · "+esc(x.district):"")+'</span><span>'+new Date(x.published_at||Date.now()).toLocaleDateString("tr-TR")+'</span></div><div class="seller">'+esc(firmMap.get(x.firm_id)||"Satıcı firma")+'</div></div></a>';
+  return '<a class="item" href="/marketplace/ilan.html?id='+encodeURIComponent(x.id)+'"><div class="photo"'+(src?' style="--photo-bg:url(&quot;'+esc(src)+'&quot;)"':'')+'>'+(src?'<img loading="lazy" decoding="async" src="'+esc(src)+'" alt="'+esc(x.title)+'">':'<span class="noimg">Fotoğraf eklenmemiş</span>')+'<span class="tag '+(isNew?"new":"")+'">'+(isNew?"Sıfır parça":"Çıkma parça")+'</span></div><div class="info"><div class="title">'+esc(x.title)+'</div><div class="price">'+money(x.price_try)+'</div><div class="meta"><span>'+esc(x.province||"Türkiye")+(x.district?" · "+esc(x.district):"")+'</span><span>'+new Date(x.published_at||Date.now()).toLocaleDateString("tr-TR")+'</span></div><div class="seller">'+esc(firmMap.get(x.firm_id)||"Satıcı firma")+'</div></div></a>';
  }).join("");
  $("status").textContent="";renderPages();
 }
