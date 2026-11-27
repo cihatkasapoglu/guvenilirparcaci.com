@@ -144,5 +144,5 @@ await Promise.all(special.map(async(x,i)=>{
  const map=new Map((rows||[]).map(y=>[y.id,y]));await cards(ids.map(id=>map.get(id)).filter(Boolean),"shelf-"+i);
 }));
 }
-$("searchForm").addEventListener("submit",e=>{e.preventDefault();location.href="/marketplace/?q="+encodeURIComponent($("q").value.trim());});init().catch(e=>{console.error(e);$("categories").textContent="Kategoriler şu anda yüklenemiyor."; $("featured").textContent="İlanlar şu anda yüklenemiyor.";});
+init().catch(e=>{console.error(e);$("categories").textContent="Kategoriler şu anda yüklenemiyor."; $("featured").textContent="İlanlar şu anda yüklenemiyor.";});
 </script></body></html>
