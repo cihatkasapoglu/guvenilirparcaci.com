@@ -45,20 +45,12 @@ async function results(){
   p_min_price:$("min").value?Number($("min").value):null,
   p_max_price:$("max").value?Number($("max").value):null,
   p_sort:$("sort").value||"new",
-  p_limit:params.get("year")?500:perPage,
-  p_offset:params.get("year")?0:page*perPage
+  p_limit:perPage,
+  p_offset:page*perPage
  });
  if(searchError)throw searchError;
- let ids=(ranked||[]).map(x=>x.listing_id);
+ const ids=(ranked||[]).map(x=>x.listing_id);
  total=Number(ranked?.[0]?.total_count||0);
- const selectedYear=params.get("year");
- if(selectedYear){
-  const y=Number(selectedYear);
-  const {data:yearCompat,error:yearError}=await sb.from("listing_vehicle_compatibilities").select("listing_id").in("listing_id",ids).lte("year_from",y).or("year_to.gte."+y+",year_to.is.null");
-  if(yearError)throw yearError;
-  const yearIds=new Set((yearCompat||[]).map(x=>x.listing_id));
-  ids=ids.filter(id=>yearIds.has(id));total=ids.length;
- }
  if(!ids.length){
   $("results").innerHTML='<div class="empty">Aramanıza uygun ilan bulunamadı. Daha kısa veya farklı kelimeler deneyebilirsiniz.</div>';
   $("count").textContent="0 ilan";$("status").textContent="";$("pages").innerHTML="";return;
