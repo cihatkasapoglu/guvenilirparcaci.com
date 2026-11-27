@@ -81,19 +81,31 @@ footer a{color:#667085;margin-right:12px;text-decoration:none}
 footer a:hover{color:#b42318}
 @media(max-width:900px){.quick-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.cats{grid-template-columns:repeat(3,1fr)}.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.brands{grid-template-columns:repeat(4,1fr)}.hero{padding:28px 30px}.hero h1{font-size:clamp(28px,4vw,38px)}.nav{gap:5px}.nav a:not(.btn){display:none}}
 @media(max-width:620px){.quick-search{padding:15px}.quick-fields{grid-template-columns:1fr 1fr;gap:9px}.quick-search-head{align-items:flex-start;flex-direction:column}.wrap{padding:13px}.top{gap:12px;padding:0 0 10px;min-height:42px}.brand{width:132px;height:30px;flex:0 1 132px}.brand img{width:100%;height:100%;max-width:100%;object-fit:contain;object-position:left center}.nav .btn{padding:10px 11px;font-size:12px}.hero{padding:22px 19px;min-height:0;margin-top:8px;margin-bottom:20px;border-radius:16px}.hero:before{width:150px;height:150px;right:-65px;opacity:.65}.hero:after{width:220px;height:220px;right:-115px}.hero h1{font-size:29px;white-space:normal;letter-spacing:-.7px;margin-bottom:9px}.hero p{font-size:13px;line-height:1.45}.eyebrow{font-size:10px;margin-bottom:10px;padding:5px 8px}.search{flex-direction:row;gap:6px;margin-top:15px;padding:5px}.search input{padding:11px 9px;font-size:13px}.search .btn{width:auto;min-width:92px;padding:10px 11px;font-size:12px}.hero:after{right:-180px}.trust-row{grid-template-columns:1fr;gap:8px;margin-top:-12px}.trust{padding:12px}.section{margin:28px 0}.cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.cat{min-height:100px;padding:14px;font-size:13px}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.item img,.noimg{height:125px}.info{padding:10px}.info strong{font-size:12px;min-height:35px}.price{font-size:16px}.brands{grid-template-columns:repeat(3,1fr);gap:8px}.brands a{font-size:12px;min-height:47px}.how{grid-template-columns:1fr;gap:9px}.how-card{padding:15px}.banner{align-items:flex-start;flex-direction:column;padding:22px}.banner h2{font-size:20px}.sectionhead h2{font-size:20px}.sectionhead a{font-size:12px}footer{font-size:11px;line-height:1.9}}
+
+/* Araç seçimi hero */
+.hero{position:relative;display:block;isolation:isolate;overflow:visible;aspect-ratio:2.6667;width:100%;min-height:0;margin:10px 0 76px;padding:0;border-radius:0;background:#171a20 url('/hero-arac-secimi.webp') center center/cover no-repeat;color:#fff}
+.hero:before,.hero:after{display:none;content:none}
+.hero-content{position:absolute;inset:0;width:100%;max-width:none}
+.hero .eyebrow,.hero h1,.hero p,.hero .search{display:none}
+.hero-filter{position:absolute;left:2.1%;right:2.1%;bottom:-34px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) minmax(150px,.95fr);align-items:center;min-height:88px;padding:8px;border:9px solid #34333d;border-radius:60px;background:#fff;box-shadow:0 8px 22px rgba(16,24,40,.16);overflow:hidden}
+.hero-filter select{width:100%;min-width:0;height:60px;padding:0 15px;border:0;border-right:1px solid #e8ebf2;border-radius:0;outline:0;background:#fff;color:#172033;font:600 13px Arial,system-ui,sans-serif;appearance:auto}
+.hero-filter select:last-of-type{border-right:0}
+.hero-filter button{height:54px;margin-left:8px;border:0;border-radius:32px;background:#557bf7;color:#fff;font:750 13px Arial,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.hero-filter button:hover{background:#4168ed}
+@media(max-width:900px){.hero{aspect-ratio:2.1}.hero-filter{left:1.5%;right:1.5%;grid-template-columns:repeat(3,minmax(0,1fr));bottom:-58px;min-height:112px;border-width:7px;border-radius:28px;padding:6px}.hero-filter select{height:43px;border-bottom:1px solid #e8ebf2;font-size:12px}.hero-filter button{height:42px;margin:3px 0 0;grid-column:span 3}}
+@media(max-width:620px){.hero{aspect-ratio:1.25;margin:8px 0 112px;background-position:center center;border-radius:12px}.hero-filter{left:0;right:0;bottom:-103px;grid-template-columns:repeat(2,minmax(0,1fr));min-height:196px;padding:7px;border-width:6px;border-radius:22px}.hero-filter select{height:43px;padding:0 8px;font-size:11px}.hero-filter button{grid-column:span 2;height:43px;margin:5px 0 0}}
+
 </style><script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Güvenilir Parçacı","url":"https://guvenilirparcaci.com/","inLanguage":"tr-TR","potentialAction":{"@type":"SearchAction","target":"https://guvenilirparcaci.com/marketplace/?q={search_term_string}","query-input":"required name=search_term_string"}}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Güvenilir Parçacı","url":"https://guvenilirparcaci.com/","logo":"https://guvenilirparcaci.com/guvenilir-parcaci.jpg"}</script></head><body><div class="wrap">
 <header class="top"><a class="brand" href="/" aria-label="Güvenilir Parçacı ana sayfa"><img src="/guvenilir-parcaci.jpg" alt="Güvenilir Parçacı"></a><nav class="nav"><a href="/marketplace/">İlanlar</a><a href="/marketplace/kategoriler.html">Kategoriler</a><a href="/marketplace/markalar.html">Markalar</a><a class="btn secondary" href="/uye-giris.html">Üye Girişi</a><a class="btn" href="/seller-panel/">Firma Girişi</a></nav></header>
-<section class="hero"><div class="hero-content"><div class="eyebrow">TÜRKİYE'NİN YEDEK PARÇA İLAN PLATFORMU</div><h1>Aradığın yedek parça, GüvenilirParçacı’da!</h1><p>Türkiye genelindeki yedek parça firmalarının ilanlarını keşfet, aradığın parçayı kolayca bul ve satıcıyla doğrudan iletişime geç.</p><form class="search" id="searchForm"><input id="q" placeholder="Örn. Hyundai Accent Era D4FA motor" aria-label="Parça, marka, model veya motor kodu ara"><button class="btn">İlan ara <span aria-hidden="true">→</span></button></form></div></section>
-<section class="quick-search" aria-label="Detaylı yedek parça arama">
-  <div class="quick-search-head"><div><h2>Detaylı parça arama</h2><p>Marka, model, kategori ve konum bilgilerini seçerek aramanı daralt.</p></div><a href="/marketplace/" style="color:#b42318;text-decoration:none;font-size:12px;font-weight:750">Tüm filtreler →</a></div>
-  <form id="advancedSearch" class="quick-fields">
-    <div><label for="homeBrand">Araç markası</label><select id="homeBrand"><option value="">Tüm markalar</option></select></div>
-    <div><label for="homeModel">Araç modeli</label><select id="homeModel" disabled><option value="">Önce marka seçin</option></select></div>
-    <div><label for="homeCategory">Parça kategorisi</label><select id="homeCategory"><option value="">Tüm kategoriler</option></select></div>
-    <div><label for="homePart">Parça türü</label><select id="homePart"><option value="">Sıfır ve çıkma</option><option value="new">Sıfır parça</option><option value="used">Çıkma parça</option></select></div>
-    <div><label for="homeProvince">Şehir</label><input id="homeProvince" placeholder="Örn. Ankara"></div>
-    <div style="grid-column:span 3;align-self:end"><button class="btn" style="width:100%">Seçimlerimle ilanları bul →</button></div>
-  </form>
+<section class="hero" aria-label="Aracınızı seçin ve yedek parçanızı bulun">
+<form class="hero-filter" id="heroVehicleSearch">
+<select id="heroBrand" aria-label="Marka"><option value="">Marka</option></select>
+<select id="heroModel" aria-label="Model" disabled><option value="">Model</option></select>
+<select id="heroYear" aria-label="Model Yılı"><option value="">Model Yılı</option></select>
+<select id="heroEngine" aria-label="Motor Hacmi"><option value="">Motor Hacmi</option><option>1.0</option><option>1.2</option><option>1.3</option><option>1.4</option><option>1.5</option><option>1.6</option><option>1.8</option><option>2.0</option><option>2.2</option><option>2.5</option><option>3.0</option><option>3.5</option><option>4.0</option></select>
+<select id="heroBody" aria-label="Kasa Tipi"><option value="">Kasa Tipi</option><option>Sedan</option><option>Hatchback</option><option>Station Wagon</option><option>SUV</option><option>Coupe</option><option>Cabrio</option><option>Pickup</option><option>Panelvan</option></select>
+<button type="submit">Parça Ara</button>
+</form>
 </section>
 <section class="suggested" aria-label="Önerilen aramalar"><strong>Popüler aramalar:</strong><a href="/marketplace/?q=çıkma%20motor">Çıkma motor</a><a href="/marketplace/?q=şanzıman">Şanzıman</a><a href="/marketplace/?q=far">Far</a><a href="/marketplace/?q=Hyundai%20Accent">Hyundai Accent</a><a href="/marketplace/?q=Volkswagen%20motor">Volkswagen motor</a><a href="/marketplace/?q=turbo">Turbo</a></section>
 <section class="trust-row" aria-label="Platform özellikleri"><div class="trust"><div class="trust-icon">⌕</div><div><strong>Kolay parça arama</strong><small>Parça adı, marka, model veya motor koduyla ara</small></div></div><div class="trust"><div class="trust-icon">▣</div><div><strong>Farklı satıcıları keşfet</strong><small>Türkiye genelindeki firma ilanlarını karşılaştır</small></div></div><div class="trust"><div class="trust-icon">↗</div><div><strong>Satıcıyla doğrudan iletişim</strong><small>İlan üzerinden telefon veya WhatsApp bağlantısı</small></div></div></section>
@@ -126,7 +138,29 @@ for(const x of brands.data||[]){
  if(!name)continue;const key=name.toLocaleLowerCase("tr");
  if(!normalizedBrands.has(key))normalizedBrands.set(key,{id:String(x.id),name,ids:[String(x.id)]});else normalizedBrands.get(key).ids.push(String(x.id));
 }
+
 const homeBrandGroups=[...normalizedBrands.values()].sort((a,b)=>a.name.localeCompare(b.name,"tr"));
+$("heroBrand").innerHTML='<option value="">Marka</option>'+homeBrandGroups.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
+const yearSelect=$("heroYear");
+for(let year=new Date().getFullYear();year>=1950;year--)yearSelect.add(new Option(String(year),String(year)));
+$("heroBrand").addEventListener("change",async()=>{
+ const group=homeBrandGroups.find(x=>x.id===$("heroBrand").value);
+ $("heroModel").disabled=!group;$("heroModel").innerHTML='<option value="">Model</option>';
+ if(!group)return;
+ const {data,error}=await sb.from("vehicle_models").select("id,name").in("brand_id",group.ids).eq("is_active",true).order("name");
+ if(error)throw error;
+ const grouped=new Map();
+ for(const x of data||[]){const key=String(x.name||"").trim().toLocaleLowerCase("tr");if(!grouped.has(key))grouped.set(key,{name:x.name,ids:[x.id]});else grouped.get(key).ids.push(x.id);}
+ $("heroModel").innerHTML='<option value="">Model</option>'+[...grouped.values()].sort((a,b)=>a.name.localeCompare(b.name,"tr")).map(x=>'<option value="'+x.ids.join(",")+'">'+esc(x.name)+'</option>').join("");
+});
+$("heroVehicleSearch").addEventListener("submit",e=>{
+ e.preventDefault();const params=new URLSearchParams();
+ if($("heroBrand").value)params.set("brand_id",$("heroBrand").value);
+ if($("heroModel").value)params.set("model_ids",$("heroModel").value);
+ const terms=[$("heroYear").value,$("heroEngine").value,$("heroBody").value].filter(Boolean);
+ if(terms.length)params.set("q",terms.join(" "));
+ location.href="/marketplace/?"+params.toString();
+});
 $("brands").innerHTML=homeBrandGroups.slice(0,18).map(x=>'<a href="/marketplace/?brand_id='+encodeURIComponent(x.id)+'">'+esc(x.name)+'</a>').join("");
 $("homeBrand").innerHTML='<option value="">Tüm markalar</option>'+homeBrandGroups.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
 $("homeCategory").innerHTML='<option value="">Tüm kategoriler</option>'+cats.data.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
