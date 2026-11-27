@@ -198,7 +198,8 @@ $("heroVehicleSearch").addEventListener("submit",e=>{
  e.preventDefault();const params=new URLSearchParams();
  if($("heroBrand").value)params.set("brand_id",$("heroBrand").value);
  if($("heroModel").value)params.set("model_ids",$("heroModel").value);
- const terms=[$("heroYear").value,$("heroEngine").value,$("heroBody").value].filter(Boolean);
+ if($("heroYear").value)params.set("year",$("heroYear").value);
+ const terms=[$("heroEngine").value,$("heroBody").value].filter(Boolean);
  if(terms.length)params.set("q",terms.join(" "));
  location.href="/marketplace/?"+params.toString();
 });
