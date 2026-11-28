@@ -66,7 +66,7 @@ const sb=createClient("https://ugqsazhpfnqiqonhvkcb.supabase.co","sb_publishable
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=v=>v==null?"Fiyat sorunuz":new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:0}).format(v);
 const imageUrl=k=>k?sb.storage.from("site-images").getPublicUrl(k).data.publicUrl:"";
-const pageSize=18;let categoryId=null,page=0,total=0,selectedSub="",subcategories=[],brands=[],selectedBrandId=new URLSearchParams(location.search).get("brand")||"",selectedModelId=new URLSearchParams(location.search).get("model")||"",selectedBrand=null,vehicleModels=[];
+const pageSize=18;let categoryId=null,page=0,total=0,selectedSub=new URLSearchParams(location.search).get("sub")||"",subcategories=[],brands=[],selectedBrandId=new URLSearchParams(location.search).get("brand")||"",selectedModelId=new URLSearchParams(location.search).get("model")||"",selectedBrand=null,vehicleModels=[];
 function renderSubcategories(){
  const all='<button class="side-item '+(!selectedSub?"active":"")+'" data-sub="">Tüm parçalar <span class="arrow">›</span></button>';
  const buttons=subcategories.map(s=>'<button class="side-item '+(selectedSub===String(s.id)?"active":"")+'" data-sub="'+s.id+'">'+esc(s.name)+' <span class="arrow">›</span></button>').join("");
@@ -75,7 +75,7 @@ function renderSubcategories(){
  document.querySelectorAll("[data-sub]").forEach(el=>el.addEventListener("click",()=>{selectedSub=el.dataset.sub;page=0;renderSubcategories();loadListings().catch(e=>$("status").textContent=e.message);}));
 }
 function categoryUrl(brandId="",modelId=""){
- const p=new URLSearchParams();p.set("slug",slug);if(brandId)p.set("brand",brandId);if(modelId)p.set("model",modelId);return "/marketplace/kategori.html?"+p.toString();
+ const p=new URLSearchParams();p.set("slug",slug);if(selectedSub)p.set("sub",selectedSub);if(brandId)p.set("brand",brandId);if(modelId)p.set("model",modelId);return "/marketplace/kategori.html?"+p.toString();
 }
 function renderVehicleOptions(){
  const input=$("vehicleSearch"),list=$("vehicleOptions"),box=$("vehicle-filter");
@@ -153,7 +153,7 @@ async function init(){
  document.querySelector('link[rel="canonical"]').href="https://guvenilirparcaci.com/marketplace/kategori.html?slug="+encodeURIComponent(slug);
  document.querySelector('meta[name="description"]').content=cat.name+" kategorisindeki güncel sıfır ve çıkma oto yedek parça ilanları. Türkiye genelindeki satıcıları keşfedin.";
  const {data:subs,error:se}=await sb.from("subcategories").select("id,name").eq("category_id",categoryId).eq("is_active",true).order("name");
- if(se)throw se;subcategories=subs||[];renderSubcategories();
+ if(se)throw se;subcategories=subs||[];if(selectedSub&&!subcategories.some(x=>String(x.id)===String(selectedSub)))selectedSub="";renderSubcategories();
  const {data:brandRows,error:brandError}=await sb.from("vehicle_brands").select("id,name").eq("is_active",true).order("name");if(brandError)throw brandError;brands=brandRows||[];
  if(selectedBrandId){const found=brands.find(x=>String(x.id)===String(selectedBrandId));if(!found){selectedBrandId="";selectedModelId="";}else{selectedBrand=found;const {data:modelRows,error:modelError}=await sb.from("vehicle_models").select("id,name").eq("brand_id",found.id).eq("is_active",true).order("name");if(modelError)throw modelError;vehicleModels=modelRows||[];if(selectedModelId&&!vehicleModels.some(x=>String(x.id)===String(selectedModelId)))selectedModelId="";}}
  renderVehicleOptions();await loadListings();
