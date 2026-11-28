@@ -2,4 +2,5 @@
 /firma-panel /seller-panel/index.html 200
 /firma-panel/ /seller-panel/index.html 200
 /ilan/:id/:slug /marketplace/ilan.html?id=:id 200
+/ilan/:slug-:number /marketplace/ilan.html?listing_number=:number 200
 /:slug /marketplace/firma.html?slug=:slug 200
