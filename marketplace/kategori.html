@@ -70,6 +70,7 @@ import{createClient}from"https://esm.sh/@supabase/supabase-js@2";
 const sb=createClient("https://ugqsazhpfnqiqonhvkcb.supabase.co","sb_publishable_pfYeKe4n7HqXZBsuzb-1bA_4GFBwWlJ"),$=id=>document.getElementById(id),slug=new URLSearchParams(location.search).get("slug");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=v=>v==null?"Fiyat sorunuz":new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:0}).format(v);
+const listingHref=x=>"/ilan/"+String(x.title||"ilan").toLocaleLowerCase("tr-TR").replace(/[ğüşıöç]/g,ch=>({ğ:"g",ü:"u",ş:"s",ı:"i",ö:"o",ç:"c"}[ch])).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,100).replace(/-+$/,"")+"-"+x.listing_number;
 const imageUrl=k=>k?sb.storage.from("site-images").getPublicUrl(k).data.publicUrl:"";
 const pageSize=18;let categoryId=null,page=0,total=0,selectedSub=new URLSearchParams(location.search).get("sub")||"",subcategories=[],brands=[],selectedBrandId=new URLSearchParams(location.search).get("brand")||"",selectedModelId=new URLSearchParams(location.search).get("model")||"",selectedBrand=null,vehicleModels=[];
 function renderSubcategories(){
@@ -122,7 +123,7 @@ async function loadListings(){
  const now=new Date().toISOString(),term=$("q").value.trim();
  let compatibleIds=null;
  if(selectedBrand){const modelIds=selectedModelId?selectedModelId.split(",").map(Number):vehicleModels.flatMap(x=>x.ids);if(!modelIds.length){total=0;$("count").textContent="0 ilan";$("grid").innerHTML='<div class="empty"><strong>Bu markaya ait aktif model bulunamadı.</strong></div>';$("status").textContent="";renderPages();return;}const {data:compat,error:compatError}=await sb.from("listing_vehicle_compatibilities").select("listing_id").in("vehicle_model_id",modelIds);if(compatError)throw compatError;compatibleIds=[...new Set((compat||[]).map(x=>x.listing_id))];if(!compatibleIds.length){total=0;$("count").textContent="0 ilan";$("grid").innerHTML='<div class="empty"><strong>Bu araç için bu kategoride uyumlu ilan bulunamadı.</strong>Başka bir marka veya model seçebilirsiniz.</div>';$("status").textContent="";renderPages();return;}}
- let q=sb.from("listings").select("id,title,price_try,part_type,province,district,firm_id,expires_at,published_at,subcategory_id",{count:"exact"}).eq("category_id",categoryId).eq("status","published").or("expires_at.is.null,expires_at.gt."+now);
+ let q=sb.from("listings").select("id,title,listing_number,price_try,part_type,province,district,firm_id,expires_at,published_at,subcategory_id",{count:"exact"}).eq("category_id",categoryId).eq("status","published").or("expires_at.is.null,expires_at.gt."+now);
  if(selectedSub)q=q.eq("subcategory_id",Number(selectedSub));
  if(compatibleIds)q=q.in("id",compatibleIds);
  if($("part").value)q=q.eq("part_type",$("part").value);
@@ -144,7 +145,7 @@ async function loadListings(){
  for(const x of images.data||[])if(x.r2_object_key&&!x.r2_object_key.startsWith("drafts/")&&!picMap.has(x.listing_id))picMap.set(x.listing_id,x.r2_object_key);
  $("grid").innerHTML=data.map(x=>{
   const key=picMap.get(x.id),src=imageUrl(key),isNew=x.part_type==="new";
-  return '<a class="item" href="/marketplace/ilan.html?id='+encodeURIComponent(x.id)+'"><div class="photo"'+(src?' style="--photo-bg:url(&quot;'+esc(src)+'&quot;)"':'')+'>'+(src?'<img loading="lazy" decoding="async" src="'+esc(src)+'" alt="'+esc(x.title)+'">':'<span class="noimg">Fotoğraf eklenmemiş</span>')+'<span class="tag '+(isNew?"new":"")+'">'+(isNew?"Sıfır parça":"Çıkma parça")+'</span></div><div class="info"><div class="title">'+esc(x.title)+'</div><div class="price">'+money(x.price_try)+'</div><div class="meta"><span>'+esc(x.province||"Türkiye")+(x.district?" · "+esc(x.district):"")+'</span><span>'+new Date(x.published_at||Date.now()).toLocaleDateString("tr-TR")+'</span></div><div class="seller">'+esc(firmMap.get(x.firm_id)||"Satıcı firma")+'</div></div></a>';
+  return '<a class="item" href="'+listingHref(x)+'"><div class="photo"'+(src?' style="--photo-bg:url(&quot;'+esc(src)+'&quot;)"':'')+'>'+(src?'<img loading="lazy" decoding="async" src="'+esc(src)+'" alt="'+esc(x.title)+'">':'<span class="noimg">Fotoğraf eklenmemiş</span>')+'<span class="tag '+(isNew?"new":"")+'">'+(isNew?"Sıfır parça":"Çıkma parça")+'</span></div><div class="info"><div class="title">'+esc(x.title)+'</div><div class="price">'+money(x.price_try)+'</div><div class="meta"><span>'+esc(x.province||"Türkiye")+(x.district?" · "+esc(x.district):"")+'</span><span>'+new Date(x.published_at||Date.now()).toLocaleDateString("tr-TR")+'</span></div><div class="seller">'+esc(firmMap.get(x.firm_id)||"Satıcı firma")+'</div></div></a>';
  }).join("");
  $("status").textContent="";renderPages();
 }
