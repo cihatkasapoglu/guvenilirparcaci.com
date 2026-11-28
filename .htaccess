@@ -6,8 +6,11 @@ RewriteBase /
 # Seller panel route
 RewriteRule ^firma-panel/?$ seller-panel/index.html [L]
 
-# Listing URL: /ilan/UUID/ilan-basligi
+# Legacy listing URL support
 RewriteRule ^ilan/([A-Fa-f0-9-]{36})/[^/]+/?$ marketplace/ilan.html?id=$1 [QSA,L]
+
+# SEO listing URL: /ilan/ilan-basligi-1000001
+RewriteRule ^ilan/(.+)-([0-9]{7})/?$ marketplace/ilan.html?listing_number=$2 [QSA,L]
 
 # Keep real files and directories (home, assets, legal pages, admin panel, etc.)
 RewriteCond %{REQUEST_FILENAME} -f [OR]
